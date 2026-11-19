@@ -38,14 +38,15 @@
 }
 *{box-sizing:border-box}
 html,body{height:100%;overflow:hidden}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.5;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0;
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.5;padding:0;
   -webkit-tap-highlight-color:transparent}
+/* 가로 화면: 스크롤 영역(main)은 화면 전체 폭, 내용은 가운데 980px → 좌우 빈 여백을 쓸어도 스크롤됩니다 */
+.bar,.tools,main{padding-left:max(16px,env(safe-area-inset-left,0px),calc((100% - 980px)/2));padding-right:max(16px,env(safe-area-inset-right,0px),calc((100% - 980px)/2))}
 .wrap{height:100%;display:flex;flex-direction:column;min-height:0}
 main{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:48px}
 button{font:inherit;color:inherit}
 h1,h2,h3{margin:0;text-wrap:balance}
-.wrap{max-width:980px;margin:0 auto}
+.wrap{max-width:none;margin:0}
 main::-webkit-scrollbar{width:8px}main::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
 [hidden]{display:none!important}
 
