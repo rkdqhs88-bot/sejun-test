@@ -233,7 +233,7 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 
 <div class="wrap">
   <header class="bar">
-    <div class="brand"><span id="brandText">♥ 사랑하는 우리 아이 영단어 시험 ♥</span><small>사진으로 만드는 시험 · 펜으로 쓰고 바로 채점</small></div>
+    <div class="brand"><span id="brandText">♥ 사랑하는 우리 아이 영단어 시험 ♥</span><small>사진으로 만드는 시험 · 펜으로 쓰고 바로 채점 <span id="buildTag"></span></small></div>
     <nav class="modes" role="tablist" aria-label="모드">
       <button role="tab" id="mode-v" aria-selected="true" data-mode="v">영단어 시험</button>
       <button role="tab" id="mode-d" aria-selected="false" data-mode="d">한글 받아쓰기</button>
@@ -293,7 +293,8 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
       </div>
       <p class="help" id="sModelHelp"></p>
     </div>
-    <div class="acts"><button class="btn primary" id="sSave">저장</button><button class="btn" id="sClose">닫기</button></div>
+    <p class="help" id="sBuildInfo" style="margin-top:12px"></p>
+    <div class="acts"><button class="btn primary" id="sSave">저장</button><button class="btn" id="sUpdate">🔄 지금 업데이트 확인</button><button class="btn" id="sClose">닫기</button></div>
   </section>
 
   <!-- practice pad -->
@@ -508,6 +509,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
+const APP_BUILD = '2026.11.19 22:46';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1555,6 +1557,16 @@ function confetti(count, ms){
 }
 
 document.querySelectorAll('[data-demo]').forEach(b => b.onclick = () => { const total = 20, ok = Math.round(total*(+b.dataset.demo)/100), pct = Math.round(ok/total*100); SET.name = $('sName').value.trim() || SET.name; celebrate({total, ok, pct, unsure:0}, $('demoEn').checked ? '영단어 시험' : '받아쓰기', $('demoEn').checked) });
+
+/* ---------- version / update source ---------- */
+(() => {
+  const built = APP_BUILD.startsWith('__') ? '' : APP_BUILD;
+  $('buildTag').textContent = built ? '· 버전 ' + built : '';
+  const src = window.__appSource, err = window.__appErr;
+  const srcText = src==='remote' ? '인터넷에서 최신 버전을 받았어요' : src==='cache' ? '인터넷 연결이 안 되어 마지막으로 받아 둔 버전이에요' : src==='bundled' ? '앱에 내장된 버전이에요 (인터넷에서 받기 실패)' : (window.Capacitor ? '앱 내장 버전 (구버전 로더)' : 'claude.ai / 브라우저에서 실행 중');
+  $('sBuildInfo').textContent = `앱 버전: ${built || '(개발용)'} · ${srcText}` + (err ? ` · 실패 이유: ${err}` : '');
+  $('sUpdate').onclick = () => { toast('최신 버전을 확인하는 중…', 2000); setTimeout(() => location.reload(), 300) };
+})();
 
 /* ---------- boot ---------- */
 renderHistory('historyV'); renderHistory('historyD');
