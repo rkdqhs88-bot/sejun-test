@@ -508,6 +508,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
+const GEMINI_MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const DEF_SETTINGS = { name:'', reads:2, rate:1, spacing:true, provider:'gemini', key:'', model:'', voiceMode:'auto', voiceKo:'', voiceEn:'' };
 const SET = Object.assign({}, DEF_SETTINGS, LS.get('settings', {}));
 if(!SET.v2){ SET.v2 = 1; if(+SET.rate < 1) SET.rate = 1; LS.set('settings', SET) }
@@ -590,7 +591,7 @@ function loadSettingsUi(){
   $('sName').value = SET.name; $('sReads').value = String(SET.reads); $('sRate').value = String(SET.rate); $('sSpacing').checked = !!SET.spacing;
   $('sProvider').value = SET.provider; $('sKey').value = SET.key; $('sModel').value = SET.model; modelHelp();
 }
-function modelHelp(){ $('sModelHelp').textContent = $('sProvider').value==='gemini' ? '기본 모델: gemini-2.5-flash. 무료 등급은 Flash 계열만 되고 하루 요청 수 제한이 있어요(시험 1회 = 보통 2~3번 요청). 키는 aistudio.google.com → Get API key 에서 만듭니다.' : '기본 모델: claude-opus-5-5 (console.anthropic.com에서 키 발급, 유료)' }
+function modelHelp(){ $('sModelHelp').textContent = $('sProvider').value==='gemini' ? '기본 모델: gemini-3.5-flash (안 되면 자동으로 flash-lite 등으로 넘어가요). 무료 등급은 하루 요청 수 제한이 있어요(시험 1회 = 보통 2~3번 요청). 키는 aistudio.google.com → Get API key 에서 만듭니다.' : '기본 모델: claude-opus-5-5 (console.anthropic.com에서 키 발급, 유료)' }
 $('sProvider').onchange = modelHelp;
 $('gearBtn').onclick = () => { const s = $('settings'); s.hidden = !s.hidden; if(!s.hidden){ loadSettingsUi(); s.scrollIntoView({behavior:'smooth'}) } };
 $('sClose').onclick = () => { $('settings').hidden = true };
@@ -649,14 +650,22 @@ const AI = {
     return txt;
   },
   async gemini(prompt, parts, signal, c){
-    const model = c.model || 'gemini-2.5-flash';
+    const chain = [...new Set([c.model || GEMINI_MODELS[0], ...GEMINI_MODELS])];
     const body = { contents:[{ role:'user', parts:[ ...parts.map(p => ({inline_data:{mime_type:'image/jpeg', data:p}})), {text: prompt} ] }], generationConfig:{ responseMimeType:'application/json' } };
-    let r; try{ r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method:'POST', signal,
-      headers:{ 'content-type':'application/json', 'x-goog-api-key':c.key }, body: JSON.stringify(body) }) }
-    catch(e){ if(signal.aborted) throw {code:'cancelled'}; throw {code:'network', message:String(e)} }
-    if(r.status===401||r.status===403||r.status===400 && c.key.length<20) throw {code:'auth'};
-    if(r.status===429) throw {code:'rate_limited'};
-    if(!r.ok){ let m=''; try{ m=(await r.json())?.error?.message||'' }catch{}; throw {code:'upstream_error', message:m||('HTTP '+r.status)} }
+    let r, lastMsg = '';
+    for(let i=0;i<chain.length;i++){
+      const model = chain[i];
+      try{ r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method:'POST', signal,
+        headers:{ 'content-type':'application/json', 'x-goog-api-key':c.key }, body: JSON.stringify(body) }) }
+      catch(e){ if(signal.aborted) throw {code:'cancelled'}; throw {code:'network', message:String(e)} }
+      if(r.ok) break;
+      if(r.status===401||r.status===403||r.status===400 && c.key.length<20) throw {code:'auth'};
+      let m=''; try{ m=(await r.json())?.error?.message||'' }catch{}; lastMsg = m || ('HTTP '+r.status);
+      const busyOrGone = r.status===404 || r.status===503 || r.status===429;
+      if(busyOrGone && i < chain.length-1){ console.warn('Gemini', model, r.status, '→ 다음 모델로', chain[i+1]); continue }   // 모델이 없거나 바쁘면 다음 모델로
+      if(r.status===429) throw {code:'rate_limited'};
+      throw {code:'upstream_error', message:lastMsg};
+    }
     const j = await r.json();
     const txt = (j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('\n');
     if(!txt.trim()) throw {code:'empty_completion', message: j.promptFeedback?.blockReason||''};
@@ -968,6 +977,7 @@ ${styleText}
 - 보기가 없는 유형이면 choices는 빈 배열([])로 둡니다.
 - word에는 그 문항이 묻는 영어 단어(목록의 단어)를, meaning에는 그 단어의 한국어 뜻을 적습니다.
 - 지시문(instruction)은 시험지에 인쇄되는 문구로, 학생이 읽기 쉽게 한국어로 씁니다.
+- 빈칸 문장(blank/보기 유형)을 만들 때의 규칙: 학생은 초등학교 1학년입니다. (1) 문장은 3~7단어의 아주 쉬운 영어로, 빈칸 단어 외에는 I, you, like, have, is, a, the, my, big, red 같은 기초 단어만 씁니다. (2) 빈칸에 들어갈 수 있는 단어가 목록의 그 단어 하나뿐이도록 문장을 만듭니다(예: "I eat an ______." 처럼 여러 단어가 가능하면 안 되고 "A red ______ grows on a tree. (사과)"처럼 뜻이 정해지게). (3) 빈칸은 밑줄 6개(______)로 표시하고, 문장 뒤 괄호 안에 빈칸 단어의 한국어 뜻을 적습니다. (4) 빈칸 단어는 문장에 다른 형태로라도 다시 나오면 안 됩니다. (5) 같은 시험 안에서 문장 패턴을 다양하게 합니다.
 - phonics는 word의 철자를 파닉스 단위로 왼쪽부터 빠짐없이 나눈 배열입니다. 한 글자, 또는 sh, ch, th, ee, oo, ai, igh, ck 같은 소리 묶음이 한 칸입니다. 모든 letters를 이어 붙이면 word와 같아야 합니다(공백은 letters " "로 한 칸). say는 영어 음성합성기가 그 "소리"를 내도록 적은 발음용 철자입니다. 글자 이름이 아니라 소리입니다: p→"puh", b→"buh", t→"tuh", a(apple)→"ah", e(egg)→"eh", i(ink)→"ih", o(ox)→"aw", u(up)→"uh", s→"sss", m→"mmm", sh→"shh", ee→"ee", 묵음(magic e 등)→"". tip은 그 묶음에 대한 아주 짧은 한국어 설명(없으면 "")입니다.
 
 단어 목록:
