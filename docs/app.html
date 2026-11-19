@@ -50,7 +50,8 @@ main::-webkit-scrollbar{width:8px}main::-webkit-scrollbar-thumb{background:var(-
 [hidden]{display:none!important}
 
 /* app bar */
-.bar{flex:none;z-index:9;background:var(--bg);padding:10px 0 8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bar{flex:none;z-index:9;background:var(--bg);padding:calc(10px + env(safe-area-inset-top,0px)) 0 8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+html.in-app .bar{padding-top:calc(10px + max(env(safe-area-inset-top,0px), 28px))}
 .brand{font-family:var(--display);font-size:28px;letter-spacing:.5px;color:var(--accent);line-height:1}
 .brand #brandText{color:#d6457a}
 .brand small{font-family:var(--font);font-size:12px;color:var(--muted);display:block;letter-spacing:.06em;margin-top:2px}
@@ -509,7 +510,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.19 22:54';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.19 22:55';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1136,6 +1137,9 @@ function renderPaper(){
     }
     p.appendChild(sec);
   }
+  const tail = document.createElement('div'); tail.className='acts tailacts'; tail.style.cssText='justify-content:center;margin-top:26px';
+  const gb = document.createElement('button'); gb.className='btn primary big'; gb.textContent='✅ 다 풀었어요! 채점하기'; gb.onclick = () => $('gradeBtn').click();
+  tail.appendChild(gb); p.appendChild(tail);
   p.querySelectorAll('.ans').forEach(setupCanvas);
   applyGrades(); refreshSayButtons();
   requestAnimationFrame(fitAll);
@@ -1195,6 +1199,7 @@ function scoreV(){ const qs = allQ(); let ok=0, unsure=0; for(const q of qs){ co
 function applyGrades(){
   const paper = $('paper'), graded = !!S.v.grades;
   paper.classList.toggle('graded', graded); paper.classList.toggle('ro', graded);
+  const tail = paper.querySelector('.tailacts'); if(tail) tail.hidden = graded;
   $('vacts').hidden = graded; $('vresult').hidden = !graded; updateTools(); refreshSayButtons();
   if(!graded) return;
   for(const q of allQ()){
@@ -1415,6 +1420,9 @@ function renderDictDone(){
     const ans = document.createElement('div'); ans.className='ans tall'; ans.dataset.key='d:'+pos; ans.innerHTML='<canvas></canvas>';
     row.append(qn, ans); p.appendChild(row); setupCanvas(ans);
   });
+  const tail = document.createElement('div'); tail.className='acts'; tail.style.cssText='justify-content:center;margin-top:26px';
+  const gb = document.createElement('button'); gb.className='btn primary big'; gb.textContent='✅ 다 썼어요! 채점하기'; gb.onclick = () => $('dGrade').click();
+  tail.appendChild(gb); p.appendChild(tail);
   requestAnimationFrame(fitAll); scrollTop();
 }
 $('dGrade').onclick = async () => {
@@ -1579,6 +1587,7 @@ function confetti(count, ms){
 
 document.querySelectorAll('[data-demo]').forEach(b => b.onclick = () => { const total = 20, ok = Math.round(total*(+b.dataset.demo)/100), pct = Math.round(ok/total*100); SET.name = $('sName').value.trim() || SET.name; celebrate({total, ok, pct, unsure:0}, $('demoEn').checked ? '영단어 시험' : '받아쓰기', $('demoEn').checked) });
 
+if(window.Capacitor) document.documentElement.classList.add('in-app');   // 앱 안: 상태바(시계·배터리) 아래로 한 칸 띄움
 /* ---------- version / update source ---------- */
 (() => {
   const built = APP_BUILD.startsWith('__') ? '' : APP_BUILD;
