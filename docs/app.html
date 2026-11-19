@@ -508,7 +508,9 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const GEMINI_MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest', 'gemini-2.5-flash'];
+// 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
+const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
+const GEMINI_QUICK  = GEMINI_MODELS;
 const DEF_SETTINGS = { name:'', reads:2, rate:1, spacing:true, provider:'gemini', key:'', model:'', voiceMode:'auto', voiceKo:'', voiceEn:'' };
 const SET = Object.assign({}, DEF_SETTINGS, LS.get('settings', {}));
 if(!SET.v2){ SET.v2 = 1; if(+SET.rate < 1) SET.rate = 1; LS.set('settings', SET) }
@@ -529,7 +531,13 @@ const scrolls = new Map();  // pointerId -> lastY
 /* ---------- ui helpers ---------- */
 let toastT;
 function toast(msg, ms=3600){ let t = $('toast'); if(!t){ t = document.createElement('div'); t.id='toast'; t.className='toast'; t.setAttribute('role','status'); document.body.appendChild(t) } t.textContent = msg; t.hidden=false; clearTimeout(toastT); toastT = setTimeout(()=>{ t.hidden = true }, ms) }
-function status(el, msg, busy){ el.innerHTML=''; if(busy){ const s=document.createElement('span'); s.className='spin'; el.appendChild(s) } el.appendChild(document.createTextNode(msg||'')) }
+function status(el, msg, busy){
+  clearInterval(el._tick); el.innerHTML='';
+  if(busy){ const s=document.createElement('span'); s.className='spin'; el.appendChild(s) }
+  const t = document.createTextNode(msg||''); el.appendChild(t);
+  if(busy){ const t0 = Date.now(); const sec = document.createElement('span'); sec.style.cssText='margin-left:8px;color:var(--muted);font-variant-numeric:tabular-nums'; el.appendChild(sec);
+    el._tick = setInterval(() => { sec.textContent = Math.round((Date.now()-t0)/1000) + '초'; if(!el.isConnected) clearInterval(el._tick) }, 1000) }
+}
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a }
 function isHangul(ch){ const c = ch.charCodeAt(0); return (c>=0xAC00&&c<=0xD7A3)||(c>=0x3131&&c<=0x318E) }
 function nameI(name){ name = (name||'').trim(); if(!name) return '우리 아이'; const c = name.charCodeAt(name.length-1); return (c>=0xAC00&&c<=0xD7A3&&((c-0xAC00)%28)) ? name+'이' : name }
@@ -575,23 +583,23 @@ function updateTools(){
 }
 
 /* ---------- settings ---------- */
-function fillVoices(){
-  const vs = ('speechSynthesis' in window) ? speechSynthesis.getVoices() : [];
+async function fillVoices(){
+  const vs = nativeTTS() ? await loadNativeVoices() : (('speechSynthesis' in window) ? speechSynthesis.getVoices() : []);
   const fill = (sel, l, cur) => { sel.innerHTML=''; const o = document.createElement('option'); o.value=''; o.textContent='자동 선택'; sel.appendChild(o);
     for(const v of vs.filter(v => v.lang.toLowerCase().startsWith(l))){ const op = document.createElement('option'); op.value=v.name; op.textContent = `${v.name} (${v.lang})`; sel.appendChild(op) } sel.value = cur || '' };
   fill($('sVoiceKo'), 'ko', SET.voiceKo); fill($('sVoiceEn'), 'en', SET.voiceEn);
 }
-if('speechSynthesis' in window) speechSynthesis.addEventListener?.('voiceschanged', () => { if(!$('settings').hidden) fillVoices() });
+if('speechSynthesis' in window) speechSynthesis.addEventListener?.('voiceschanged', () => { if(!$('settings').hidden) fillVoices().catch(()=>{}) });
 $('sVoiceTest').onclick = async () => { const keep = {m:SET.voiceMode, k:SET.voiceKo, e:SET.voiceEn, r:SET.rate}; SET.voiceMode=$('sVoiceMode').value; SET.voiceKo=$('sVoiceKo').value; SET.voiceEn=$('sVoiceEn').value; SET.rate=+$('sRate').value||1;
   await speak('안녕! 나는 학교에 갑니다.', 'ko-KR'); await wait(300); await speak('apple', 'en-US', 1); Object.assign(SET, {voiceMode:keep.m, voiceKo:keep.k, voiceEn:keep.e, rate:keep.r});
   $('sVoiceInfo').textContent = `방금 사용한 음성 — 한국어: ${lastVoice.ko||'?'} / 영어: ${lastVoice.en||'?'}` };
 function loadSettingsUi(){
-  $('sVoiceMode').value = SET.voiceMode; fillVoices();
+  $('sVoiceMode').value = SET.voiceMode; fillVoices().catch(()=>{});
   $('sKey').placeholder = BUILTIN.key ? '앱에 내장된 키를 쓰는 중 (바꾸려면 입력)' : 'sk-ant-… 또는 AIza…';
   $('sName').value = SET.name; $('sReads').value = String(SET.reads); $('sRate').value = String(SET.rate); $('sSpacing').checked = !!SET.spacing;
   $('sProvider').value = SET.provider; $('sKey').value = SET.key; $('sModel').value = SET.model; modelHelp();
 }
-function modelHelp(){ $('sModelHelp').textContent = $('sProvider').value==='gemini' ? '기본 모델: gemini-3.5-flash (안 되면 자동으로 flash-lite 등으로 넘어가요). 무료 등급은 하루 요청 수 제한이 있어요(시험 1회 = 보통 2~3번 요청). 키는 aistudio.google.com → Get API key 에서 만듭니다.' : '기본 모델: claude-opus-5-5 (console.anthropic.com에서 키 발급, 유료)' }
+function modelHelp(){ $('sModelHelp').textContent = $('sProvider').value==='gemini' ? '기본 모델: gemini-3.5-flash-lite (빠름. 안 되면 자동으로 다른 flash 모델로 넘어가요). 무료 등급은 하루 요청 수 제한이 있어요(시험 1회 = 보통 2~3번 요청). 키는 aistudio.google.com → Get API key 에서 만듭니다.' : '기본 모델: claude-opus-5-5 (console.anthropic.com에서 키 발급, 유료)' }
 $('sProvider').onchange = modelHelp;
 $('gearBtn').onclick = () => { const s = $('settings'); s.hidden = !s.hidden; if(!s.hidden){ loadSettingsUi(); s.scrollIntoView({behavior:'smooth'}) } };
 $('sClose').onclick = () => { $('settings').hidden = true };
@@ -620,17 +628,18 @@ const AI = {
     $('aiSettings').hidden = this.backend==='sample';
     refreshButtons();
   },
-  async json(prompt, images){
+  async json(prompt, images, o={}){
     S.ctl = new AbortController(); const signal = S.ctl.signal;
+    const tier = o.tier || 'default';
     try{
       if(this.sampleFn){
-        const opts = { modelTier:'default', cache:false, signal };
+        const opts = { modelTier: tier==='quick' ? 'quick' : 'default', cache:false, signal };
         if(images && images.length) opts.images = images;
         return await this.sampleFn.json(prompt, opts);
       }
       const c = cred(); if(!c) throw {code:'sampling_disabled', message:'no key'};
       const parts = []; for(const f of (images||[])) parts.push(await toJpegB64(f));
-      const text = c.provider==='gemini' ? await this.gemini(prompt, parts, signal, c) : await this.anthropic(prompt, parts, signal, c);
+      const text = c.provider==='gemini' ? await this.gemini(prompt, parts, signal, c, tier) : await this.anthropic(prompt, parts, signal, c);
       return parseLoose(text);
     } finally { S.ctl = null }
   },
@@ -649,21 +658,34 @@ const AI = {
     if(!txt.trim()) throw {code:'empty_completion'};
     return txt;
   },
-  async gemini(prompt, parts, signal, c){
-    const chain = [...new Set([c.model || GEMINI_MODELS[0], ...GEMINI_MODELS])];
-    const body = { contents:[{ role:'user', parts:[ ...parts.map(p => ({inline_data:{mime_type:'image/jpeg', data:p}})), {text: prompt} ] }], generationConfig:{ responseMimeType:'application/json' } };
+  async gemini(prompt, parts, signal, c, tier){
+    // quick(사진 읽기): 가벼운 모델 먼저. default(출제·채점): 일반 모델 먼저. 한 모델이 45초 안에 답이 없거나 바쁘면 다음 모델로.
+    const order = tier==='quick' ? GEMINI_QUICK : GEMINI_MODELS;
+    const chain = [...new Set([...(c.model ? [c.model] : []), ...order])];
+    const contents = [{ role:'user', parts:[ ...parts.map(p => ({inline_data:{mime_type:'image/jpeg', data:p}})), {text: prompt} ] }];
     let r, lastMsg = '';
     for(let i=0;i<chain.length;i++){
       const model = chain[i];
-      try{ r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method:'POST', signal,
-        headers:{ 'content-type':'application/json', 'x-goog-api-key':c.key }, body: JSON.stringify(body) }) }
-      catch(e){ if(signal.aborted) throw {code:'cancelled'}; throw {code:'network', message:String(e)} }
-      if(r.ok) break;
-      if(r.status===401||r.status===403||r.status===400 && c.key.length<20) throw {code:'auth'};
-      let m=''; try{ m=(await r.json())?.error?.message||'' }catch{}; lastMsg = m || ('HTTP '+r.status);
-      const busyOrGone = r.status===404 || r.status===503 || r.status===429;
-      if(busyOrGone && i < chain.length-1){ console.warn('Gemini', model, r.status, '→ 다음 모델로', chain[i+1]); continue }   // 모델이 없거나 바쁘면 다음 모델로
-      if(r.status===429) throw {code:'rate_limited'};
+      for(let thinking of [true, false]){
+        const gen = { responseMimeType:'application/json' };
+        if(thinking && /^gemini-3/.test(model)) gen.thinkingConfig = { thinkingLevel:'low' };   // 생각을 짧게 → 빨라짐
+        else if(!thinking && /^gemini-2\.5/.test(model)) gen.thinkingConfig = { thinkingBudget: 0 };
+        const inner = new AbortController(); const onAbort = () => inner.abort(); signal.addEventListener('abort', onAbort, {once:true});
+        const timer = setTimeout(() => inner.abort(), 40000);
+        try{ r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method:'POST', signal: inner.signal,
+          headers:{ 'content-type':'application/json', 'x-goog-api-key':c.key }, body: JSON.stringify({ contents, generationConfig: gen }) }) }
+        catch(e){ clearTimeout(timer); if(signal.aborted) throw {code:'cancelled'}; r = null; lastMsg = inner.signal.aborted ? '응답 시간 초과(45초)' : String(e); break }
+        finally{ clearTimeout(timer); signal.removeEventListener('abort', onAbort) }
+        if(r.ok) break;
+        if(r.status===401||r.status===403||r.status===400 && c.key.length<20) throw {code:'auth'};
+        let m=''; try{ m=(await r.json())?.error?.message||'' }catch{}; lastMsg = m || ('HTTP '+r.status);
+        if(r.status===400 && thinking && /thinking/i.test(m)) { r = null; continue }   // 이 모델은 thinking 옵션을 모름 → 옵션 없이 한 번 더
+        break;
+      }
+      if(r && r.ok) break;
+      const retryable = !r || r.status===404 || r.status===503 || r.status===429 || r.status>=500;
+      if(retryable && i < chain.length-1){ console.warn('Gemini', model, r ? r.status : 'timeout', '→ 다음 모델로', chain[i+1]); continue }
+      if(r && r.status===429) throw {code:'rate_limited'};
       throw {code:'upstream_error', message:lastMsg};
     }
     const j = await r.json();
@@ -708,15 +730,25 @@ function pickVoice(lang){
     return p2.find(v => /x-(iom|iol|tpd)/i.test(v.name)) || p2.find(v => /male|david|guy|christopher|eric|andrew|brian/i.test(v.name) && !/female/i.test(v.name)) || p2.find(v => /google us|us english|neural|natural|premium|enhanced/i.test(v.name)) || p2.find(v => /google/i.test(v.name)) || p2[0] || null }
   return pool.find(v => /google|neural|natural|premium|enhanced/i.test(v.name)) || pool[0] || null;
 }
-function stopSpeech(){ try{ window.speechSynthesis?.cancel() }catch{} try{ ttsFn?.stop?.() }catch{} }
-function hasDeviceVoice(l){ try{ return ('speechSynthesis' in window) && speechSynthesis.getVoices().some(v => v.lang.toLowerCase().startsWith(l)) }catch{ return false } }
+function nativeTTS(){ try{ const p = window.Capacitor?.Plugins?.TextToSpeech; return (p && typeof p.speak==='function') ? p : null }catch{ return null } }
+let nativeVoices = null;
+async function loadNativeVoices(){ const n = nativeTTS(); if(!n) return []; if(nativeVoices) return nativeVoices; try{ const r = await n.getSupportedVoices(); nativeVoices = (r?.voices||[]).map((v,i) => ({ name: v.name || v.voiceURI || ('voice '+i), lang: (v.lang||'').replace('_','-'), index: i })) }catch{ nativeVoices = [] } return nativeVoices }
+function pickNativeVoice(lang){
+  const vs = nativeVoices||[]; const l = lang.slice(0,2).toLowerCase(); const chosen = l==='ko' ? SET.voiceKo : SET.voiceEn;
+  if(chosen){ const v = vs.find(v => v.name===chosen); if(v) return v }
+  const pool = vs.filter(v => v.lang.toLowerCase().startsWith(l)); if(!pool.length) return null;
+  if(l==='en'){ const us = pool.filter(v => /en-us/i.test(v.lang)); const p2 = us.length ? us : pool; return p2.find(v => /x-(iom|iol|tpd)/i.test(v.name)) || p2.find(v => /male/i.test(v.name) && !/female/i.test(v.name)) || p2[0] }
+  return pool.find(v => /x-/i.test(v.name)) || pool[0];
+}
+function stopSpeech(){ try{ window.speechSynthesis?.cancel() }catch{} try{ ttsFn?.stop?.() }catch{} try{ nativeTTS()?.stop?.() }catch{} }
+function hasDeviceVoice(l){ try{ if(nativeTTS()) return true; return ('speechSynthesis' in window) && speechSynthesis.getVoices().some(v => v.lang.toLowerCase().startsWith(l)) }catch{ return false } }
 // Korean: the tablet's own Korean voice sounds native; Claude's voice reads Korean with an accent. English: Claude's voice is the natural one.
 function useClaudeVoice(lang){
   if(!ttsFn) return false;
   if(SET.voiceMode==='claude') return true;
   if(SET.voiceMode==='device') return false;
   const l = lang.slice(0,2).toLowerCase();
-  return l==='ko' ? !('speechSynthesis' in window) : true;   // Korean: the tablet's own voice whenever the browser has one
+  return l==='ko' ? !(nativeTTS() || ('speechSynthesis' in window)) : true;   // Korean: the tablet's own voice whenever there is one
 }
 function speak(text, lang='ko-KR', rate=SET.rate){ return speakSeq([{text, lang, rate}]) }
 /* Read several items in order. English on Claude's voice goes out as ONE reading (one call, fixed voice, no per-line
@@ -737,7 +769,15 @@ async function speakSeq(items, onLine){
   for(const it of items){ if(onLine) onLine(it.id); if(useClaudeVoice(it.lang)){ try{ await ttsFn.speak(it.text, {voice: CLAUDE_VOICE, language: it.lang.slice(0,2), rate: it.rate}); continue }catch{} } await deviceSpeak(it.text, it.lang, it.rate) }
 }
 function deviceSpeak(text, lang, rate){
-  return new Promise(res => {
+  return new Promise(async res => {
+    const n = nativeTTS();
+    if(n){   // 안드로이드 앱: 기기 TTS 엔진으로 직접 읽기 (WebView에는 웹 음성 API가 없음)
+      await loadNativeVoices(); const v = pickNativeVoice(lang); lastVoice[lang.slice(0,2)] = v ? v.name : '기기 기본 음성';
+      const opt = { text, lang, rate: Math.max(0.5, Math.min(2, rate)), pitch: 1, volume: 1, category: 'ambient' };
+      try{ await n.speak(v ? Object.assign({voice: v.index}, opt) : opt) }
+      catch(e){ try{ await n.speak(opt) }catch(e2){ console.warn('native tts', e2) } }
+      return res();
+    }
     if('speechSynthesis' in window){
       const go = () => {
         const u = new SpeechSynthesisUtterance(text); u.lang = lang; u.rate = rate; const v = pickVoice(lang); if(v) u.voice = v;
@@ -931,7 +971,7 @@ async function readWordsFromPhotos(){
 사진에 있는 영어 단어·숙어를 빠짐없이, 사진에 적힌 순서대로 읽어 주세요. 뜻이 함께 적혀 있으면 그 뜻을 그대로 쓰고, 뜻이 없으면 초등학생 수준에 맞는 짧은 한국어 뜻을 직접 써 주세요.
 단어 옆에 영어 예문이 함께 적혀 있으면 example에 그 문장을 그대로 옮기고, 없으면 example은 "" 로 둡니다(예문을 지어내지 마세요).
 문제 번호, 체크 표시, 날짜 같은 단어와 무관한 글자는 무시합니다.
-반드시 JSON 배열만 출력하세요. 예: [{"word":"apple","meaning":"사과","example":"I like apples."},{"word":"take care of","meaning":"~을 돌보다","example":""}]`, S.v.wordPhotos);
+반드시 JSON 배열만 출력하세요. 예: [{"word":"apple","meaning":"사과","example":"I like apples."},{"word":"take care of","meaning":"~을 돌보다","example":""}]`, S.v.wordPhotos, {tier:'quick'});
   const arr = Array.isArray(data) ? data : (data?.words || []);
   const lines = arr.filter(w => w && w.word).map(w => `${String(w.word).trim()} = ${String(w.meaning||'').trim()}${w.example && String(w.example).trim() ? ' | ' + String(w.example).trim() : ''}`);
   if(!lines.length) throw {code:'empty_completion'};
@@ -1291,7 +1331,7 @@ $('readDict').onclick = async () => {
     const data = await AI.json(
 `이 사진은 초등학생이 외워야 하는 한글 받아쓰기 문장(또는 낱말) 목록입니다.
 사진에 있는 문장·낱말을 적힌 순서대로 빠짐없이 읽어 주세요. 글자, 띄어쓰기, 문장부호를 사진에 적힌 그대로 옮기고, 앞의 번호나 급수 표시는 뺍니다.
-반드시 JSON 문자열 배열만 출력하세요. 예: ["나는 학교에 갑니다.","토끼가 깡충깡충 뛰어요.","꽃밭"]`, S.d.photos);
+반드시 JSON 문자열 배열만 출력하세요. 예: ["나는 학교에 갑니다.","토끼가 깡충깡충 뛰어요.","꽃밭"]`, S.d.photos, {tier:'quick'});
     const arr = (Array.isArray(data) ? data : (data?.items || [])).map(x => typeof x==='string' ? x : (x?.text || '')).map(s => s.trim()).filter(Boolean);
     if(!arr.length) throw {code:'empty_completion'};
     const cur = $('dictList').value.trim();
