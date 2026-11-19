@@ -51,7 +51,6 @@ main::-webkit-scrollbar{width:8px}main::-webkit-scrollbar-thumb{background:var(-
 
 /* app bar */
 .bar{flex:none;z-index:9;background:var(--bg);padding:calc(10px + env(safe-area-inset-top,0px)) 0 8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-html.in-app .bar{padding-top:calc(10px + max(env(safe-area-inset-top,0px), 28px))}
 .brand{font-family:var(--display);font-size:28px;letter-spacing:.5px;color:var(--accent);line-height:1}
 .brand #brandText{color:#d6457a}
 .brand small{font-family:var(--font);font-size:12px;color:var(--muted);display:block;letter-spacing:.06em;margin-top:2px}
@@ -510,7 +509,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.19 22:55';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.19 22:56';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
