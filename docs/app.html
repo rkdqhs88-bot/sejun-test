@@ -509,7 +509,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.19 22:51';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.19 22:54';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1585,7 +1585,8 @@ document.querySelectorAll('[data-demo]').forEach(b => b.onclick = () => { const 
   $('buildTag').textContent = built ? '· 버전 ' + built : '';
   const src = window.__appSource, err = window.__appErr;
   const srcText = src==='remote' ? '인터넷에서 최신 버전을 받았어요' : src==='cache' ? '인터넷 연결이 안 되어 마지막으로 받아 둔 버전이에요' : src==='bundled' ? '앱에 내장된 버전이에요 (인터넷에서 받기 실패)' : (window.Capacitor ? '앱 내장 버전 (구버전 로더)' : 'claude.ai / 브라우저에서 실행 중');
-  $('sBuildInfo').textContent = `앱 버전: ${built || '(개발용)'} · ${srcText}` + (err ? ` · 실패 이유: ${err}` : '');
+  $('sBuildInfo').textContent = `앱 버전: ${built || '(개발용)'} · ${srcText}` + (err ? ` · 실패 이유: ${err}` : '') + (window.__shell ? ` · 설치된 APK: v${window.__shell}` : (window.Capacitor ? ' · 설치된 APK: v1.4 이하(음성 플러그인 없음 → 새 APK 설치 필요)' : ''));
+  if(window.Capacitor && !window.__shell) $('buildTag').textContent += ' · APK 구버전';
   $('sUpdate').onclick = () => { toast('최신 버전을 확인하는 중…', 2000); setTimeout(() => location.reload(), 300) };
 })();
 
