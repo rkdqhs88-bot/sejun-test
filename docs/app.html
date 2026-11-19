@@ -509,7 +509,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.19 22:49';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.19 22:51';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -742,8 +742,7 @@ function nativeTTS(){
     if(!isNative) return null;
     const p = cap.Plugins && cap.Plugins.TextToSpeech;
     if(p && typeof p.speak==='function'){ _ntts = { via:'plugins', speak:o=>p.speak(o), stop:()=>p.stop(), getSupportedVoices:()=>p.getSupportedVoices() }; return _ntts }
-    const hasHeader = Array.isArray(cap.PluginHeaders) ? cap.PluginHeaders.some(h => h.name==='TextToSpeech') : true;
-    if(hasHeader && typeof cap.nativePromise==='function'){
+    if(typeof cap.nativePromise==='function'){
       const call = (m, o) => cap.nativePromise('TextToSpeech', m, o||{});
       _ntts = { via:'bridge', speak:o=>call('speak', o), stop:()=>call('stop'), getSupportedVoices:()=>call('getSupportedVoices') }; return _ntts;
     }
@@ -751,6 +750,9 @@ function nativeTTS(){
   }catch{ return null }
 }
 function ttsEngineInfo(){ const n = nativeTTS(); if(n) return '앱 음성 플러그인(' + n.via + ')'; if('speechSynthesis' in window) return '브라우저 음성'; return '없음' }
+function ttsDiag(){ try{ const cap = window.Capacitor; if(!cap) return 'Capacitor 없음(androidBridge ' + (typeof window.androidBridge) + ')';
+  const heads = Array.isArray(cap.PluginHeaders) ? cap.PluginHeaders.map(h => h.name).join(',') : typeof cap.PluginHeaders;
+  return `platform=${typeof cap.getPlatform==='function' ? cap.getPlatform() : '?'} native=${typeof cap.isNativePlatform==='function' ? cap.isNativePlatform() : '?'} nativePromise=${typeof cap.nativePromise} Plugins=${cap.Plugins ? Object.keys(cap.Plugins).join(',') : 'x'} headers=${heads}` }catch(e){ return 'diag err ' + e } }
 let nativeVoices = null;
 async function loadNativeVoices(){ const n = nativeTTS(); if(!n) return []; if(nativeVoices) return nativeVoices; try{ const r = await n.getSupportedVoices(); nativeVoices = (r?.voices||[]).map((v,i) => ({ name: v.name || v.voiceURI || ('voice '+i), lang: (v.lang||'').replace('_','-'), index: i })) }catch{ nativeVoices = [] } return nativeVoices }
 function pickNativeVoice(lang){
@@ -811,7 +813,7 @@ function deviceSpeak(text, lang, rate){
       if(!speechSynthesis.getVoices().length){ let fired=false; speechSynthesis.onvoiceschanged = () => { if(!fired){ fired=true; go() } }; setTimeout(()=>{ if(!fired){ fired=true; go() } }, 400) } else go();
       return;
     }
-    toast('이 기기에서는 소리 읽기를 쓸 수 없어요.'); res();
+    toast('이 기기에서는 소리 읽기를 쓸 수 없어요. [' + ttsDiag() + ']', 10000); res();
   });
 }
 const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -1361,7 +1363,7 @@ $('readDict').onclick = async () => {
   }catch(e){ status($('dStatus'), errCopy(e)); if(e?.code!=='cancelled') toast(errCopy(e)) }
   finally{ refreshButtons() }
 };
-$('dVoiceTest').onclick = async () => { $('dVoiceTest').classList.add('speaking'); await speak(`${nameI(SET.name)}, 안녕! 받아쓰기 준비됐니?`, 'ko-KR'); $('dVoiceTest').classList.remove('speaking'); toast(`음성 엔진: ${ttsEngineInfo()} · ${lastVoice.ko || '음성 정보 없음'}` + (lastTtsErr ? ` · 오류: ${lastTtsErr}` : ''), 5000) };
+$('dVoiceTest').onclick = async () => { $('dVoiceTest').classList.add('speaking'); await speak(`${nameI(SET.name)}, 안녕! 받아쓰기 준비됐니?`, 'ko-KR'); $('dVoiceTest').classList.remove('speaking'); toast(`음성 엔진: ${ttsEngineInfo()} · ${lastVoice.ko || '음성 정보 없음'}` + (lastTtsErr ? ` · 오류: ${lastTtsErr}` : '') + ` · [${ttsDiag()}]`, 12000) };
 
 function startDict(items){
   const want = parseInt($('dCountIn').value,10);
