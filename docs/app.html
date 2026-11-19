@@ -343,8 +343,8 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
         </div>
         <div class="thumbs" id="wordThumbs"></div>
         <div class="status" id="wordStatus"></div>
-        <label class="f" style="margin-top:12px">단어 목록 <span style="font-weight:400">(한 줄에 하나, <code>영어 = 뜻</code>)</span>
-          <textarea id="wordList" placeholder="apple = 사과&#10;library = 도서관&#10;take care of = ~을 돌보다"></textarea>
+        <label class="f" style="margin-top:12px">단어 목록 <span style="font-weight:400">(한 줄에 하나, <code>영어 = 뜻</code>, 예문이 있으면 <code>| 예문</code>)</span>
+          <textarea id="wordList" placeholder="apple = 사과 | I like apples.&#10;library = 도서관&#10;take care of = ~을 돌보다"></textarea>
         </label>
         <div class="status" id="wordCount"></div>
       </div>
@@ -893,9 +893,10 @@ function parseWords(text){
   for(const raw of text.split('\n')){
     const line = raw.trim().replace(/^\d+[.)]\s*/,'');
     if(!line) continue;
-    const m = line.split(/\s*(?:=|:|—|–|\t| - )\s*/);
-    const word = (m[0]||'').trim(); const meaning = m.slice(1).join(' ').trim();
-    if(word) out.push({word, meaning});
+    const [main, ...ex] = line.split('|');
+    const m = main.split(/\s*(?:=|:|—|–|\t| - )\s*/);
+    const word = (m[0]||'').trim(); const meaning = m.slice(1).join(' ').trim(); const example = ex.join('|').trim();
+    if(word) out.push({word, meaning, example});
   }
   return out;
 }
@@ -927,11 +928,12 @@ async function readWordsFromPhotos(){
   status($('wordStatus'), '선생님이 사진을 읽고 있어요… (10~40초)', true);
   const data = await AI.json(
 `이 사진들은 학생이 외워야 하는 영어 단어 목록(단어장, 프린트, 교재 등)입니다.
-사진에 있는 영어 단어·숙어를 빠짐없이, 사진에 적힌 순서대로 읽어 주세요. 뜻이 함께 적혀 있으면 그 뜻을 그대로 쓰고, 뜻이 없으면 중학생 수준에 맞는 짧은 한국어 뜻을 직접 써 주세요.
+사진에 있는 영어 단어·숙어를 빠짐없이, 사진에 적힌 순서대로 읽어 주세요. 뜻이 함께 적혀 있으면 그 뜻을 그대로 쓰고, 뜻이 없으면 초등학생 수준에 맞는 짧은 한국어 뜻을 직접 써 주세요.
+단어 옆에 영어 예문이 함께 적혀 있으면 example에 그 문장을 그대로 옮기고, 없으면 example은 "" 로 둡니다(예문을 지어내지 마세요).
 문제 번호, 체크 표시, 날짜 같은 단어와 무관한 글자는 무시합니다.
-반드시 JSON 배열만 출력하세요. 예: [{"word":"apple","meaning":"사과"},{"word":"take care of","meaning":"~을 돌보다"}]`, S.v.wordPhotos);
+반드시 JSON 배열만 출력하세요. 예: [{"word":"apple","meaning":"사과","example":"I like apples."},{"word":"take care of","meaning":"~을 돌보다","example":""}]`, S.v.wordPhotos);
   const arr = Array.isArray(data) ? data : (data?.words || []);
-  const lines = arr.filter(w => w && w.word).map(w => `${String(w.word).trim()} = ${String(w.meaning||'').trim()}`);
+  const lines = arr.filter(w => w && w.word).map(w => `${String(w.word).trim()} = ${String(w.meaning||'').trim()}${w.example && String(w.example).trim() ? ' | ' + String(w.example).trim() : ''}`);
   if(!lines.length) throw {code:'empty_completion'};
   const cur = wordsText().trim();
   $('wordList').value = (cur ? cur + '\n' : '') + lines.join('\n');
@@ -977,11 +979,12 @@ ${styleText}
 - 보기가 없는 유형이면 choices는 빈 배열([])로 둡니다.
 - word에는 그 문항이 묻는 영어 단어(목록의 단어)를, meaning에는 그 단어의 한국어 뜻을 적습니다.
 - 지시문(instruction)은 시험지에 인쇄되는 문구로, 학생이 읽기 쉽게 한국어로 씁니다.
-- 빈칸 문장(blank/보기 유형)을 만들 때의 규칙: 학생은 초등학교 1학년입니다. (1) 문장은 3~7단어의 아주 쉬운 영어로, 빈칸 단어 외에는 I, you, like, have, is, a, the, my, big, red 같은 기초 단어만 씁니다. (2) 빈칸에 들어갈 수 있는 단어가 목록의 그 단어 하나뿐이도록 문장을 만듭니다(예: "I eat an ______." 처럼 여러 단어가 가능하면 안 되고 "A red ______ grows on a tree. (사과)"처럼 뜻이 정해지게). (3) 빈칸은 밑줄 6개(______)로 표시하고, 문장 뒤 괄호 안에 빈칸 단어의 한국어 뜻을 적습니다. (4) 빈칸 단어는 문장에 다른 형태로라도 다시 나오면 안 됩니다. (5) 같은 시험 안에서 문장 패턴을 다양하게 합니다.
+- 빈칸 문장(blank/보기 유형)을 만들 때, 단어 목록에 "예문:"이 붙어 있는 단어는 반드시 그 예문을 그대로 쓰고 그 단어 자리만 빈칸(______)으로 바꿉니다(단어가 문장 안에서 apples처럼 다른 형태면 그 형태 그대로가 정답이고 answer도 그 형태로 적습니다). 예문이 없는 단어만 아래 규칙으로 새 문장을 만듭니다.
+- 새 문장을 만드는 규칙: 학생은 초등학교 1학년입니다. (1) 문장은 3~7단어의 아주 쉬운 영어로, 빈칸 단어 외에는 I, you, like, have, is, a, the, my, big, red 같은 기초 단어만 씁니다. (2) 빈칸에 들어갈 수 있는 단어가 목록의 그 단어 하나뿐이도록 문장을 만듭니다(예: "I eat an ______." 처럼 여러 단어가 가능하면 안 되고 "A red ______ grows on a tree. (사과)"처럼 뜻이 정해지게). (3) 빈칸은 밑줄 6개(______)로 표시하고, 문장 뒤 괄호 안에 빈칸 단어의 한국어 뜻을 적습니다. (4) 빈칸 단어는 문장에 다른 형태로라도 다시 나오면 안 됩니다. (5) 같은 시험 안에서 문장 패턴을 다양하게 합니다.
 - phonics는 word의 철자를 파닉스 단위로 왼쪽부터 빠짐없이 나눈 배열입니다. 한 글자, 또는 sh, ch, th, ee, oo, ai, igh, ck 같은 소리 묶음이 한 칸입니다. 모든 letters를 이어 붙이면 word와 같아야 합니다(공백은 letters " "로 한 칸). say는 영어 음성합성기가 그 "소리"를 내도록 적은 발음용 철자입니다. 글자 이름이 아니라 소리입니다: p→"puh", b→"buh", t→"tuh", a(apple)→"ah", e(egg)→"eh", i(ink)→"ih", o(ox)→"aw", u(up)→"uh", s→"sss", m→"mmm", sh→"shh", ee→"ee", 묵음(magic e 등)→"". tip은 그 묶음에 대한 아주 짧은 한국어 설명(없으면 "")입니다.
 
 단어 목록:
-${list.map((w,i)=>`${i+1}. ${w.word}${w.meaning?' = '+w.meaning:''}`).join('\n')}
+${list.map((w,i)=>`${i+1}. ${w.word}${w.meaning?' = '+w.meaning:''}${w.example?' | 예문: '+w.example:''}`).join('\n')}
 
 반드시 아래 형태의 JSON 객체만 출력하세요(설명 금지):
 {"title":"${label||'영단어 시험'}","sections":[{"instruction":"다음 영어 단어의 뜻을 쓰세요.","choices":[],"questions":[{"n":1,"word":"apple","meaning":"사과","prompt":"apple","answer":"사과","accept":["사과"],"answer_lang":"ko","hint":"","phonics":[{"letters":"a","say":"ah","tip":""},{"letters":"pp","say":"puh","tip":"p 두 개지만 소리는 한 번"},{"letters":"le","say":"ul","tip":""}]}]}]}`;
