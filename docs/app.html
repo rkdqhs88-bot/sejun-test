@@ -326,6 +326,8 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 .sp .legs{transform-box:fill-box;transform-origin:center;animation:legs .4s ease-in-out infinite alternate}
 @keyframes legs{from{transform:translateX(-1px)}to{transform:translateX(1px)}}
 .sp .light{animation:blink 2s ease-in-out infinite alternate}
+.sp .rot{display:inline-block;animation:spin 2.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 @keyframes blink{from{opacity:.5}to{opacity:1}}
 .sp.deep{filter:drop-shadow(0 0 10px rgba(120,220,255,.55))}
 /* hero */
@@ -700,7 +702,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 12:57';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 13:02';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1878,6 +1880,10 @@ const SHAPES = {
   boulder: c => `<svg viewBox="-40 -34 80 60"><path d="M-38,20 C-40,-6 -22,-30 4,-30 C28,-30 40,-10 38,20 Z" fill="${c}" stroke="rgba(0,0,0,.18)" stroke-width="1.5"/><path d="M-22,0 C-14,-14 2,-18 14,-10" stroke="rgba(255,255,255,.3)" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M-6,8 q10,-4 20,2" stroke="rgba(0,0,0,.15)" stroke-width="2" fill="none"/></svg>`,
   falls: c => `<svg viewBox="-20 -60 40 70"><path d="M-10,-58 C-12,-30 -8,-10 -12,8 L12,8 C8,-10 12,-30 10,-58 Z" fill="${c}" opacity=".85"/><path d="M-4,-56 C-5,-30 -3,-10 -5,6 M4,-56 C5,-30 3,-10 5,6" stroke="#fff" stroke-width="1.5" opacity=".8"/><ellipse cx="0" cy="8" rx="16" ry="4" fill="#fff" opacity=".6"/></svg>`,
   birds: c => `<svg viewBox="-40 -16 80 32"><g stroke="${c}" stroke-width="2" fill="none" stroke-linecap="round"><path d="M-30,0 q5,-6 10,0 q5,-6 10,0 M-8,-8 q5,-6 10,0 q5,-6 10,0 M14,2 q5,-6 10,0 q5,-6 10,0"/></g></svg>`,
+  frog: c => `<svg viewBox="-40 -34 80 60"><g class="legs"><path d="M-22,8 C-34,4 -36,16 -26,20 L-14,16" fill="${c}" stroke="rgba(0,0,0,.2)" stroke-width="1"/><path d="M22,8 C34,4 36,16 26,20 L14,16" fill="${c}" stroke="rgba(0,0,0,.2)" stroke-width="1"/><path d="M-26,20 l-8,4 M-26,20 l-6,6 M26,20 l8,4 M26,20 l6,6" stroke="${c}" stroke-width="3" stroke-linecap="round"/></g><ellipse cx="0" cy="6" rx="22" ry="15" fill="${c}" stroke="rgba(0,0,0,.18)" stroke-width="1.2"/><ellipse cx="0" cy="10" rx="14" ry="8" fill="#e8f5c8" opacity=".9"/><path d="M-14,-6 C-12,-18 12,-18 14,-6 C8,-10 -8,-10 -14,-6 Z" fill="${c}"/><circle cx="-10" cy="-10" r="7" fill="${c}" stroke="rgba(0,0,0,.18)"/><circle cx="10" cy="-10" r="7" fill="${c}" stroke="rgba(0,0,0,.18)"/><circle cx="-10" cy="-10" r="4.5" fill="#fff"/><circle cx="10" cy="-10" r="4.5" fill="#fff"/><circle cx="-9" cy="-10" r="2.2" fill="#1b2238"/><circle cx="11" cy="-10" r="2.2" fill="#1b2238"/><path d="M-6,0 q6,5 12,0" stroke="#2d5a1b" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="-16" cy="2" r="2.5" fill="#ff8a80" opacity=".5"/><circle cx="16" cy="2" r="2.5" fill="#ff8a80" opacity=".5"/><path d="M-12,22 l-6,4 M-8,22 l-2,6 M12,22 l6,4 M8,22 l2,6" stroke="${c}" stroke-width="3" stroke-linecap="round"/></svg>`,
+  salamander: c => `<svg viewBox="-44 -20 88 40"><g class="legs" stroke="${c}" stroke-width="4" stroke-linecap="round" fill="none"><path d="M-14,6 l-8,10 M-14,6 l-10,2 M10,6 l8,10 M10,6 l10,2 M-14,-4 l-8,-10 M10,-4 l8,-10"/></g><path d="M-18,0 C-28,-2 -36,4 -42,10" stroke="${c}" stroke-width="7" stroke-linecap="round" fill="none"/><ellipse cx="0" cy="0" rx="20" ry="8" fill="${c}"/><circle cx="24" cy="-1" r="8" fill="${c}"/><g fill="#ffd54f"><circle cx="-8" cy="-3" r="2"/><circle cx="2" cy="3" r="2"/><circle cx="10" cy="-3" r="1.8"/><circle cx="-16" cy="2" r="1.6"/></g><circle cx="27" cy="-3" r="2" fill="#fff"/><circle cx="27.6" cy="-3" r="1.1" fill="#1b2238"/></svg>`,
+  beetle: c => `<svg viewBox="-24 -20 48 40"><g class="legs" stroke="${c}" stroke-width="2.5" stroke-linecap="round" fill="none"><path d="M-8,2 l-12,6 M8,2 l12,6 M-6,-4 l-12,-6 M6,-4 l12,-6 M-4,8 l-8,8 M4,8 l8,8"/></g><ellipse cx="0" cy="2" rx="12" ry="15" fill="${c}"/><path d="M0,-12 V16" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/><circle cx="0" cy="-12" r="5" fill="${c}"/><path d="M-6,-4 C-4,4 4,4 6,-4" stroke="rgba(255,255,255,.3)" stroke-width="1.5" fill="none"/></svg>`,
+  snake: c => `<svg viewBox="-46 -16 92 32"><g class="legs"><path d="M-42,0 C-32,-13 -22,13 -12,0 C-2,-13 8,13 18,0 C24,-7 28,-5 32,0" stroke="${c}" stroke-width="6.5" fill="none" stroke-linecap="round"/><path d="M-42,0 C-32,-13 -22,13 -12,0 C-2,-13 8,13 18,0" stroke="rgba(255,255,255,.25)" stroke-width="2" fill="none"/></g><ellipse cx="36" cy="0" rx="8" ry="5.5" fill="${c}"/><circle cx="39" cy="-2" r="1.8" fill="#fff"/><circle cx="39.6" cy="-2" r="1" fill="#1b2238"/><path d="M44,0 l5,-2.5 M44,0 l5,2.5" stroke="#e53935" stroke-width="1.5" stroke-linecap="round"/></svg>`,
   egg: c => `<svg viewBox="-30 -36 60 72"><path d="M0,-34 C18,-34 28,-10 28,8 C28,24 14,34 0,34 C-14,34 -28,24 -28,8 C-28,-10 -18,-34 0,-34 Z" fill="${c}"/><circle cx="-8" cy="-6" r="4" fill="rgba(0,0,0,.12)"/><circle cx="10" cy="8" r="5" fill="rgba(0,0,0,.12)"/></svg>`,
   chest: c => `<svg viewBox="-40 -30 80 60"><rect x="-34" y="-6" width="68" height="34" rx="4" fill="${c}"/><path d="M-34,-6 C-34,-28 34,-28 34,-6 Z" fill="${c}" opacity=".85"/><rect x="-34" y="-8" width="68" height="6" fill="#f0c24b"/><rect x="-6" y="-2" width="12" height="12" rx="2" fill="#f0c24b"/><g class="light"><circle cx="-14" cy="-14" r="3" fill="#fff8b0"/><circle cx="14" cy="-16" r="2" fill="#fff8b0"/></g></svg>`,
 };
@@ -1891,12 +1897,12 @@ const POOLS = {
     F('갈겨니','옆줄이 예뻐요','c',.65,{body:'oval',c1:'#b3e5fc',c2:'#4fc3f7',pat:'stripes',c3:'#01579b'}), F('참붕어','작은 붕어','c',.7,{body:'oval',c1:'#ffe082',c2:'#ffb300'}), F('미꾸라지','미끌미끌 바닥 친구','c',.7,{body:'eel',c1:'#a1887f',c2:'#5d4037',pat:'spots'}),
     F('돌고기','돌 틈에 숨어요','u',.6,{body:'long',c1:'#bcaaa4',c2:'#6d4c41',pat:'stripes',c3:'#3e2723'}), F('꺽지','냇가의 작은 사냥꾼','u',.8,{body:'tall',c1:'#a5d6a7',c2:'#2e7d32',pat:'band'}), F('쉬리','우리나라에만 사는 물고기','r',.7,{body:'long',c1:'#fff59d',c2:'#f9a825',pat:'stripes',c3:'#1b2238'}),
     F('금강모치','차가운 물을 좋아해요','r',.6,{body:'long',c1:'#ffccbc',c2:'#e64a19',pat:'stripes',c3:'#3e2723'}), F('열목어','맑은 물의 보석','e',1,{body:'long',c1:'#f8bbd0',c2:'#ad1457',pat:'spots'}), F('산천어','계곡의 왕자','e',1,{body:'long',c1:'#c5e1a5',c2:'#558b2f',pat:'spots',c3:'#263238'}),
-    SH('올챙이','꼬물꼬물 헤엄쳐요','c',.5,'tadpole','#37474f','swim'), EM('청개구리','개굴개굴','u',.9,'🐸','bounce'), SH('소금쟁이','물 위를 미끄러져요','c',.8,'strider','#37474f','float'),
-    SH('가재','뒷걸음질 선수','u',.8,'crab','#8d6e63','crawl'), SH('다슬기','돌에 붙어 사는 민물 고둥','c',.55,'snail','#5d4037'), SH('조약돌','매끈매끈','c',.9,'rock','#90a4ae'),
-    SH('큰 바위','물고기들의 쉼터','u',1.5,'rock','#78909c'), SH('갈대','바람에 사각사각','c',1.5,'reed','#8bc34a','sway'), SH('검정말','가늘고 긴 민물 수초','c',1.1,'grass','#66bb6a','sway'),
+    SH('올챙이','꼬물꼬물 헤엄쳐요','c',.5,'tadpole','#37474f','swim'), SH('청개구리','연잎 위에서 폴짝폴짝','u',.9,'frog','#66bb6a','hop',{needs:'연잎'}), SH('소금쟁이','물 위를 미끄러져요','c',.8,'strider','#37474f','float'),
+    SH('가재','뒷걸음질 선수','u',.8,'crab','#8d6e63','crawl'), SH('다슬기','돌에 붙어 사는 민물 고둥','c',.55,'snail','#5d4037'), SH('도롱뇽','계곡 바위 밑에 살아요','u',.9,'salamander','#5d4037','crawl'),
+    SH('물방개','물속을 헤엄치는 딱정벌레','c',.6,'beetle','#3e2723','swim'), SH('갈대','바람에 사각사각','c',1.5,'reed','#8bc34a','sway'), SH('검정말','가늘고 긴 민물 수초','c',1.1,'grass','#66bb6a','sway'),
     SH('붕어마름 숲','송사리 놀이터','u',1.6,'grass','#43a047','sway'), SH('연잎','개구리 의자','u',1.2,'lily','#66bb6a','float'), EM('아기 오리','삐약삐약 둥둥','r',.9,'🦆','float'),
     SH('고추잠자리','냇가 위를 날아요','c',1,'dragonfly','#e53935','fly'), SH('들꽃','둑에 핀 꽃','c',.9,'flower','#f06292','none',{bank:true}), SH('물가 돌탑','소원을 빌어요','r',1.3,'rock','#b0bec5'),
-    EM('거북이','느릿느릿 일광욕','r',1,'🐢','crawl'), SH('노란 들꽃','나비가 좋아해요','c',.9,'flower','#ffca28','none',{bank:true}), F('황어','봄에 붉어져요','u',.9,{body:'long',c1:'#ef9a9a',c2:'#c62828',pat:'belly'}),
+    SH('남생이','계곡에 사는 민물 거북','r',1,'turtle','#4caf50','crawl'), SH('노란 들꽃','나비가 좋아해요','c',.9,'flower','#ffca28','none',{bank:true}), F('황어','봄에 붉어져요','u',.9,{body:'long',c1:'#ef9a9a',c2:'#c62828',pat:'belly'}),
   ]},
   2: { name:'Lv2 낙동강', hint:'갈대밭이 펼쳐진 넓은 강', items:[
     F('잉어','오래 사는 큰 물고기','c',1.3,{body:'oval',c1:'#ffcc80',c2:'#ef6c00',pat:'spots'}), F('비단잉어','알록달록 비단 옷','r',1.3,{body:'oval',c1:'#fff',c2:'#ff7043',pat:'spots',c3:'#e64a19'}), F('붕어','강의 대표 선수','c',.9,{body:'oval',c1:'#fff9c4',c2:'#fbc02d'}),
@@ -1906,9 +1912,9 @@ const POOLS = {
     F('연어','고향으로 돌아와요','e',1.3,{body:'long',c1:'#ffab91',c2:'#d84315',pat:'spots'}), F('철갑상어','살아 있는 화석','e',1.8,{body:'eel',c1:'#b0bec5',c2:'#455a64',pat:'stripes',c3:'#263238'}), F('황쏘가리','황금빛 쏘가리','e',1.1,{body:'tall',c1:'#fff59d',c2:'#f9a825'}),
     SH('자라','등딱지가 말랑','u',1,'turtle','#8d6e63','crawl'), SH('민물게','옆으로 총총','c',.7,'crab','#6d4c41','crawl'), SH('말조개','진흙 속 길쭉한 조개','c',.7,'mussel','#5d4037'),
     SH('연꽃잎','물 위의 초록 접시','c',1.3,'lily','#4caf50','float'), SH('갈대밭','강가의 바람','c',1.6,'reed','#9e9d24','sway'), SH('나사말','강바닥의 긴 풀','c',1.2,'grass','#388e3c','sway'),
-    SH('자갈밭','반질반질 자갈','c',1,'rock','#9e9e9e'), SH('나룻배','강을 건너요','r',1.6,'boat','#8d6e63','float'), EM('수달','물장구 선수','r',1,'🦦','swim'),
-    EM('왜가리','긴 다리 낚시꾼','u',1.3,'🪿','float'), EM('청둥오리','둥둥 떠다녀요','c',.9,'🦆','float'), EM('두꺼비','엉금엉금 두꺼비','c',.9,'🐸','crawl',{hue:40}),
-    EM('물뱀','스르륵 헤엄','u',1,'🐍','swim'), SH('잠긴 나무','물고기 아파트','u',1.5,'reed','#5d4037'), SH('강바닥 바위','이끼 낀 바위','c',1.3,'rock','#607d8b'),
+    SH('자갈밭','반질반질 자갈','c',1,'rock','#9e9e9e'), SH('나룻배','강을 건너요','r',1.6,'boat','#8d6e63','float'), EM('수달','빙글빙글 돌며 헤엄치는 물장구 선수','r',1,'🦦','dash',{spin:true,slow:true}),
+    EM('왜가리','긴 다리 낚시꾼','u',1.3,'🪿','float'), EM('청둥오리','둥둥 떠다녀요','c',.9,'🦆','float'), SH('두꺼비','둑 위를 엉금엉금','c',.9,'frog','#a1887f','crawl',{bank:true}),
+    SH('물뱀','물 위를 슈슝 헤엄쳐요','u',1.2,'snake','#558b2f','dash'), SH('잠긴 나무','물고기 아파트','u',1.5,'reed','#5d4037'), SH('강바닥 바위','이끼 낀 바위','c',1.3,'rock','#607d8b'),
   ]},
   3: { name:'Lv3 해운대 해수욕장', hint:'빌딩이 보이는 햇살 가득한 바다', items:[
     F('흰동가리','말미잘 속 니모','c',.7,{body:'oval',c1:'#ffb74d',c2:'#e65100',pat:'band'}), F('블루탱','파란 도리','u',.9,{body:'tall',c1:'#64b5f6',c2:'#0d47a1',pat:'spots',c3:'#000'}), F('노랑나비고기','노란 나비','c',.8,{body:'tall',c1:'#fff176',c2:'#f9a825',pat:'band'}),
@@ -2005,8 +2011,10 @@ const HERO_BAND = { 1:[38,38.5], 2:[30,34], 3:[28,36], 4:[30,82], 5:[16,82] };  
 // 아이템 종류별로 놓이는 높이 구역(%). 수면·하늘은 물이 시작되는 높이에 따라 달라요.
 function bandFor(lv, it){
   const wt = WATER_TOP[lv], m = it.m;
-  if(it.bank) return [33,37];
+  if(it.bank) return [wt-7, wt-3];
   if(m==='float') return [wt+1, wt+4];
+  if(m==='hop') return [wt-4, wt+4];
+  if(m==='dash') return [wt+1, wt+3];
   if(m==='fly') return [Math.max(4, wt-32), Math.max(10, wt-10)];
   if(m==='crawl'||m==='none'||m==='sway') return [82,90];
   if(m==='drift') return [wt+12, 68];
@@ -2079,8 +2087,9 @@ const Play = {
     const lv = this.data.lv, def = POOLS[lv].items[rec.id]; if(!def) return;
     const el = document.createElement('div'); el.className = 'sp' + (def.f ? ' fish' : '') + (def.deep ? ' deep' : ''); el.title = def.n;
     if(def.f) el.innerHTML = fishSVG(def.f); else if(def.sh) el.innerHTML = SHAPES[def.sh](def.c); else el.textContent = def.e;
+    if(def.spin) el.innerHTML = `<span class="rot">${el.innerHTML}</span>`;
     if(def.hue) el.style.filter = `hue-rotate(${def.hue}deg)`;
-    const sp = { el, name: def.n, move: def.m, scale: def.s, x: rec.x, y: rec.y, dir: rec.dir||(Math.random()<.5?-1:1), speed: rec.speed || (0.5+Math.random()*0.9), phase: Math.random()*6.28, baseY: rec.y, faces: def.f ? 1 : (def.e ? -1 : 0) };
+    const sp = { el, name: def.n, move: def.m, scale: def.s, x: rec.x, y: rec.y, dir: rec.dir||(Math.random()<.5?-1:1), speed: def.n==='연잎' ? 0 : (rec.speed || (0.5+Math.random()*0.9)), phase: Math.random()*6.28, baseY: rec.y, faces: (def.f || def.sh==='snake' || def.sh==='salamander') ? 1 : (def.e ? -1 : 0), slow: !!def.slow };
     if(fresh){ el.style.transition = 'opacity .6s'; el.style.opacity = '0'; requestAnimationFrame(() => el.style.opacity = '1') }
     $('sprites').appendChild(el); this.sprites.push(sp); return sp;
   },
@@ -2097,6 +2106,8 @@ const Play = {
         case 'drift': y = sp.baseY + Math.sin(sp.phase*0.8)*6; x += Math.sin(sp.phase*0.5)*0.02; break;
         case 'float': y = sp.baseY + Math.sin(sp.phase*0.9)*0.8; x += sp.dir * sp.speed * 0.6 * dt; break;
         case 'bounce': y = sp.baseY - Math.abs(Math.sin(sp.phase*3))*6; x += sp.dir * sp.speed * 1.5 * dt; break;
+        case 'hop': y = sp.baseY - Math.abs(Math.sin(sp.phase*2.2))*5; break;
+        case 'dash': x += sp.dir * sp.speed * (sp.slow ? 4 : 10) * dt; y = sp.baseY + Math.sin(sp.phase*5)*0.6; break;
       }
       if(x < 5){ x = 5; sp.dir = 1 } if(x > 95){ x = 95; sp.dir = -1 }
       if(sp.move==='swim' || sp.move==='drift'){ const wt = WATER_TOP[this.data.lv] + 6; if(y < wt) y = wt }
@@ -2135,10 +2146,14 @@ const Play = {
     this.data.coins -= 1; this.data.pulls += 1;
     const total = Object.values(RARITY).reduce((a,r)=>a+r.w,0); let roll = Math.random()*total, rar = 'c';
     for(const [k,r] of Object.entries(RARITY)){ roll -= r.w; if(roll <= 0){ rar = k; break } }
-    let cands = pool.items.map((it,i)=>({it,i})).filter(o => o.it.r===rar); if(!cands.length) cands = pool.items.map((it,i)=>({it,i}));
+    const have = n => this.data.items[lv].some(r => POOLS[lv].items[r.id]?.n === n);
+    const ok = it => !it.needs || have(it.needs);   // 예: 청개구리는 연잎이 있어야 나와요
+    let cands = pool.items.map((it,i)=>({it,i})).filter(o => o.it.r===rar && ok(o.it)); if(!cands.length) cands = pool.items.map((it,i)=>({it,i})).filter(o => ok(o.it));
     const {it, i} = pick(cands); const m = it.m;
     const yBand = bandFor(lv, it);
     const rec = { id:i, x: 8+Math.random()*84, y: yBand[0] + Math.random()*(yBand[1]-yBand[0]), dir: Math.random()<.5?-1:1, speed: 0.5+Math.random()*0.9, t: Date.now() };
+    if(it.n==='연잎') rec.speed = 0;   // 연잎은 제자리에
+    if(it.needs){ const pads = this.data.items[lv].filter(r => POOLS[lv].items[r.id]?.n === it.needs); if(pads.length){ const pad = pick(pads); rec.x = pad.x; rec.y = pad.y - 3.5 } }
     this.data.items[lv].push(rec); this.save();
     this.pending = rec;
     const r = RARITY[rar]; $('rvRarity').textContent = `${r.stars} ${r.label}`; $('rvRarity').className = 'rarity rar-' + rar;
