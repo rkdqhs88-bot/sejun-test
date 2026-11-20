@@ -1964,6 +1964,8 @@ const RARITY = { c:{w:60,label:'보통',stars:'★'}, u:{w:28,label:'조금 희�
 const UNLOCK_AT = 30;   // 이 개수를 넘기면 다음 레벨이 열려요
 const CREATURE_SHAPES = ['frog','crab','turtle','octo','jelly','tadpole','snake','salamander','beetle','dragonfly','strider','star','sub'];
 const isAlive = def => !!(def.f || def.e || (def.sh && CREATURE_SHAPES.includes(def.sh)));
+const BIRD_EMOJI = ['🦆','🪿','🐦','🦅','🦇','🐧'];
+const isBird = def => !!(def.e && BIRD_EMOJI.includes(def.e)) || def.sh==='birds';
 const WATER_TOP = { 1:40, 2:31, 3:22, 4:18, 5:0 };   // 화면 위에서 물이 시작되는 높이(%)
 // 기본 풍경(뽑기와 무관하게 항상 있는 것): 냇가의 꽃·자갈·풀, 강가의 나무, 해변의 파라솔·구름
 const DECOR = {
@@ -2096,7 +2098,7 @@ const Play = {
     if(def.f) el.innerHTML = fishSVG(def.f); else if(def.sh) el.innerHTML = SHAPES[def.sh](def.c); else el.textContent = def.e;
     if(def.spin) el.innerHTML = `<span class="rot">${el.innerHTML}</span>`;
     if(def.hue) el.style.filter = `hue-rotate(${def.hue}deg)`;
-    const sp = { el, name: def.n, move: def.m, scale: def.s, x: rec.x, y: rec.y, dir: rec.dir||(Math.random()<.5?-1:1), speed: (def.sh==='lily') ? 0 : (rec.speed || (0.5+Math.random()*0.9)), phase: Math.random()*6.28, baseY: rec.y, faces: (def.f || def.sh==='snake' || def.sh==='salamander') ? 1 : (def.e ? -1 : 0), slow: !!def.slow, bank: !!def.bank, eager: 0.5 + Math.random()*1.2, alive: isAlive(def), air: def.m==='fly' || def.m==='hop' || !!def.bank };
+    const sp = { el, name: def.n, move: def.m, scale: def.s, x: rec.x, y: rec.y, dir: rec.dir||(Math.random()<.5?-1:1), speed: (def.sh==='lily') ? 0 : (rec.speed || (0.5+Math.random()*0.9)), phase: Math.random()*6.28, baseY: rec.y, faces: (def.f || def.sh==='snake' || def.sh==='salamander') ? 1 : (def.e ? -1 : 0), slow: !!def.slow, bank: !!def.bank, eager: 0.5 + Math.random()*1.2, alive: isAlive(def), air: def.m==='fly' || def.m==='hop' || !!def.bank, bird: isBird(def) };
     if(fresh){ el.style.transition = 'opacity .6s'; el.style.opacity = '0'; requestAnimationFrame(() => el.style.opacity = '1') }
     $('sprites').appendChild(el); this.sprites.push(sp); return sp;
   },
@@ -2109,6 +2111,14 @@ const Play = {
     const SEEK = ['swim','dash','drift','crawl'];
     for(const sp of this.sprites){
       let {x, y} = sp; sp.phase += dt;
+      if(sp.flap){                       // 새: 날개 파닥 + 포물선으로 살짝 떠올랐다 착지
+        const pr = (now - sp.flap.t0) / sp.flap.dur;
+        if(pr < 1){ x += sp.flap.dx * dt; y = sp.flap.y0 - Math.sin(pr*Math.PI) * 9; if(x < 5) x = 5; if(x > 95) x = 95; sp.x = x; sp.y = y;
+          const wob = Math.sin(now/45) * 14, sq = 1 + Math.sin(now/45) * 0.12;
+          const flipB = sp.faces===-1 ? (sp.dir>0 ? -1 : 1) : 1;
+          sp.el.style.transform = `translate(${x/100*W}px, ${y/100*H}px) translate(-50%,-50%) scaleX(${flipB}) rotate(${wob}deg) scale(1,${sq})`; continue }
+        sp.flap = null; sp.y = sp.flap_y0 ?? sp.baseY;
+      }
       if(sp.dart){                       // 톡 치면 슝! 하고 달아나요
         if(now < sp.dart.until){ x += sp.dart.dir * 55 * dt; if(sp.move==='hop' || sp.move==='float') y = sp.baseY - 4; sp.x = x; sp.y = y; if(x < 5){ sp.x = 5; sp.dart.dir = 1; sp.dir = 1 } if(x > 95){ sp.x = 95; sp.dart.dir = -1; sp.dir = -1 }
           const flipD = sp.faces===1 ? (sp.dir<0 ? -1 : 1) : sp.faces===-1 ? (sp.dir>0 ? -1 : 1) : 1;
@@ -2213,7 +2223,9 @@ const Play = {
       const vx = (Math.random()<.5?-1:1) * (3 + Math.random()*7), vy = o.move==='crawl' ? 0 : (Math.random()<.5?-1:1) * (1.5 + Math.random()*5);
       o.scatter = { until: performance.now() + 700 + Math.random()*700, vx, vy }; o.dir = vx > 0 ? 1 : -1; o.baseY = o.y }
   },
-  dart(sp){ if(!sp.alive) return; sp.dart = { until: performance.now() + 750, dir: sp.dir || 1 }; if(!sp.air && sp.y > WATER_TOP[this.data.lv] + 1) this.bubbles(sp.x, sp.y, 7); },
+  dart(sp){ if(!sp.alive) return;
+    if(sp.bird){ sp.flap = { t0: performance.now(), dur: 1300, y0: sp.baseY, dx: (Math.random()<.5?-1:1) * (2+Math.random()*4) }; return }   // 새: 파닥이며 살짝 날았다가 내려앉아요
+    sp.dart = { until: performance.now() + 750, dir: sp.dir || 1 }; if(!sp.air && sp.y > WATER_TOP[this.data.lv] + 1) this.bubbles(sp.x, sp.y, 7); },
   go(d){ const lv = this.data.lv + d; if(!POOLS[lv]) return; this.data.lv = lv; this.save(); this.render(); },
 };
 $('pGacha').onclick = () => Play.pull();
