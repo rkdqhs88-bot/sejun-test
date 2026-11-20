@@ -269,9 +269,11 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 .scene.lv2 .scenebg{background:linear-gradient(#cfe9ff 0%,#f3f9ff 15%,#9fb7a0 19%,#b8c48a 25%,#cdb96a 29%,#7fb7d1 31%,#3f8aa8 65%,#5f7a55 90%,#44583a 100%)}
 .scene.lv2 .scenebg::before{content:"";position:absolute;left:-10%;right:-10%;top:9%;height:11%;background:radial-gradient(ellipse at 15% 100%,#8fa9b8 0 40%,transparent 41%),radial-gradient(ellipse at 48% 100%,#7f9bab 0 46%,transparent 47%),radial-gradient(ellipse at 82% 100%,#8fa9b8 0 42%,transparent 43%);opacity:.9}
 /* 해수욕장: 하늘·해 → 수평선 → 얕은 바다 → 모래 */
-.scene.lv3 .scenebg{background:linear-gradient(#8fd4ff 0%,#dff4ff 16%,#2f9fd0 18%,#1f8bc0 22%,#5bc8e8 23%,#f6e7bd 25%,#efd9a4 33%,#39c6d6 34%,#1fa7c4 60%,#f1dfae 86%,#d9c48d 100%)}
+.scene.lv3 .scenebg{background:linear-gradient(#8fd4ff 0%,#dff4ff 9%,#1b6fb0 10%,#1f8bc0 16%,#2aa6cf 30%,#3fc3dc 52%,#6fdbe6 68%,#a8ecef 73%,#fff8e6 74.5%,#f6e7bd 76%,#efd9a4 90%,#e6cc93 100%)}
+.scene.lv3 .scenebg::after{content:"";position:absolute;left:0;right:0;top:73%;height:2.5%;background:repeating-linear-gradient(90deg,rgba(255,255,255,.9) 0 26px,rgba(255,255,255,.3) 26px 44px);border-radius:50%;filter:blur(2px);opacity:.8}
+.scene.lv3 .hero{filter:drop-shadow(0 3px 4px rgba(0,0,0,.28))}
 .scene.lv3 .scenebg::before{content:"";position:absolute;right:10%;top:3%;width:60px;height:60px;border-radius:50%;background:radial-gradient(#fff8c4,#ffd54f 60%,rgba(255,213,79,0) 72%);box-shadow:0 0 40px 10px rgba(255,236,150,.6)}
-.farbridge{position:absolute;left:4%;width:58%;top:10%;height:10%;pointer-events:none;opacity:.85}
+.farbridge{position:absolute;left:0;width:100%;top:5.5%;height:7%;pointer-events:none;opacity:.92}
 .farbridge svg{width:100%;height:100%;display:block}
 .flow{position:absolute;left:0;right:0;pointer-events:none;background:repeating-linear-gradient(100deg,transparent 0 60px,rgba(255,255,255,.18) 60px 90px,transparent 90px 160px);background-size:220px 100%;animation:flow 5s linear infinite;opacity:.8}
 .scene.lv2 .flow{animation-duration:9s;opacity:.5}
@@ -711,7 +713,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 13:24';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 13:31';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1971,7 +1973,8 @@ const CREATURE_SHAPES = ['frog','crab','turtle','octo','jelly','tadpole','snake'
 const isAlive = def => !!(def.f || def.e || (def.sh && CREATURE_SHAPES.includes(def.sh)));
 const BIRD_EMOJI = ['🦆','🪿','🐦','🦅','🦇','🐧'];
 const isBird = def => !!(def.e && BIRD_EMOJI.includes(def.e)) || def.sh==='birds';
-const WATER_TOP = { 1:40, 2:31, 3:34, 4:20, 5:0 };   // 화면 위에서 물이 시작되는 높이(%)
+const WATER_TOP = { 1:40, 2:31, 3:16, 4:20, 5:0 };
+const WATER_BOT = { 1:90, 2:90, 3:72, 4:90, 5:90 };   // 물 바닥(해운대는 아래가 모래사장)   // 화면 위에서 물이 시작되는 높이(%)
 // 기본 풍경(뽑기와 무관하게 항상 있는 것): 냇가의 꽃·자갈·풀, 강가의 나무, 해변의 파라솔·구름
 const DECOR = {
   1: [ {sh:'cloud',c:'#fff',x:14,y:5,s:1.4},{sh:'cloud',c:'#fff',x:66,y:7,s:1.1},
@@ -1982,7 +1985,7 @@ const DECOR = {
   2: [ {sh:'cloud',c:'#fff',x:18,y:5,s:1.5},{sh:'cloud',c:'#fff',x:72,y:7,s:1.3},{sh:'birds',c:'#455a64',x:40,y:9,s:1.2},{sh:'birds',c:'#455a64',x:58,y:6,s:.9},
        {sh:'reed',c:'#b8a24a',x:4,y:30,s:1.3},{sh:'reed',c:'#c9b35a',x:10,y:30.5,s:1.1},{sh:'reed',c:'#b8a24a',x:17,y:30,s:1.4},{sh:'reed',c:'#c9b35a',x:30,y:30.5,s:1.2},{sh:'reed',c:'#b8a24a',x:38,y:30,s:1.3},{sh:'reed',c:'#c9b35a',x:52,y:30.5,s:1.1},{sh:'reed',c:'#b8a24a',x:60,y:30,s:1.4},{sh:'reed',c:'#c9b35a',x:73,y:30.5,s:1.2},{sh:'reed',c:'#b8a24a',x:81,y:30,s:1.3},{sh:'reed',c:'#c9b35a',x:94,y:30.5,s:1.2},
        {sh:'tree',c:'#4f8a3f',x:24,y:27,s:1.1},{sh:'tree',c:'#5c9a4a',x:67,y:27,s:1.2} ],
-  3: [ {sh:'cloud',c:'#fff',x:22,y:6,s:1.6},{sh:'cloud',c:'#fff',x:75,y:4,s:1.1},{sh:'umbrella',c:'#ef5350',x:12,y:29,s:1.6},{sh:'umbrella',c:'#42a5f5',x:86,y:29,s:1.4},{sh:'pebble',c:'#e6c98a',x:30,y:32.5,s:.7},{sh:'pebble',c:'#d9b877',x:62,y:33,s:.6},{sh:'star',c:'#ff7043',x:48,y:32.5,s:.6} ],
+  3: [ {sh:'cloud',c:'#fff',x:22,y:6,s:1.6},{sh:'cloud',c:'#fff',x:75,y:4,s:1.1},{sh:'umbrella',c:'#ef5350',x:12,y:86,s:1.6},{sh:'umbrella',c:'#42a5f5',x:86,y:87,s:1.4},{sh:'pebble',c:'#e6c98a',x:30,y:79,s:.7},{sh:'pebble',c:'#d9b877',x:62,y:78.5,s:.6},{sh:'star',c:'#ff7043',x:72,y:81,s:.6},{sh:'pebble',c:'#e2c484',x:50,y:93,s:.5} ],
   4: [], 5: [],
 };
 const MAX_LV = 5;
@@ -2020,18 +2023,18 @@ function heroSVG(lv){
   return `<svg viewBox="-64 -72 128 128"><g${swim}>${body}${head}${over}</g></svg><span class="nm"></span>`;
 }
 // 레벨별로 세준이가 머무는 높이(%): 냇가·해수욕장은 얕은 물, 강은 카약(수면), 바다·심해는 자유롭게
-const HERO_BAND = { 1:[38,38.5], 2:[30,34], 3:[32,33], 4:[26,82], 5:[16,82] };   // 해운대: 모래사장 위(발끝 기준)   // 냇가: 둑 위(발끝 기준)
+const HERO_BAND = { 1:[38,38.5], 2:[30,34], 3:[95,96.5], 4:[26,82], 5:[16,82] };   // 해운대: 모래사장 위(발끝 기준)   // 냇가: 둑 위(발끝 기준)
 // 아이템 종류별로 놓이는 높이 구역(%). 수면·하늘은 물이 시작되는 높이에 따라 달라요.
 function bandFor(lv, it){
-  const wt = WATER_TOP[lv], m = it.m;
+  const wt = WATER_TOP[lv], wb = WATER_BOT[lv], m = it.m;
   if(it.bank) return [wt-7, wt-3];
   if(m==='float') return [wt+1, wt+4];
   if(m==='hop') return [wt-4, wt+4];
   if(m==='dash') return [wt+1, wt+3];
   if(m==='fly') return [Math.max(4, wt-32), Math.max(10, wt-10)];
-  if(m==='crawl'||m==='none'||m==='sway') return [82,90];
-  if(m==='drift') return [wt+12, 68];
-  return [wt+10, 80];
+  if(m==='crawl'||m==='none'||m==='sway') return [wb-8, wb];
+  if(m==='drift') return [wt+12, Math.min(68, wb-4)];
+  return [wt+10, Math.min(80, wb-2)];
 }
 const HERO_ANCHOR = { 1:0.92, 2:0.6, 3:0.92, 4:0.5, 5:0.5 };   // 기준점(세로): 1은 발끝, 나머지는 몸 가운데쯤
 
@@ -2083,7 +2086,7 @@ const Play = {
       bg.appendChild(cl);
       for(const [x,y,w,d] of [[80,42,14,0],[86,44,10,-.6],[76,45,9,-1.1],[91,43,8,-.9]]){ const f = document.createElement('div'); f.className='foam'; f.style.cssText = `left:${x}%;top:${y}%;width:${w}%;height:${w*0.5}%;transform:translate(-50%,-50%);animation-delay:${d}s`; bg.appendChild(f) }
     }
-    if(lv===3){ const fb = document.createElement('div'); fb.className='farbridge'; fb.innerHTML = `<svg viewBox="0 0 600 60" preserveAspectRatio="none"><path d="M0,44 H600" stroke="#e8edf2" stroke-width="5"/><path d="M0,48 H600" stroke="#9fb0c0" stroke-width="2"/><g stroke="#e8edf2" stroke-width="5" stroke-linecap="round"><path d="M150,12 V52 M450,12 V52"/></g><path d="M0,34 Q150,-4 300,34 T600,34" stroke="#dfe6ee" stroke-width="2.5" fill="none"/><g stroke="#dfe6ee" stroke-width="1" opacity=".9"><path d="M40,42 V30 M80,42 V22 M110,42 V16 M190,42 V16 M220,42 V22 M260,42 V30 M340,42 V30 M380,42 V22 M410,42 V16 M490,42 V16 M520,42 V22 M560,42 V30"/></g><g fill="#ffd166"><circle cx="60" cy="41" r="1.6"/><circle cx="120" cy="41" r="1.6"/><circle cx="180" cy="41" r="1.6"/><circle cx="240" cy="41" r="1.6"/><circle cx="300" cy="41" r="1.6"/><circle cx="360" cy="41" r="1.6"/><circle cx="420" cy="41" r="1.6"/><circle cx="480" cy="41" r="1.6"/><circle cx="540" cy="41" r="1.6"/></g></svg>`; bg.appendChild(fb) }
+    if(lv===3){ const fb = document.createElement('div'); fb.className='farbridge'; fb.innerHTML = `<svg viewBox="0 0 1000 60" preserveAspectRatio="none"><path d="M0,46 H1000" stroke="#eef2f6" stroke-width="5"/><path d="M0,50 H1000" stroke="#8fa3b5" stroke-width="2"/><g stroke="#eef2f6" stroke-width="5" stroke-linecap="round"><path d="M180,10 V56 M500,8 V56 M820,10 V56"/></g><path d="M0,40 Q90,10 180,12 Q340,-2 500,10 Q660,-2 820,12 Q910,10 1000,40" stroke="#e3eaf1" stroke-width="2.5" fill="none"/><g stroke="#e3eaf1" stroke-width="1" opacity=".9"><path d="M30,44 V36 M70,44 V28 M110,44 V20 M140,44 V15 M220,44 V12 M260,44 V8 M300,44 V5 M340,44 V4 M380,44 V5 M420,44 V7 M460,44 V9 M540,44 V9 M580,44 V7 M620,44 V5 M660,44 V4 M700,44 V5 M740,44 V8 M780,44 V12 M860,44 V15 M890,44 V20 M930,44 V28 M970,44 V36"/></g><g fill="#ffd166">${Array.from({length:24},(_,i)=>`<circle cx="${20+i*42}" cy="43" r="1.6"/>`).join('')}</g></svg>`; bg.appendChild(fb) }
     if(lv===4){ const b = document.createElement('div'); b.className='bridge'; b.innerHTML = `<svg viewBox="0 0 1000 120" preserveAspectRatio="none"><path d="M0,78 H1000" stroke="#e8edf2" stroke-width="10"/><path d="M0,86 H1000" stroke="#9fb0c0" stroke-width="4"/><g stroke="#e8edf2" stroke-width="9" stroke-linecap="round"><path d="M250,20 V96 M750,20 V96"/></g><path d="M0,60 Q250,-10 500,60 T1000,60" stroke="#dfe6ee" stroke-width="5" fill="none"/><g stroke="#dfe6ee" stroke-width="1.6" opacity=".9"><path d="M60,74 V48 M120,74 V32 M180,74 V22 M320,74 V22 M380,74 V32 M440,74 V48 M560,74 V48 M620,74 V32 M680,74 V22 M820,74 V22 M880,74 V32 M940,74 V48"/></g><g fill="#ffd166"><circle cx="100" cy="72" r="3"/><circle cx="200" cy="72" r="3"/><circle cx="300" cy="72" r="3"/><circle cx="400" cy="72" r="3"/><circle cx="500" cy="72" r="3"/><circle cx="600" cy="72" r="3"/><circle cx="700" cy="72" r="3"/><circle cx="800" cy="72" r="3"/><circle cx="900" cy="72" r="3"/></g><g fill="rgba(60,70,90,.9)"><rect x="236" y="86" width="28" height="34"/><rect x="736" y="86" width="28" height="34"/></g></svg>`; bg.appendChild(b) }
     if(lv===4){ const sf = document.createElement('div'); sf.className='surface'; sf.style.top = (WATER_TOP[4]-2) + '%'; bg.appendChild(sf) }
     if(lv===5) for(let i=0;i<40;i++){ const g = document.createElement('div'); g.className='glow'; const sz = 2+Math.random()*5; g.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;animation-delay:${-Math.random()*3}s;animation-duration:${2+Math.random()*3}s`; bg.appendChild(g) }
@@ -2107,12 +2110,12 @@ const Play = {
     if(fresh){ el.style.transition = 'opacity .6s'; el.style.opacity = '0'; requestAnimationFrame(() => el.style.opacity = '1') }
     $('sprites').appendChild(el); this.sprites.push(sp); return sp;
   },
-  fixSizes(){ const h = $('scene').clientHeight || 500; const base = Math.max(24, Math.min(70, h/10)); for(const sp of this.sprites){ sp.el.style.fontSize = Math.round(base*sp.scale) + 'px' } const hero = $('hero'); hero.style.width = hero.style.height = Math.round(base*2.6) + 'px' },
+  fixSizes(){ const h = $('scene').clientHeight || 500; const base = Math.max(24, Math.min(70, h/10)); for(const sp of this.sprites){ sp.el.style.fontSize = Math.round(base*sp.scale) + 'px' } const hero = $('hero'); hero.style.width = hero.style.height = Math.round(base*(this.data.lv===3 ? 1.9 : 2.6)) + 'px' },
   tick(now){
     if(!this.running) return; const dt = Math.min(0.05, (now - this.last)/1000 || 0.016); this.last = now;
     const W = $('scene').clientWidth || 800, H = $('scene').clientHeight || 500;
     const food = this.food;
-    if(food){ food.y = Math.min(90, food.y + 1.2*dt); food.el.style.transform = `translate(${food.x/100*W}px, ${food.y/100*H}px) translate(-50%,-50%)`; if(now - food.t > 12000){ food.el.remove(); this.food = null } }
+    if(food){ food.y = Math.min(WATER_BOT[this.data.lv], food.y + 1.2*dt); food.el.style.transform = `translate(${food.x/100*W}px, ${food.y/100*H}px) translate(-50%,-50%)`; if(now - food.t > 12000){ food.el.remove(); this.food = null } }
     const SEEK = ['swim','dash','drift','crawl'];
     for(const sp of this.sprites){
       let {x, y} = sp; sp.phase += dt;
@@ -2140,17 +2143,17 @@ const Play = {
         sp.dart = null;
       }
       if(sp.scatter){                     // 누가 먹으면 제각각 흩어져요 (대각선 위·아래로도)
-        if(now < sp.scatter.until){ x += sp.scatter.vx * 2.2 * dt; y += sp.scatter.vy * 2.2 * dt; const wt0 = WATER_TOP[this.data.lv] + 6; if(y < wt0) y = wt0; if(y > 90) y = 90; sp.baseY = y }
+        if(now < sp.scatter.until){ x += sp.scatter.vx * dt; let by = sp.baseY + sp.scatter.vy * dt; const wt0 = WATER_TOP[this.data.lv] + 6, wb0 = WATER_BOT[this.data.lv]; if(by < wt0) by = wt0; if(by > wb0) by = wb0; sp.baseY = by; y = by }
         else sp.scatter = null;
       }
       if(this.food && SEEK.includes(sp.move) && !sp.bank && sp.speed > 0 && !sp.scatter){   // 물속 생물만 먹이 쪽으로, 각자 속도로
         const f = this.food, off = sp.foodOff || {dx:0, dy:0};
-        const dReal = Math.hypot(f.x - x, f.y - y);
-        if(dReal < 2.8){ this.eat(sp) }
-        else { const tx = f.x + off.dx, ty = sp.move==='crawl' ? y : f.y + off.dy; const ddx = tx - x, ddy = ty - y, d = Math.hypot(ddx, ddy);
-          if(d > 0.8){ const spd = (3 + sp.speed*6) * sp.eager * dt; x += ddx/d*spd; y += ddy/d*spd; if(Math.abs(ddx) > 0.3) sp.dir = ddx > 0 ? 1 : -1 }
+        const tx = f.x + off.dx, ty = sp.move==='crawl' ? y : f.y + off.dy; const ddx = tx - x, ddy = ty - y, d = Math.hypot(ddx, ddy);
+        if(sp === f.eater && d < 2.8){ this.eat(sp) }   // 먹는 건 제일 가까웠던 한 마리만
+        else {
+          if(d > 0.8){ const spd = (3 + sp.speed*6) * sp.eager * (sp === f.eater ? 1.25 : 1) * dt; x += ddx/d*spd; y += ddy/d*spd; if(Math.abs(ddx) > 0.3) sp.dir = ddx > 0 ? 1 : -1 }
           else { y = ty + Math.sin(sp.phase*1.5)*0.8 }   // 자기 자리에 도착하면 그 근처에서 서성여요
-          const wt0 = WATER_TOP[this.data.lv] + 6; if(y < wt0) y = wt0; if(y > 90) y = 90; sp.baseY = y; }
+          const wt0 = WATER_TOP[this.data.lv] + 6, wb0 = WATER_BOT[this.data.lv]; if(y < wt0) y = wt0; if(y > wb0) y = wb0; sp.baseY = y; }
         if(x < 5) x = 5; if(x > 95) x = 95;
         sp.x = x; sp.y = y;
         const flipF = sp.faces===1 ? (sp.dir<0 ? -1 : 1) : sp.faces===-1 ? (sp.dir>0 ? -1 : 1) : 1;
@@ -2238,14 +2241,19 @@ const Play = {
     el.innerHTML = `<svg viewBox="0 0 26 18"><g fill="#a1887f" stroke="#5d4037" stroke-width=".8"><circle cx="5" cy="9" r="3.2"/><circle cx="12" cy="5" r="3"/><circle cx="19" cy="10" r="3.4"/><circle cx="12" cy="13" r="2.6"/></g></svg>`;
     $('scene').appendChild(el);
     this.food = { el, x: xp, y: Math.max(WATER_TOP[this.data.lv]+4, yp), t: performance.now() };
-    for(const sp of this.sprites){ const a = Math.random()*Math.PI*2, rr = 3 + Math.random()*7; sp.foodOff = { dx: Math.cos(a)*rr, dy: Math.sin(a)*rr*0.6 }; sp.scatter = null }
+    const SEEK = ['swim','dash','drift','crawl'];
+    let eater = null, best = 1e9;
+    for(const sp of this.sprites){ const a = Math.random()*Math.PI*2, rr = 3 + Math.random()*7; sp.foodOff = { dx: Math.cos(a)*rr, dy: Math.sin(a)*rr*0.6 }; sp.scatter = null;
+      if(SEEK.includes(sp.move) && !sp.bank && sp.speed > 0){ const d = Math.hypot(sp.x - xp, sp.y - this.food.y); if(d < best){ best = d; eater = sp } } }
+    if(eater) eater.foodOff = { dx:0, dy:0 };   // 제일 가까운 생물이 먹이로 곧장 가서 먼저 먹어요
+    this.food.eater = eater;
     this.bubbles(xp, this.food.y, 3);
   },
   eat(sp){ if(!this.food) return; this.bubbles(this.food.x, this.food.y, 5); this.food.el.remove(); this.food = null;
     const SEEK = ['swim','dash','drift','crawl'];
     for(const o of this.sprites){ if(!SEEK.includes(o.move) || o.bank || o.speed <= 0) continue;
-      const vx = (Math.random()<.5?-1:1) * (3 + Math.random()*7), vy = o.move==='crawl' ? 0 : (Math.random()<.5?-1:1) * (1.5 + Math.random()*5);
-      o.scatter = { until: performance.now() + 300, vx: vx*1.6, vy: vy*1.6 }; o.dir = vx > 0 ? 1 : -1; o.baseY = o.y }
+      const a = Math.random()*Math.PI*2, v = 20; const vx = Math.cos(a)*v, vy = o.move==='crawl' ? 0 : Math.sin(a)*v*0.6;   // 랜덤 방향으로 0.3초만 휙
+      o.scatter = { until: performance.now() + 300, vx, vy }; o.dir = vx > 0 ? 1 : -1; o.baseY = o.y }
   },
   dart(sp){ if(!sp.alive) return;
     if(sp.bird){ sp.flap = { t0: performance.now(), dur: 3200, y0: sp.baseY, dx: (Math.random()<.5?-1:1) * (1+Math.random()*2) }; return }   // 새: 날개 한 번 치고 날아올랐다 내려앉아요
@@ -2266,7 +2274,7 @@ $('pPrev').onclick = () => Play.go(-1); $('pNext').onclick = () => Play.go(1);
       const sp = hit && Play.sprites.find(o => o.el === hit);
       if(sp && sp.alive){ Play.dart(sp); return }           // 생물을 톡: 슝! (물속 생물만 거품)
       const wt = WATER_TOP[Play.data.lv];
-      if(yp > wt + 2){ Play.dropFood(xp, Math.min(88, yp)); if(Play.data.lv >= 4){ Play.hero.tx = xp; Play.hero.ty = Math.max(HERO_BAND[Play.data.lv][0], Math.min(HERO_BAND[Play.data.lv][1], yp)) } return }   // 물을 톡: 먹이
+      if(yp > wt + 2 && yp < WATER_BOT[Play.data.lv] + 2){ Play.dropFood(xp, Math.min(WATER_BOT[Play.data.lv]-2, yp)); if(Play.data.lv >= 4){ Play.hero.tx = xp; Play.hero.ty = Math.max(HERO_BAND[Play.data.lv][0], Math.min(HERO_BAND[Play.data.lv][1], yp)) } return }   // 물을 톡: 먹이
       Play.hero.tx = Math.max(6, Math.min(94, xp)); const hb = HERO_BAND[Play.data.lv]; Play.hero.ty = Math.max(hb[0], Math.min(hb[1], yp)); if(Play.data.lv===1) Play.hero.tx = Math.min(58, Play.hero.tx);   // 둑·하늘을 톡: 세준이가 그쪽으로
     }
   }) })();
