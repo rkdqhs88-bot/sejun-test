@@ -331,6 +331,9 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 @keyframes legs{from{transform:translateX(-1px)}to{transform:translateX(1px)}}
 .sp .light{animation:blink 2s ease-in-out infinite alternate}
 .sp .rot{display:inline-block;animation:spin 2.6s linear infinite}
+.sp .tongue{transform-box:fill-box;transform-origin:0% 50%;transform:scaleX(0)}
+.sp.lick .tongue{animation:lick .5s ease-out}
+@keyframes lick{0%{transform:scaleX(0)}35%{transform:scaleX(1)}70%{transform:scaleX(1)}100%{transform:scaleX(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes blink{from{opacity:.5}to{opacity:1}}
 .sp.deep{filter:drop-shadow(0 0 10px rgba(120,220,255,.55))}
@@ -706,7 +709,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 13:15';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 13:17';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1884,7 +1887,7 @@ const SHAPES = {
   boulder: c => `<svg viewBox="-40 -34 80 60"><path d="M-38,20 C-40,-6 -22,-30 4,-30 C28,-30 40,-10 38,20 Z" fill="${c}" stroke="rgba(0,0,0,.18)" stroke-width="1.5"/><path d="M-22,0 C-14,-14 2,-18 14,-10" stroke="rgba(255,255,255,.3)" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M-6,8 q10,-4 20,2" stroke="rgba(0,0,0,.15)" stroke-width="2" fill="none"/></svg>`,
   falls: c => `<svg viewBox="-20 -60 40 70"><path d="M-10,-58 C-12,-30 -8,-10 -12,8 L12,8 C8,-10 12,-30 10,-58 Z" fill="${c}" opacity=".85"/><path d="M-4,-56 C-5,-30 -3,-10 -5,6 M4,-56 C5,-30 3,-10 5,6" stroke="#fff" stroke-width="1.5" opacity=".8"/><ellipse cx="0" cy="8" rx="16" ry="4" fill="#fff" opacity=".6"/></svg>`,
   birds: c => `<svg viewBox="-40 -16 80 32"><g stroke="${c}" stroke-width="2" fill="none" stroke-linecap="round"><path d="M-30,0 q5,-6 10,0 q5,-6 10,0 M-8,-8 q5,-6 10,0 q5,-6 10,0 M14,2 q5,-6 10,0 q5,-6 10,0"/></g></svg>`,
-  frog: c => `<svg viewBox="-40 -34 80 60"><g class="legs"><path d="M-22,8 C-34,4 -36,16 -26,20 L-14,16" fill="${c}" stroke="rgba(0,0,0,.2)" stroke-width="1"/><path d="M22,8 C34,4 36,16 26,20 L14,16" fill="${c}" stroke="rgba(0,0,0,.2)" stroke-width="1"/><path d="M-26,20 l-8,4 M-26,20 l-6,6 M26,20 l8,4 M26,20 l6,6" stroke="${c}" stroke-width="3" stroke-linecap="round"/></g><ellipse cx="0" cy="6" rx="22" ry="15" fill="${c}" stroke="rgba(0,0,0,.18)" stroke-width="1.2"/><ellipse cx="0" cy="10" rx="14" ry="8" fill="#e8f5c8" opacity=".9"/><path d="M-14,-6 C-12,-18 12,-18 14,-6 C8,-10 -8,-10 -14,-6 Z" fill="${c}"/><circle cx="-10" cy="-10" r="7" fill="${c}" stroke="rgba(0,0,0,.18)"/><circle cx="10" cy="-10" r="7" fill="${c}" stroke="rgba(0,0,0,.18)"/><circle cx="-10" cy="-10" r="4.5" fill="#fff"/><circle cx="10" cy="-10" r="4.5" fill="#fff"/><circle cx="-9" cy="-10" r="2.2" fill="#1b2238"/><circle cx="11" cy="-10" r="2.2" fill="#1b2238"/><path d="M-6,0 q6,5 12,0" stroke="#2d5a1b" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="-16" cy="2" r="2.5" fill="#ff8a80" opacity=".5"/><circle cx="16" cy="2" r="2.5" fill="#ff8a80" opacity=".5"/><path d="M-12,22 l-6,4 M-8,22 l-2,6 M12,22 l6,4 M8,22 l2,6" stroke="${c}" stroke-width="3" stroke-linecap="round"/></svg>`,
+  frog: c => `<svg viewBox="-40 -34 80 60"><g class="legs"><path d="M-22,8 C-34,4 -36,16 -26,20 L-14,16" fill="${c}" stroke="rgba(0,0,0,.2)" stroke-width="1"/><path d="M22,8 C34,4 36,16 26,20 L14,16" fill="${c}" stroke="rgba(0,0,0,.2)" stroke-width="1"/><path d="M-26,20 l-8,4 M-26,20 l-6,6 M26,20 l8,4 M26,20 l6,6" stroke="${c}" stroke-width="3" stroke-linecap="round"/></g><ellipse cx="0" cy="6" rx="22" ry="15" fill="${c}" stroke="rgba(0,0,0,.18)" stroke-width="1.2"/><ellipse cx="0" cy="10" rx="14" ry="8" fill="#e8f5c8" opacity=".9"/><path d="M-14,-6 C-12,-18 12,-18 14,-6 C8,-10 -8,-10 -14,-6 Z" fill="${c}"/><circle cx="-10" cy="-10" r="7" fill="${c}" stroke="rgba(0,0,0,.18)"/><circle cx="10" cy="-10" r="7" fill="${c}" stroke="rgba(0,0,0,.18)"/><circle cx="-10" cy="-10" r="4.5" fill="#fff"/><circle cx="10" cy="-10" r="4.5" fill="#fff"/><circle cx="-9" cy="-10" r="2.2" fill="#1b2238"/><circle cx="11" cy="-10" r="2.2" fill="#1b2238"/><path d="M-6,0 q6,5 12,0" stroke="#2d5a1b" stroke-width="1.6" fill="none" stroke-linecap="round"/><path class="tongue" d="M0,2 C10,0 18,-6 26,-12" stroke="#e91e63" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="-16" cy="2" r="2.5" fill="#ff8a80" opacity=".5"/><circle cx="16" cy="2" r="2.5" fill="#ff8a80" opacity=".5"/><path d="M-12,22 l-6,4 M-8,22 l-2,6 M12,22 l6,4 M8,22 l2,6" stroke="${c}" stroke-width="3" stroke-linecap="round"/></svg>`,
   salamander: c => `<svg viewBox="-44 -20 88 40"><g class="legs" stroke="${c}" stroke-width="4" stroke-linecap="round" fill="none"><path d="M-14,6 l-8,10 M-14,6 l-10,2 M10,6 l8,10 M10,6 l10,2 M-14,-4 l-8,-10 M10,-4 l8,-10"/></g><path d="M-18,0 C-28,-2 -36,4 -42,10" stroke="${c}" stroke-width="7" stroke-linecap="round" fill="none"/><ellipse cx="0" cy="0" rx="20" ry="8" fill="${c}"/><circle cx="24" cy="-1" r="8" fill="${c}"/><g fill="#ffd54f"><circle cx="-8" cy="-3" r="2"/><circle cx="2" cy="3" r="2"/><circle cx="10" cy="-3" r="1.8"/><circle cx="-16" cy="2" r="1.6"/></g><circle cx="27" cy="-3" r="2" fill="#fff"/><circle cx="27.6" cy="-3" r="1.1" fill="#1b2238"/></svg>`,
   beetle: c => `<svg viewBox="-24 -20 48 40"><g class="legs" stroke="${c}" stroke-width="2.5" stroke-linecap="round" fill="none"><path d="M-8,2 l-12,6 M8,2 l12,6 M-6,-4 l-12,-6 M6,-4 l12,-6 M-4,8 l-8,8 M4,8 l8,8"/></g><ellipse cx="0" cy="2" rx="12" ry="15" fill="${c}"/><path d="M0,-12 V16" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/><circle cx="0" cy="-12" r="5" fill="${c}"/><path d="M-6,-4 C-4,4 4,4 6,-4" stroke="rgba(255,255,255,.3)" stroke-width="1.5" fill="none"/></svg>`,
   snake: c => `<svg viewBox="-46 -16 92 32"><g class="legs"><path d="M-42,0 C-32,-13 -22,13 -12,0 C-2,-13 8,13 18,0 C24,-7 28,-5 32,0" stroke="${c}" stroke-width="6.5" fill="none" stroke-linecap="round"/><path d="M-42,0 C-32,-13 -22,13 -12,0 C-2,-13 8,13 18,0" stroke="rgba(255,255,255,.25)" stroke-width="2" fill="none"/></g><ellipse cx="36" cy="0" rx="8" ry="5.5" fill="${c}"/><circle cx="39" cy="-2" r="1.8" fill="#fff"/><circle cx="39.6" cy="-2" r="1" fill="#1b2238"/><path d="M44,0 l5,-2.5 M44,0 l5,2.5" stroke="#e53935" stroke-width="1.5" stroke-linecap="round"/></svg>`,
@@ -2098,7 +2101,7 @@ const Play = {
     if(def.f) el.innerHTML = fishSVG(def.f); else if(def.sh) el.innerHTML = SHAPES[def.sh](def.c); else el.textContent = def.e;
     if(def.spin) el.innerHTML = `<span class="rot">${el.innerHTML}</span>`;
     if(def.hue) el.style.filter = `hue-rotate(${def.hue}deg)`;
-    const sp = { el, name: def.n, move: def.m, scale: def.s, x: rec.x, y: rec.y, dir: rec.dir||(Math.random()<.5?-1:1), speed: (def.sh==='lily') ? 0 : (rec.speed || (0.5+Math.random()*0.9)), phase: Math.random()*6.28, baseY: rec.y, faces: (def.f || def.sh==='snake' || def.sh==='salamander') ? 1 : (def.e ? -1 : 0), slow: !!def.slow, bank: !!def.bank, eager: 0.5 + Math.random()*1.2, alive: isAlive(def), air: def.m==='fly' || def.m==='hop' || !!def.bank, bird: isBird(def) };
+    const sp = { el, name: def.n, move: def.m, scale: def.s, x: rec.x, y: rec.y, dir: rec.dir||(Math.random()<.5?-1:1), speed: (def.sh==='lily') ? 0 : (rec.speed || (0.5+Math.random()*0.9)), phase: Math.random()*6.28, baseY: rec.y, faces: (def.f || def.sh==='snake' || def.sh==='salamander') ? 1 : (def.e ? -1 : 0), slow: !!def.slow, bank: !!def.bank, eager: 0.5 + Math.random()*1.2, alive: isAlive(def), air: def.m==='fly' || def.m==='hop' || !!def.bank, bird: isBird(def), frog: def.sh==='frog' };
     if(fresh){ el.style.transition = 'opacity .6s'; el.style.opacity = '0'; requestAnimationFrame(() => el.style.opacity = '1') }
     $('sprites').appendChild(el); this.sprites.push(sp); return sp;
   },
@@ -2111,13 +2114,22 @@ const Play = {
     const SEEK = ['swim','dash','drift','crawl'];
     for(const sp of this.sprites){
       let {x, y} = sp; sp.phase += dt;
-      if(sp.flap){                       // 새: 날개 파닥 + 포물선으로 살짝 떠올랐다 착지
+      if(sp.jump){                       // 개구리·두꺼비: 제자리 점프
+        const pr = (now - sp.jump.t0) / sp.jump.dur;
+        if(pr < 1){ y = sp.jump.y0 - Math.sin(pr*Math.PI) * 10; sp.y = y; const sq = pr < 0.2 ? 1 - pr : 1 + Math.sin(pr*Math.PI)*0.12;
+          sp.el.style.transform = `translate(${x/100*W}px, ${y/100*H}px) translate(-50%,-50%) scale(1,${sq})`; continue }
+        sp.jump = null;
+      }
+      if(sp.flap){                       // 새: 날개 한 번 크게 치고 → 높이 날아올라 → 천천히 내려앉기
         const pr = (now - sp.flap.t0) / sp.flap.dur;
-        if(pr < 1){ x += sp.flap.dx * dt; y = sp.flap.y0 - Math.sin(pr*Math.PI) * 9; if(x < 5) x = 5; if(x > 95) x = 95; sp.x = x; sp.y = y;
-          const wob = Math.sin(now/45) * 14, sq = 1 + Math.sin(now/45) * 0.12;
+        if(pr < 1){ x += sp.flap.dx * dt; if(x < 5) x = 5; if(x > 95) x = 95;
+          const lift = pr < 0.55 ? Math.sin(pr/0.55*Math.PI/2) : Math.cos((pr-0.55)/0.45*Math.PI/2);   // 올라갔다가 내려와요
+          y = sp.flap.y0 - lift * 16; sp.x = x; sp.y = y;
+          const flapping = pr < 0.22;
+          const wob = flapping ? Math.sin(now/35) * 18 : Math.sin(now/300) * 4, sq = flapping ? 1 + Math.sin(now/35) * 0.18 : 1;
           const flipB = sp.faces===-1 ? (sp.dir>0 ? -1 : 1) : 1;
           sp.el.style.transform = `translate(${x/100*W}px, ${y/100*H}px) translate(-50%,-50%) scaleX(${flipB}) rotate(${wob}deg) scale(1,${sq})`; continue }
-        sp.flap = null; sp.y = sp.flap_y0 ?? sp.baseY;
+        sp.flap = null;
       }
       if(sp.dart){                       // 톡 치면 슝! 하고 달아나요
         if(now < sp.dart.until){ x += sp.dart.dir * 55 * dt; if(sp.move==='hop' || sp.move==='float') y = sp.baseY - 4; sp.x = x; sp.y = y; if(x < 5){ sp.x = 5; sp.dart.dir = 1; sp.dir = 1 } if(x > 95){ sp.x = 95; sp.dart.dir = -1; sp.dir = -1 }
@@ -2224,7 +2236,8 @@ const Play = {
       o.scatter = { until: performance.now() + 700 + Math.random()*700, vx, vy }; o.dir = vx > 0 ? 1 : -1; o.baseY = o.y }
   },
   dart(sp){ if(!sp.alive) return;
-    if(sp.bird){ sp.flap = { t0: performance.now(), dur: 1300, y0: sp.baseY, dx: (Math.random()<.5?-1:1) * (2+Math.random()*4) }; return }   // 새: 파닥이며 살짝 날았다가 내려앉아요
+    if(sp.bird){ sp.flap = { t0: performance.now(), dur: 3200, y0: sp.baseY, dx: (Math.random()<.5?-1:1) * (1+Math.random()*2) }; return }   // 새: 날개 한 번 치고 날아올랐다 내려앉아요
+    if(sp.frog){ sp.jump = { t0: performance.now(), dur: 750, y0: sp.baseY }; sp.el.classList.add('lick'); setTimeout(() => sp.el.classList.remove('lick'), 600); return }   // 개구리·두꺼비: 혀 쏙 + 제자리 점프
     sp.dart = { until: performance.now() + 750, dir: sp.dir || 1 }; if(!sp.air && sp.y > WATER_TOP[this.data.lv] + 1) this.bubbles(sp.x, sp.y, 7); },
   go(d){ const lv = this.data.lv + d; if(!POOLS[lv]) return; this.data.lv = lv; this.save(); this.render(); },
 };
