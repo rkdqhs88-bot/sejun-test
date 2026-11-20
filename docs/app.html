@@ -316,6 +316,7 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 .rays i:nth-child(1){left:8%}.rays i:nth-child(2){left:30%;animation-delay:-3s;width:9%}.rays i:nth-child(3){left:55%;animation-delay:-6s}.rays i:nth-child(4){left:78%;animation-delay:-1.5s;width:10%}
 @keyframes ray{from{opacity:.35;transform:skewX(-14deg) translateX(-20px)}to{opacity:.7;transform:skewX(-10deg) translateX(20px)}}
 .scene.lv4 .rays i{opacity:.25;top:16%}.scene.lv5 .rays{display:none}.scene.lv1 .rays i,.scene.lv2 .rays i{top:30%;height:100%;opacity:.3}.scene.lv3 .rays i{top:30%}
+.bubwrap{position:absolute;left:0;right:0;bottom:0;overflow:hidden;pointer-events:none}
 .bubble{position:absolute;bottom:-20px;border-radius:50%;border:2px solid rgba(255,255,255,.55);background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.45),rgba(255,255,255,.05));animation:rise linear infinite;pointer-events:none}
 @keyframes rise{to{transform:translateY(-110vh) translateX(20px)}}
 .glow{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(120,220,255,.9),rgba(120,220,255,0) 70%);animation:twinkle 3s ease-in-out infinite alternate;pointer-events:none}
@@ -712,7 +713,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 13:33';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 13:35';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -2063,7 +2064,8 @@ const Play = {
     if(lv<=2){ const fw = document.createElement('div'); fw.className='flow'; fw.style.top = WATER_TOP[lv] + '%'; fw.style.bottom = '12%'; bg.appendChild(fw) }
     const fl = document.createElement('div'); fl.className='floor'; bg.appendChild(fl);
     const nb = lv===5 ? 6 : lv>=3 ? 16 : 8;
-    if(lv>=4) for(let i=0;i<nb;i++){ const b = document.createElement('div'); b.className='bubble'; const sz = 5+Math.random()*14; b.style.cssText = `left:${Math.random()*100}%;width:${sz}px;height:${sz}px;animation-duration:${7+Math.random()*10}s;animation-delay:${-Math.random()*14}s`; bg.appendChild(b) }
+    const bw = document.createElement('div'); bw.className='bubwrap'; bw.style.top = (WATER_TOP[lv]+1) + '%'; bg.appendChild(bw);   // 거품은 물속에서만 올라와요
+    if(lv>=4) for(let i=0;i<nb;i++){ const b = document.createElement('div'); b.className='bubble'; const sz = 5+Math.random()*14; b.style.cssText = `left:${Math.random()*100}%;width:${sz}px;height:${sz}px;animation-duration:${7+Math.random()*10}s;animation-delay:${-Math.random()*14}s`; bw.appendChild(b) }
     if(lv>=4){ const v = document.createElement('div'); v.className='vignette'; bg.appendChild(v) }
     if(lv===1){
       const cl = document.createElement('div'); cl.className='cliff';
