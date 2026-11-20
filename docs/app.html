@@ -291,10 +291,10 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 /* sprites */
 .sp svg{overflow:visible}
 .sp.fish svg{width:1.7em;height:1em}
-.sp .tail{transform-box:view-box;transform-origin:32px 36px;animation:tail .55s ease-in-out infinite alternate}
-.sp .fin{transform-box:view-box;transform-origin:60px 24px;animation:fin .7s ease-in-out infinite alternate}
-@keyframes tail{from{transform:rotate(-16deg)}to{transform:rotate(16deg)}}
-@keyframes fin{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}
+.sp .tail{transform-box:view-box;transform-origin:50px 36px;animation:tail .55s ease-in-out infinite alternate}
+.sp .fin{transform-box:view-box;transform-origin:62px 24px;animation:fin .9s ease-in-out infinite alternate}
+@keyframes tail{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
+@keyframes fin{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
 .sp .pulse{transform-box:fill-box;transform-origin:center;animation:pulse2 1.6s ease-in-out infinite alternate}
 @keyframes pulse2{from{transform:scale(1,.92)}to{transform:scale(1.06,1.06)}}
 .sp .legs{transform-box:fill-box;transform-origin:center;animation:legs .4s ease-in-out infinite alternate}
@@ -653,7 +653,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 12:34';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 12:37';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1768,21 +1768,35 @@ const BODIES = {
 };
 function fishSVG(o){
   const id = 'f'+(++gid), body = BODIES[o.body||'oval'], c1=o.c1, c2=o.c2, c3=o.c3||'#1b2238';
+  const line = 'rgba(20,30,50,.28)';
+  // 꼬리·지느러미는 몸통 안쪽 깊숙이 겹쳐 그려서 이음새가 보이지 않게
+  const tail = o.body==='eel'
+    ? `<path d="M-14,-5 C-34,-6 -42,-16 -54,-14 C-48,-6 -48,6 -54,14 C-42,16 -34,6 -14,5 Z" fill="url(#${id}t)" stroke="${line}" stroke-width="1.2" stroke-linejoin="round"/>`
+    : `<path d="M-10,-8 C-28,-6 -38,-24 -52,-22 C-45,-12 -45,12 -52,22 C-38,24 -28,6 -10,8 Z" fill="url(#${id}t)" stroke="${line}" stroke-width="1.2" stroke-linejoin="round"/>`;
+  const dorsal = `<path class="fin" d="M-8,-12 C-2,-34 18,-34 22,-14 C14,-20 2,-20 -8,-12 Z" fill="url(#${id}t)" stroke="${line}" stroke-width="1.2" stroke-linejoin="round"/>`;
+  const pelvic = `<path d="M0,10 C2,26 16,26 20,12 C14,16 6,16 0,10 Z" fill="url(#${id}t)" stroke="${line}" stroke-width="1.2" stroke-linejoin="round"/>`;
+  const pectoral = `<path d="M6,2 C14,6 20,14 14,18 C8,14 4,8 6,2 Z" fill="${c2}" opacity=".85"/>`;
   let pat = '';
-  if(o.pat==='stripes') pat = `<path d="M-14,-24 L-10,24 M-2,-26 L2,26 M10,-24 L14,24" stroke="${c3}" stroke-width="5" opacity=".5" clip-path="url(#${id}c)" fill="none"/>`;
-  if(o.pat==='spots') pat = `<g fill="${c3}" opacity=".45" clip-path="url(#${id}c)"><circle cx="-10" cy="-6" r="4"/><circle cx="6" cy="6" r="5"/><circle cx="16" cy="-8" r="3"/><circle cx="-18" cy="8" r="3"/></g>`;
-  if(o.pat==='band') pat = `<path d="M-22,-24 L-18,24" stroke="#fff" stroke-width="7" opacity=".8" clip-path="url(#${id}c)" fill="none"/><path d="M6,-26 L10,26" stroke="#fff" stroke-width="6" opacity=".8" clip-path="url(#${id}c)" fill="none"/>`;
-  if(o.pat==='belly') pat = `<path d="M-30,4 C-10,26 20,24 36,6 L36,20 L-30,20 Z" fill="#fff" opacity=".45" clip-path="url(#${id}c)"/>`;
-  const glow = o.light ? `<g class="light"><path d="M18,-24 C22,-40 30,-44 34,-38" stroke="${c2}" stroke-width="3" fill="none"/><circle cx="34" cy="-38" r="6" fill="#fff8b0"/><circle cx="34" cy="-38" r="12" fill="#fff8b0" opacity=".25"/></g>` : '';
-  const teeth = o.teeth ? `<path d="M24,6 l3,5 3,-5 3,5 3,-5" stroke="#fff" stroke-width="2" fill="none"/>` : '';
-  const eyeR = o.bigEye ? 7 : 4.5;
-  return `<svg viewBox="-60 -36 120 72"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient><clipPath id="${id}c"><path d="${body}"/></clipPath></defs>
-    <g class="tail"><path d="M-26,0 L-54,-20 L-46,0 L-54,20 Z" fill="${c2}"/></g>
-    <path class="fin" d="M-6,-14 C2,-32 18,-32 20,-18 Z" fill="${c2}" opacity=".95"/>
-    <path d="${body}" fill="url(#${id})" stroke="rgba(0,0,0,.18)" stroke-width="1.5"/>${pat}
-    <path d="M2,10 C6,24 18,24 20,12 Z" fill="${c2}" opacity=".85"/>
-    <circle cx="22" cy="-6" r="${eyeR}" fill="#fff"/><circle cx="${23.5}" cy="-6" r="${eyeR*0.5}" fill="#1b2238"/><circle cx="${25}" cy="-7.5" r="${eyeR*0.18}" fill="#fff"/>
-    <path d="M34,4 q-4,3 -8,1" stroke="#1b2238" stroke-width="1.3" fill="none" opacity=".7"/>${teeth}${glow}</svg>`;
+  if(o.pat==='stripes') pat = `<g clip-path="url(#${id}c)" stroke="${c3}" stroke-width="5" stroke-linecap="round" opacity=".45" fill="none"><path d="M-12,-26 C-14,-8 -12,8 -10,26"/><path d="M0,-28 C-2,-8 0,8 2,28"/><path d="M12,-26 C10,-8 12,8 14,26"/></g>`;
+  if(o.pat==='spots') pat = `<g fill="${c3}" opacity=".4" clip-path="url(#${id}c)"><circle cx="-10" cy="-5" r="4"/><circle cx="6" cy="7" r="5"/><circle cx="16" cy="-8" r="3"/><circle cx="-18" cy="8" r="3"/><circle cx="2" cy="-12" r="2.5"/></g>`;
+  if(o.pat==='band') pat = `<g clip-path="url(#${id}c)" stroke="#fff" stroke-linecap="round" fill="none" opacity=".85"><path d="M-20,-26 C-22,-8 -20,8 -18,26" stroke-width="7"/><path d="M8,-28 C6,-8 8,8 10,28" stroke-width="6"/></g>`;
+  if(o.pat==='belly') pat = '';
+  const glow = o.light ? `<g class="light"><path d="M18,-24 C22,-40 30,-44 34,-38" stroke="${c2}" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="34" cy="-38" r="6" fill="#fff8b0"/><circle cx="34" cy="-38" r="13" fill="#fff8b0" opacity=".25"/></g>` : '';
+  const teeth = o.teeth ? `<path d="M22,7 l3,5 3,-5 3,5 3,-5" stroke="#fff" stroke-width="2" fill="none" stroke-linejoin="round"/>` : '';
+  const eyeR = o.bigEye ? 7 : 5;
+  return `<svg viewBox="-60 -36 120 72"><defs>
+      <linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset=".55" stop-color="${c2}"/><stop offset="1" stop-color="${c2}"/></linearGradient>
+      <linearGradient id="${id}t" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}" stop-opacity=".95"/><stop offset="1" stop-color="${c2}"/></linearGradient>
+      <radialGradient id="${id}h" cx=".35" cy=".25" r=".7"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></radialGradient>
+      <clipPath id="${id}c"><path d="${body}"/></clipPath></defs>
+    <g class="tail">${tail}</g>${dorsal}${pelvic}
+    <path d="${body}" fill="url(#${id})" stroke="${line}" stroke-width="1.3"/>
+    <path d="${body}" fill="url(#${id}h)"/>${pat}
+    <path d="M-26,6 C-10,26 18,24 34,8" stroke="#fff" stroke-width="5" opacity=".22" fill="none" clip-path="url(#${id}c)" stroke-linecap="round"/>
+    ${pectoral}
+    <path d="M18,-14 C14,-6 14,4 18,10" stroke="rgba(0,0,0,.18)" stroke-width="1.6" fill="none"/>
+    <circle cx="23" cy="-6" r="${eyeR+1.5}" fill="rgba(0,0,0,.12)"/><circle cx="23" cy="-6" r="${eyeR}" fill="#fff"/><circle cx="24.5" cy="-6" r="${eyeR*0.55}" fill="#1b2238"/><circle cx="26" cy="-7.8" r="${eyeR*0.2}" fill="#fff"/>
+    <path d="M35,3 q-4,3 -8,1" stroke="rgba(0,0,0,.45)" stroke-width="1.4" fill="none" stroke-linecap="round"/>${teeth}${glow}</svg>`;
 }
 const SHAPES = {
   jelly: c => `<svg viewBox="-40 -40 80 90"><g class="pulse"><path d="M-34,0 C-34,-40 34,-40 34,0 Z" fill="${c}" opacity=".85"/><path d="M-34,0 Q0,10 34,0" fill="none" stroke="#fff" stroke-width="2" opacity=".6"/></g><g stroke="${c}" stroke-width="3" fill="none" opacity=".8"><path d="M-24,2 q-6,20 2,40"/><path d="M-10,4 q6,20 -2,42"/><path d="M6,4 q-6,22 4,44"/><path d="M22,2 q6,20 -2,40"/></g></svg>`,
@@ -1805,7 +1819,7 @@ const SHAPES = {
   snail: c => `<svg viewBox="-40 -30 80 60"><path d="M-36,16 C-20,-4 10,-6 28,4 L36,14 Z" fill="${c}"/><path d="M-26,12 C-18,-6 8,-8 20,2 C10,-2 -6,-2 -14,12 Z" fill="rgba(255,255,255,.35)"/><path d="M-34,14 q-4,-18 10,-24 q16,-6 30,8" stroke="rgba(0,0,0,.25)" stroke-width="2" fill="none"/><ellipse cx="0" cy="18" rx="30" ry="5" fill="${c}" opacity=".8"/></svg>`,
   grass: c => `<svg viewBox="-30 -70 60 80"><g class="pulse" stroke="${c}" stroke-width="3.5" stroke-linecap="round" fill="none"><path d="M-18,8 C-22,-20 -10,-40 -14,-62"/><path d="M-8,8 C-6,-20 -14,-44 -4,-66"/><path d="M2,8 C8,-16 -2,-40 6,-60"/><path d="M12,8 C18,-14 10,-36 20,-56"/><path d="M-13,8 C-16,-10 -20,-28 -24,-44"/><path d="M8,8 C14,-6 20,-20 26,-36"/></g></svg>`,
   mussel: c => `<svg viewBox="-40 -24 80 48"><path d="M-36,6 C-30,-16 20,-22 36,-4 C30,14 -14,20 -36,6 Z" fill="${c}"/><path d="M-30,4 C-20,-8 10,-14 30,-4" stroke="rgba(255,255,255,.35)" stroke-width="2" fill="none"/><path d="M-24,8 C-10,0 10,-4 28,0" stroke="rgba(0,0,0,.2)" stroke-width="1.5" fill="none"/></svg>`,
-  dragonfly: c => `<svg viewBox="-40 -24 80 48"><g class="wing"><ellipse cx="-12" cy="-10" rx="16" ry="6" fill="rgba(200,240,255,.75)" stroke="rgba(255,255,255,.9)"/><ellipse cx="12" cy="-10" rx="16" ry="6" fill="rgba(200,240,255,.75)" stroke="rgba(255,255,255,.9)"/><ellipse cx="-10" cy="4" rx="13" ry="5" fill="rgba(200,240,255,.6)" stroke="rgba(255,255,255,.9)"/><ellipse cx="10" cy="4" rx="13" ry="5" fill="rgba(200,240,255,.6)" stroke="rgba(255,255,255,.9)"/></g><path d="M-34,0 H14" stroke="${c}" stroke-width="4" stroke-linecap="round"/><circle cx="18" cy="0" r="6" fill="${c}"/><circle cx="21" cy="-2" r="2.2" fill="#fff"/><circle cx="22" cy="-2" r="1.2" fill="#1b2238"/></svg>`,
+  dragonfly: c => `<svg viewBox="-44 -26 88 52"><g class="wing"><g fill="rgba(210,240,255,.55)" stroke="rgba(255,255,255,.95)" stroke-width="1.2"><ellipse cx="-4" cy="-13" rx="22" ry="5.5" transform="rotate(-18 -4 -13)"/><ellipse cx="-4" cy="13" rx="22" ry="5.5" transform="rotate(18 -4 13)"/><ellipse cx="-12" cy="-11" rx="19" ry="5" transform="rotate(-34 -12 -11)"/><ellipse cx="-12" cy="11" rx="19" ry="5" transform="rotate(34 -12 11)"/></g><g stroke="rgba(255,255,255,.7)" stroke-width=".8" fill="none"><path d="M-22,-18 L8,-10 M-24,-10 L6,-14 M-22,18 L8,10 M-24,10 L6,14"/></g></g><path d="M-40,0 H10" stroke="${c}" stroke-width="4.5" stroke-linecap="round"/><g stroke="rgba(0,0,0,.25)" stroke-width="1"><path d="M-34,-2 v4 M-28,-2 v4 M-22,-2 v4 M-16,-2 v4 M-10,-2 v4 M-4,-2 v4"/></g><ellipse cx="13" cy="0" rx="7" ry="6" fill="${c}"/><circle cx="22" cy="0" r="5" fill="${c}"/><circle cx="24" cy="-4" r="3.6" fill="#7cb342" stroke="rgba(0,0,0,.2)"/><circle cx="24" cy="4" r="3.6" fill="#7cb342" stroke="rgba(0,0,0,.2)"/><circle cx="25" cy="-4.5" r="1.2" fill="#fff" opacity=".8"/><circle cx="25" cy="3.5" r="1.2" fill="#fff" opacity=".8"/></svg>`,
   strider: c => `<svg viewBox="-40 -24 80 48"><g stroke="${c}" stroke-width="2" fill="none" stroke-linecap="round"><path d="M-6,0 L-30,-14 L-38,2 M6,0 L30,-14 L38,2 M-4,2 L-22,12 M4,2 L22,12 M-8,-2 L-18,-16 M8,-2 L18,-16"/></g><ellipse cx="0" cy="0" rx="9" ry="3.5" fill="${c}"/><circle cx="9" cy="-1" r="2" fill="${c}"/><g opacity=".35" fill="none" stroke="#fff" stroke-width="1.5"><circle cx="-30" cy="-14" r="5"/><circle cx="30" cy="-14" r="5"/><circle cx="22" cy="12" r="4"/><circle cx="-22" cy="12" r="4"/></g></svg>`,
   flower: c => `<svg viewBox="-20 -50 40 60"><path d="M0,10 V-20" stroke="#43a047" stroke-width="3"/><path d="M0,-6 q-10,-2 -12,6 q10,0 12,-6 M0,-12 q10,-2 12,6 q-10,0 -12,-6" fill="#66bb6a"/><g class="petal"><circle cx="0" cy="-32" r="7" fill="${c}"/><circle cx="-9" cy="-24" r="7" fill="${c}"/><circle cx="9" cy="-24" r="7" fill="${c}"/><circle cx="-6" cy="-14" r="7" fill="${c}"/><circle cx="6" cy="-14" r="7" fill="${c}"/><circle cx="0" cy="-23" r="5" fill="#fff59d"/></g></svg>`,
   pebble: c => `<svg viewBox="-20 -12 40 24"><ellipse cx="0" cy="2" rx="18" ry="9" fill="${c}"/><ellipse cx="-4" cy="-1" rx="8" ry="3" fill="rgba(255,255,255,.25)"/></svg>`,
@@ -1830,7 +1844,7 @@ const POOLS = {
     SH('가재','뒷걸음질 선수','u',.8,'crab','#8d6e63','crawl'), SH('다슬기','돌에 붙어 사는 민물 고둥','c',.55,'snail','#5d4037'), SH('조약돌','매끈매끈','c',.9,'rock','#90a4ae'),
     SH('큰 바위','물고기들의 쉼터','u',1.5,'rock','#78909c'), SH('갈대','바람에 사각사각','c',1.5,'reed','#8bc34a','sway'), SH('검정말','가늘고 긴 민물 수초','c',1.1,'grass','#66bb6a','sway'),
     SH('붕어마름 숲','송사리 놀이터','u',1.6,'grass','#43a047','sway'), SH('연잎','개구리 의자','u',1.2,'lily','#66bb6a','float'), EM('아기 오리','삐약삐약 둥둥','r',.9,'🦆','float'),
-    SH('잠자리','냇가 위를 날아요','c',.9,'dragonfly','#e53935','fly'), SH('들꽃','둑에 핀 꽃','c',.9,'flower','#f06292','none',{bank:true}), SH('물가 돌탑','소원을 빌어요','r',1.3,'rock','#b0bec5'),
+    SH('고추잠자리','냇가 위를 날아요','c',1,'dragonfly','#e53935','fly'), SH('들꽃','둑에 핀 꽃','c',.9,'flower','#f06292','none',{bank:true}), SH('물가 돌탑','소원을 빌어요','r',1.3,'rock','#b0bec5'),
     EM('거북이','느릿느릿 일광욕','r',1,'🐢','crawl'), SH('노란 들꽃','나비가 좋아해요','c',.9,'flower','#ffca28','none',{bank:true}), F('황어','봄에 붉어져요','u',.9,{body:'long',c1:'#ef9a9a',c2:'#c62828',pat:'belly'}),
   ]},
   2: { name:'Lv2 강', hint:'넓고 깊은 강물', items:[
@@ -1916,7 +1930,7 @@ function heroSVG(lv){
   const fins = c => `<g class="hk"><path d="M-8,28 V36 L-18,52 C-10,54 0,52 -1,36 Z" fill="${c}"/></g><g class="hk" style="animation-delay:-.3s"><path d="M8,28 V36 L0,52 C8,54 18,52 15,36 Z" fill="${c}"/></g>`;
   const mask = `<rect x="-18" y="-35" width="36" height="14" rx="7" fill="rgba(191,239,255,.6)" stroke="#2d2420" stroke-width="2.5"/><path d="M-18,-28 h-4 M18,-28 h4" stroke="#2d2420" stroke-width="2.5"/>`;
   let body='', over='';
-  if(lv===1){ body = `${arms(skin)}${torso('#66bb6a')}${shorts('#1e88e5')}${legs}<g transform="rotate(-58 24 18)"><path d="M24,22 L24,-40" stroke="#8d6e63" stroke-width="3.5" stroke-linecap="round"/><ellipse cx="24" cy="-50" rx="12" ry="11" fill="rgba(255,255,255,.3)" stroke="#f5f5f5" stroke-width="2"/><path d="M16,-46 l16,-8 M14,-52 l20,0 M16,-56 l16,8" stroke="#f5f5f5" stroke-width="1" opacity=".8"/></g>` }
+  if(lv===1){ body = `${arms(skin)}${torso('#66bb6a')}${shorts('#1e88e5')}${legs}<path d="M24,18 L60,-26" stroke="#8d6e63" stroke-width="4" stroke-linecap="round"/><g transform="rotate(40 66 -34)"><ellipse cx="66" cy="-34" rx="13" ry="11" fill="rgba(255,255,255,.35)" stroke="#e0e0e0" stroke-width="2.5"/><path d="M56,-38 h20 M56,-30 h20 M60,-44 v20 M66,-45 v22 M72,-44 v20" stroke="#e0e0e0" stroke-width="1.2" opacity=".9"/></g>` }
   if(lv===2){ body = `<path d="M-48,22 C-30,8 30,8 48,22 C30,34 -30,34 -48,22 Z" fill="#fbc02d" stroke="${line}"/><ellipse cx="0" cy="22" rx="22" ry="7" fill="#f57f17"/>${arms(skin)}${torso('#ef5350')}<path d="M-15,12 h30 v8 h-30 Z" fill="#1e88e5"/><g transform="rotate(25)"><path d="M-42,-2 L42,-2" stroke="#8d6e63" stroke-width="3.5" stroke-linecap="round"/><ellipse cx="-44" cy="-2" rx="5" ry="9" fill="#ff7043"/><ellipse cx="44" cy="-2" rx="5" ry="9" fill="#ff7043"/></g>` }
   if(lv===3){ body = `${arms(skin)}${torso(skin)}${shorts('#ff7043')}${legs}<circle cx="28" cy="14" r="14" fill="none" stroke="#ffca28" stroke-width="7" opacity=".95"/>`; over = `<ellipse cx="0" cy="-47" rx="30" ry="6" fill="#fbc02d"/><path d="M-19,-47 C-19,-66 19,-66 19,-47 Z" fill="#fdd835"/><path d="M-19,-49 h38" stroke="#ef6c00" stroke-width="2.5"/>` }
   if(lv===4){ body = `${arms(skin)}${torso('#1e88e5')}<path d="M-16,12 h32 v12 h-32 Z" fill="#0d47a1"/>${fins('#43a047')}`; over = mask + `<path d="M18,-31 h9 v-18" stroke="#ff7043" stroke-width="4" fill="none" stroke-linecap="round"/>` }
@@ -1926,6 +1940,16 @@ function heroSVG(lv){
 }
 // 레벨별로 세준이가 머무는 높이(%): 냇가·해수욕장은 얕은 물, 강은 카약(수면), 바다·심해는 자유롭게
 const HERO_BAND = { 1:[38,38.5], 2:[30,34], 3:[28,36], 4:[16,82], 5:[16,82] };   // 냇가: 둑 위(발끝 기준)
+// 아이템 종류별로 놓이는 높이 구역(%). 수면·하늘은 물이 시작되는 높이에 따라 달라요.
+function bandFor(lv, it){
+  const wt = WATER_TOP[lv], m = it.m;
+  if(it.bank) return [33,37];
+  if(m==='float') return [wt+1, wt+4];
+  if(m==='fly') return [Math.max(4, wt-32), Math.max(10, wt-10)];
+  if(m==='crawl'||m==='none'||m==='sway') return [82,90];
+  if(m==='drift') return [wt+12, 68];
+  return [wt+10, 80];
+}
 const HERO_ANCHOR = { 1:0.92, 2:0.6, 3:0.55, 4:0.5, 5:0.5 };   // 기준점(세로): 1은 발끝, 나머지는 몸 가운데쯤
 
 const Play = {
@@ -1959,6 +1983,9 @@ const Play = {
     if(lv===5) for(let i=0;i<40;i++){ const g = document.createElement('div'); g.className='glow'; const sz = 2+Math.random()*5; g.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;animation-delay:${-Math.random()*3}s;animation-duration:${2+Math.random()*3}s`; bg.appendChild(g) }
     const host = $('sprites'); host.innerHTML=''; this.sprites = [];
     for(const d of (DECOR[lv]||[])){ const el = document.createElement('div'); el.className='sp deco'; el.innerHTML = SHAPES[d.sh](d.c); host.appendChild(el); this.sprites.push({ el, name:'', move:'none', scale:d.s, x:d.x, y:d.y, baseY:d.y, dir:1, speed:0, phase:0, faces:0 }) }
+    let moved = false;
+    for(const rec of this.data.items[lv]){ const def = POOLS[lv].items[rec.id]; if(!def) continue; const [lo, hi] = bandFor(lv, def); if(rec.y < lo || rec.y > hi){ rec.y = lo + Math.random()*(hi-lo); moved = true } }
+    if(moved) this.save();
     for(const it of this.data.items[lv]) this.spawn(it, false);
     const hero = $('hero'); hero.innerHTML = heroSVG(lv); hero.querySelector('.nm').textContent = (SET.name||'나'); const hb = HERO_BAND[lv]; const hy = (hb[0]+hb[1])/2; this.hero = {x:50,y:hy,tx:50,ty:hy,dir:1};
     this.fixSizes();
@@ -2011,8 +2038,7 @@ const Play = {
     for(const [k,r] of Object.entries(RARITY)){ roll -= r.w; if(roll <= 0){ rar = k; break } }
     let cands = pool.items.map((it,i)=>({it,i})).filter(o => o.it.r===rar); if(!cands.length) cands = pool.items.map((it,i)=>({it,i}));
     const {it, i} = pick(cands); const m = it.m;
-    const wt = WATER_TOP[lv];
-    const yBand = it.bank ? [33,37] : m==='float' ? [wt+1, wt+4] : m==='fly' ? [Math.max(4, wt-32), Math.max(10, wt-10)] : (m==='crawl'||m==='none'||m==='sway') ? [82,90] : m==='drift' ? [wt+12, 68] : [wt+10, 80];
+    const yBand = bandFor(lv, it);
     const rec = { id:i, x: 8+Math.random()*84, y: yBand[0] + Math.random()*(yBand[1]-yBand[0]), dir: Math.random()<.5?-1:1, speed: 0.5+Math.random()*0.9, t: Date.now() };
     this.data.items[lv].push(rec); this.save();
     this.pending = rec;
