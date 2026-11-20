@@ -1891,6 +1891,7 @@ if(window.Capacitor) document.documentElement.classList.add('in-app');   // 앱 
   $('sUpdate').onclick = () => { toast('최신 버전을 확인하는 중…', 2000); setTimeout(() => location.reload(), 300) };
   $('sResetPlay').onclick = () => {   // 코인 0, 뽑은 아이템 전부 삭제 (테스트 끝!)
     if(!confirm('나의 바다의 코인과 뽑은 아이템을 모두 지울까요? (되돌릴 수 없어요)')) return;
+    const pw = prompt('정말 지우려면 비밀번호를 입력하세요'); if(pw === null) return; if(pw.trim() !== '1111'){ toast('비밀번호가 달라요. 초기화하지 않았어요.', 2500); return }
     const items = {}; for(let i=1;i<=MAX_LV;i++) items[i] = [];
     Object.assign(Play.data, { coins:0, lv:1, items, pulls:0, seen:{}, since:{} }); Play.save(); if(Play.running) Play.render();
     toast('나의 바다를 처음 상태로 되돌렸어요. 코인 0개!', 2500); setTimeout(() => location.reload(), 900);
