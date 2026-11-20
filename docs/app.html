@@ -709,7 +709,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 13:17';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 13:18';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -2221,7 +2221,7 @@ const Play = {
   say(msg){ const m = $('pMsg'); m.textContent = msg; m.hidden = false; clearTimeout(m._t); m._t = setTimeout(() => { m.hidden = true }, 3500) },
   bubbles(xp, yp, n=6){ const sc = $('scene'); const W = sc.clientWidth, H = sc.clientHeight; for(let i=0;i<n;i++){ const b = document.createElement('div'); b.className='pop'; const sz = 5+Math.random()*9; b.style.cssText = `left:${xp/100*W + (Math.random()-.5)*30}px;top:${yp/100*H + (Math.random()-.5)*20}px;width:${sz}px;height:${sz}px;animation-delay:${Math.random()*.25}s;--dx:${(Math.random()-.5)*30}px`; sc.appendChild(b); setTimeout(() => b.remove(), 1300) } },
   dropFood(xp, yp){
-    if(this.food) this.food.el.remove();
+    if(this.food) return;   // 누가 먹기 전까지는 새 먹이가 생기지 않아요
     const el = document.createElement('div'); el.className='food';
     el.innerHTML = `<svg viewBox="0 0 26 18"><g fill="#a1887f" stroke="#5d4037" stroke-width=".8"><circle cx="5" cy="9" r="3.2"/><circle cx="12" cy="5" r="3"/><circle cx="19" cy="10" r="3.4"/><circle cx="12" cy="13" r="2.6"/></g></svg>`;
     $('scene').appendChild(el);
@@ -2233,7 +2233,7 @@ const Play = {
     const SEEK = ['swim','dash','drift','crawl'];
     for(const o of this.sprites){ if(!SEEK.includes(o.move) || o.bank || o.speed <= 0) continue;
       const vx = (Math.random()<.5?-1:1) * (3 + Math.random()*7), vy = o.move==='crawl' ? 0 : (Math.random()<.5?-1:1) * (1.5 + Math.random()*5);
-      o.scatter = { until: performance.now() + 700 + Math.random()*700, vx, vy }; o.dir = vx > 0 ? 1 : -1; o.baseY = o.y }
+      o.scatter = { until: performance.now() + 300, vx: vx*1.6, vy: vy*1.6 }; o.dir = vx > 0 ? 1 : -1; o.baseY = o.y }
   },
   dart(sp){ if(!sp.alive) return;
     if(sp.bird){ sp.flap = { t0: performance.now(), dur: 3200, y0: sp.baseY, dx: (Math.random()<.5?-1:1) * (1+Math.random()*2) }; return }   // 새: 날개 한 번 치고 날아올랐다 내려앉아요
