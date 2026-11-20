@@ -653,7 +653,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 12:32';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 12:34';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1925,7 +1925,8 @@ function heroSVG(lv){
   return `<svg viewBox="-64 -72 128 128"><g${swim}>${body}${head}${over}</g></svg><span class="nm"></span>`;
 }
 // 레벨별로 세준이가 머무는 높이(%): 냇가·해수욕장은 얕은 물, 강은 카약(수면), 바다·심해는 자유롭게
-const HERO_BAND = { 1:[62,76], 2:[30,34], 3:[28,36], 4:[16,82], 5:[16,82] };
+const HERO_BAND = { 1:[38,38.5], 2:[30,34], 3:[28,36], 4:[16,82], 5:[16,82] };   // 냇가: 둑 위(발끝 기준)
+const HERO_ANCHOR = { 1:0.92, 2:0.6, 3:0.55, 4:0.5, 5:0.5 };   // 기준점(세로): 1은 발끝, 나머지는 몸 가운데쯤
 
 const Play = {
   data: Object.assign({ coins:0, lv:1, items:{}, pulls:0 }, LS.get('play', {})),
@@ -1996,8 +1997,9 @@ const Play = {
     const h = this.hero; const dx = h.tx - h.x, dy = h.ty - h.y, dist = Math.hypot(dx, dy);
     if(dist > 0.5){ const sp = Math.min(dist, 18*dt); h.x += dx/dist*sp; h.y += dy/dist*sp; if(Math.abs(dx) > 0.3) h.dir = dx > 0 ? 1 : -1 }
     else if(Math.random() < 0.004){ const hb = HERO_BAND[this.data.lv]; h.tx = 10+Math.random()*80; h.ty = hb[0] + Math.random()*(hb[1]-hb[0]) }
-    const bob = Math.sin(now/600)*0.6;
-    const he = $('hero'); he.style.transform = `translate(${h.x/100*W}px, ${(h.y+bob)/100*H}px) translate(-50%,-50%)`; const hs = he.firstElementChild; if(hs) hs.style.transform = `scaleX(${h.dir})`;
+    const lvNow = this.data.lv; const walking = lvNow===1 && dist > 0.5;
+    const bob = lvNow===1 ? (walking ? -Math.abs(Math.sin(now/120))*0.6 : 0) : Math.sin(now/600)*0.6;
+    const he = $('hero'); he.style.transform = `translate(${h.x/100*W}px, ${(h.y+bob)/100*H}px) translate(-50%,-${Math.round(HERO_ANCHOR[lvNow]*100)}%)`; const hs = he.firstElementChild; if(hs) hs.style.transform = `scaleX(${h.dir})`;
     this.raf = requestAnimationFrame(t => this.tick(t));
   },
   pull(){
