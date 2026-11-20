@@ -640,7 +640,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 12:19';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 12:22';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1789,6 +1789,9 @@ const SHAPES = {
   sub: c => `<svg viewBox="-50 -30 100 60"><ellipse cx="0" cy="4" rx="44" ry="18" fill="${c}"/><rect x="-12" y="-20" width="24" height="16" rx="4" fill="${c}"/><circle cx="-16" cy="4" r="6" fill="#bfefff"/><circle cx="4" cy="4" r="6" fill="#bfefff"/><circle cx="24" cy="4" r="6" fill="#bfefff"/><g class="tail"><path d="M-44,4 L-56,-10 L-56,18 Z" fill="${c}"/></g><circle class="light" cx="46" cy="4" r="5" fill="#fff8b0"/></svg>`,
   vent: c => `<svg viewBox="-40 -60 80 70"><path d="M-30,10 L-14,-40 L14,-40 L30,10 Z" fill="${c}"/><g class="pulse" fill="rgba(60,60,70,.55)"><circle cx="0" cy="-48" r="10"/><circle cx="-8" cy="-58" r="7"/><circle cx="10" cy="-62" r="8"/></g></svg>`,
   bone: c => `<svg viewBox="-60 -24 120 48"><path d="M-50,0 H50" stroke="${c}" stroke-width="8" stroke-linecap="round"/><g stroke="${c}" stroke-width="5" stroke-linecap="round"><path d="M-36,-16 V16 M-18,-20 V20 M0,-22 V22 M18,-20 V20 M36,-16 V16"/></g><circle cx="56" cy="0" r="12" fill="${c}"/></svg>`,
+  snail: c => `<svg viewBox="-40 -30 80 60"><path d="M-36,16 C-20,-4 10,-6 28,4 L36,14 Z" fill="${c}"/><path d="M-26,12 C-18,-6 8,-8 20,2 C10,-2 -6,-2 -14,12 Z" fill="rgba(255,255,255,.35)"/><path d="M-34,14 q-4,-18 10,-24 q16,-6 30,8" stroke="rgba(0,0,0,.25)" stroke-width="2" fill="none"/><ellipse cx="0" cy="18" rx="30" ry="5" fill="${c}" opacity=".8"/></svg>`,
+  grass: c => `<svg viewBox="-30 -70 60 80"><g class="pulse" stroke="${c}" stroke-width="3.5" stroke-linecap="round" fill="none"><path d="M-18,8 C-22,-20 -10,-40 -14,-62"/><path d="M-8,8 C-6,-20 -14,-44 -4,-66"/><path d="M2,8 C8,-16 -2,-40 6,-60"/><path d="M12,8 C18,-14 10,-36 20,-56"/><path d="M-13,8 C-16,-10 -20,-28 -24,-44"/><path d="M8,8 C14,-6 20,-20 26,-36"/></g></svg>`,
+  mussel: c => `<svg viewBox="-40 -24 80 48"><path d="M-36,6 C-30,-16 20,-22 36,-4 C30,14 -14,20 -36,6 Z" fill="${c}"/><path d="M-30,4 C-20,-8 10,-14 30,-4" stroke="rgba(255,255,255,.35)" stroke-width="2" fill="none"/><path d="M-24,8 C-10,0 10,-4 28,0" stroke="rgba(0,0,0,.2)" stroke-width="1.5" fill="none"/></svg>`,
   egg: c => `<svg viewBox="-30 -36 60 72"><path d="M0,-34 C18,-34 28,-10 28,8 C28,24 14,34 0,34 C-14,34 -28,24 -28,8 C-28,-10 -18,-34 0,-34 Z" fill="${c}"/><circle cx="-8" cy="-6" r="4" fill="rgba(0,0,0,.12)"/><circle cx="10" cy="8" r="5" fill="rgba(0,0,0,.12)"/></svg>`,
   chest: c => `<svg viewBox="-40 -30 80 60"><rect x="-34" y="-6" width="68" height="34" rx="4" fill="${c}"/><path d="M-34,-6 C-34,-28 34,-28 34,-6 Z" fill="${c}" opacity=".85"/><rect x="-34" y="-8" width="68" height="6" fill="#f0c24b"/><rect x="-6" y="-2" width="12" height="12" rx="2" fill="#f0c24b"/><g class="light"><circle cx="-14" cy="-14" r="3" fill="#fff8b0"/><circle cx="14" cy="-16" r="2" fill="#fff8b0"/></g></svg>`,
 };
@@ -1802,10 +1805,10 @@ const POOLS = {
     F('갈겨니','옆줄이 예뻐요','c',.65,{body:'oval',c1:'#b3e5fc',c2:'#4fc3f7',pat:'stripes',c3:'#01579b'}), F('참붕어','작은 붕어','c',.7,{body:'oval',c1:'#ffe082',c2:'#ffb300'}), F('미꾸라지','미끌미끌 바닥 친구','c',.7,{body:'eel',c1:'#a1887f',c2:'#5d4037',pat:'spots'}),
     F('돌고기','돌 틈에 숨어요','u',.6,{body:'long',c1:'#bcaaa4',c2:'#6d4c41',pat:'stripes',c3:'#3e2723'}), F('꺽지','냇가의 작은 사냥꾼','u',.8,{body:'tall',c1:'#a5d6a7',c2:'#2e7d32',pat:'band'}), F('쉬리','우리나라에만 사는 물고기','r',.7,{body:'long',c1:'#fff59d',c2:'#f9a825',pat:'stripes',c3:'#1b2238'}),
     F('금강모치','차가운 물을 좋아해요','r',.6,{body:'long',c1:'#ffccbc',c2:'#e64a19',pat:'stripes',c3:'#3e2723'}), F('열목어','맑은 물의 보석','e',1,{body:'long',c1:'#f8bbd0',c2:'#ad1457',pat:'spots'}), F('산천어','계곡의 왕자','e',1,{body:'long',c1:'#c5e1a5',c2:'#558b2f',pat:'spots',c3:'#263238'}),
-    SH('올챙이','꼬물꼬물 헤엄쳐요','c',.5,'tadpole','#37474f','swim'), EM('개구리','개굴개굴','u',.9,'🐸','bounce'), EM('소금쟁이','물 위를 미끄러져요','c',.6,'🦟','float'),
-    SH('가재','뒷걸음질 선수','u',.8,'crab','#8d6e63','crawl'), SH('다슬기','돌에 붙어 살아요','c',.5,'shell','#5d4037'), SH('조약돌','매끈매끈','c',.9,'rock','#90a4ae'),
-    SH('큰 바위','물고기들의 쉼터','u',1.5,'rock','#78909c'), SH('갈대','바람에 사각사각','c',1.5,'reed','#8bc34a','sway'), SH('물풀','살랑살랑','c',1.1,'weed','#66bb6a','sway'),
-    SH('수초 숲','물고기 놀이터','u',1.6,'weed','#43a047','sway'), SH('연잎','개구리 의자','u',1.2,'lily','#66bb6a','float'), EM('아기 오리','삐약삐약 둥둥','r',.9,'🦆','float'),
+    SH('올챙이','꼬물꼬물 헤엄쳐요','c',.5,'tadpole','#37474f','swim'), EM('청개구리','개굴개굴','u',.9,'🐸','bounce'), EM('소금쟁이','물 위를 미끄러져요','c',.6,'🦟','float'),
+    SH('가재','뒷걸음질 선수','u',.8,'crab','#8d6e63','crawl'), SH('다슬기','돌에 붙어 사는 민물 고둥','c',.55,'snail','#5d4037'), SH('조약돌','매끈매끈','c',.9,'rock','#90a4ae'),
+    SH('큰 바위','물고기들의 쉼터','u',1.5,'rock','#78909c'), SH('갈대','바람에 사각사각','c',1.5,'reed','#8bc34a','sway'), SH('검정말','가늘고 긴 민물 수초','c',1.1,'grass','#66bb6a','sway'),
+    SH('붕어마름 숲','송사리 놀이터','u',1.6,'grass','#43a047','sway'), SH('연잎','개구리 의자','u',1.2,'lily','#66bb6a','float'), EM('아기 오리','삐약삐약 둥둥','r',.9,'🦆','float'),
     EM('잠자리','물 위를 날아요','c',.7,'🪰','fly'), EM('나비','꽃 찾아 팔랑','c',.7,'🦋','fly'), SH('물가 돌탑','소원을 빌어요','r',1.3,'rock','#b0bec5'),
     EM('거북이','느릿느릿 일광욕','r',1,'🐢','crawl'), EM('물총새','파란 보석 새','e',.8,'🐦','fly'), F('황어','봄에 붉어져요','u',.9,{body:'long',c1:'#ef9a9a',c2:'#c62828',pat:'belly'}),
   ]},
@@ -1815,10 +1818,10 @@ const POOLS = {
     F('강준치','은빛 번개','u',1.1,{body:'long',c1:'#eceff1',c2:'#90a4ae',pat:'belly'}), F('뱀장어','바다에서 태어나 강으로','u',1.3,{body:'eel',c1:'#9e9e9e',c2:'#424242'}), F('가물치','힘센 민물고기','r',1.4,{body:'eel',c1:'#a5d6a7',c2:'#1b5e20',pat:'spots'}),
     F('블루길','파란 아가미','c',.8,{body:'tall',c1:'#90caf9',c2:'#1565c0',pat:'stripes',c3:'#0d47a1'}), F('배스','입이 큰 물고기','u',1.1,{body:'tall',c1:'#c5e1a5',c2:'#33691e',pat:'stripes',c3:'#1b5e20'}), F('은어','수박 향이 나요','r',.9,{body:'long',c1:'#e0f7fa',c2:'#4dd0e1',pat:'belly'}),
     F('연어','고향으로 돌아와요','e',1.3,{body:'long',c1:'#ffab91',c2:'#d84315',pat:'spots'}), F('철갑상어','살아 있는 화석','e',1.8,{body:'eel',c1:'#b0bec5',c2:'#455a64',pat:'stripes',c3:'#263238'}), F('황쏘가리','황금빛 쏘가리','e',1.1,{body:'tall',c1:'#fff59d',c2:'#f9a825'}),
-    SH('자라','등딱지가 말랑','u',1,'turtle','#8d6e63','crawl'), SH('민물게','옆으로 총총','c',.7,'crab','#6d4c41','crawl'), SH('민물조개','진흙 속 보물','c',.6,'shell','#a1887f'),
-    SH('연꽃잎','물 위의 초록 접시','c',1.3,'lily','#4caf50','float'), SH('갈대밭','강가의 바람','c',1.6,'reed','#9e9d24','sway'), SH('물풀','강바닥 숲','c',1.2,'weed','#388e3c','sway'),
-    SH('조약돌 무더기','반질반질','c',1,'rock','#9e9e9e'), SH('나룻배','강을 건너요','r',1.6,'boat','#8d6e63','float'), EM('수달','물장구 선수','r',1,'🦦','swim'),
-    EM('왜가리','긴 다리 낚시꾼','u',1.3,'🪿','float'), EM('청둥오리','둥둥 떠다녀요','c',.9,'🦆','float'), EM('개구리','연잎 위 점프','c',.8,'🐸','bounce'),
+    SH('자라','등딱지가 말랑','u',1,'turtle','#8d6e63','crawl'), SH('민물게','옆으로 총총','c',.7,'crab','#6d4c41','crawl'), SH('말조개','진흙 속 길쭉한 조개','c',.7,'mussel','#5d4037'),
+    SH('연꽃잎','물 위의 초록 접시','c',1.3,'lily','#4caf50','float'), SH('갈대밭','강가의 바람','c',1.6,'reed','#9e9d24','sway'), SH('나사말','강바닥의 긴 풀','c',1.2,'grass','#388e3c','sway'),
+    SH('자갈밭','반질반질 자갈','c',1,'rock','#9e9e9e'), SH('나룻배','강을 건너요','r',1.6,'boat','#8d6e63','float'), EM('수달','물장구 선수','r',1,'🦦','swim'),
+    EM('왜가리','긴 다리 낚시꾼','u',1.3,'🪿','float'), EM('청둥오리','둥둥 떠다녀요','c',.9,'🦆','float'), EM('두꺼비','엉금엉금 두꺼비','c',.9,'🐸','crawl',{hue:40}),
     EM('물뱀','스르륵 헤엄','u',1,'🐍','swim'), SH('잠긴 나무','물고기 아파트','u',1.5,'reed','#5d4037'), SH('강바닥 바위','이끼 낀 바위','c',1.3,'rock','#607d8b'),
   ]},
   3: { name:'Lv3 해수욕장', hint:'햇살 가득 얕은 바다', items:[
@@ -1826,13 +1829,13 @@ const POOLS = {
     F('파랑비늘돔','비늘이 무지개','u',1.1,{body:'oval',c1:'#80deea',c2:'#00838f',pat:'spots',c3:'#f06292'}), F('복어','뾰족뾰족 풍선','c',.8,{body:'round',c1:'#fff9c4',c2:'#c0ca33',pat:'spots'}), F('쥐치','뾰로통한 입','c',.8,{body:'tall',c1:'#b2dfdb',c2:'#00695c'}),
     F('자리돔','까만 꼬마','c',.6,{body:'oval',c1:'#90a4ae',c2:'#263238'}), F('놀래기','알록달록 옷','u',.8,{body:'long',c1:'#ce93d8',c2:'#6a1b9a',pat:'stripes',c3:'#ffee58'}), F('전갱이','은빛 떼','c',.8,{body:'long',c1:'#e0e0e0',c2:'#78909c',pat:'belly'}),
     F('멸치 떼','반짝반짝 작은 떼','c',.45,{body:'long',c1:'#eceff1',c2:'#b0bec5'}), F('가자미','모래 속 숨바꼭질','u',1,{body:'flat',c1:'#d7ccc8',c2:'#8d6e63',pat:'spots'}), F('학꽁치','뾰족한 주둥이','u',1,{body:'eel',c1:'#b3e5fc',c2:'#0288d1'}),
-    F('돛새치','바다의 스피드왕','e',1.9,{body:'long',c1:'#90caf9',c2:'#1a237e',pat:'stripes',c3:'#0d47a1'}), F('쏠배감펭','날개 달린 가시','r',1.1,{body:'tall',c1:'#ffccbc',c2:'#bf360c',pat:'stripes',c3:'#fff'}), F('나폴레옹피시','혹 달린 거인','e',1.8,{body:'tall',c1:'#a5d6a7',c2:'#00695c',pat:'spots'}),
+    F('숭어','얕은 바다를 펄쩍','u',1.1,{body:'long',c1:'#cfd8dc',c2:'#455a64',pat:'belly'}), F('쏠배감펭','날개 달린 가시','r',1.1,{body:'tall',c1:'#ffccbc',c2:'#bf360c',pat:'stripes',c3:'#fff'}), F('나폴레옹피시','혹 달린 거인','e',1.8,{body:'tall',c1:'#a5d6a7',c2:'#00695c',pat:'spots'}),
     SH('꽃게','집게 조심','c',.8,'crab','#ef6c00','crawl'), SH('불가사리','바다의 별','c',.7,'star','#ff7043','crawl'), SH('파란 불가사리','희귀한 파란 별','r',.7,'star','#42a5f5','crawl'),
     SH('소라','파도 소리가 들려요','c',.6,'shell','#f48fb1'), SH('진주조개','안에 진주가!','r',.8,'shell','#e1bee7'), SH('산호','바다의 꽃밭','c',1,'coral','#ff8a80'),
     SH('보라 산호','보라색 산호','u',1,'coral','#b388ff'), SH('말미잘','니모의 집','u',.9,'weed','#f48fb1','sway'), SH('바다 해초','살랑살랑','c',1.2,'weed','#26a69a','sway'),
     SH('해파리','둥실둥실','u',.9,'jelly','#f8bbd0','drift'), SH('아기 거북','바다로 첫 수영','r',.9,'turtle','#4caf50','swim'), SH('문어','여덟 다리 마술사','u',1,'octo','#ab47bc','drift'),
-    EM('돌고래','해변의 친구','r',1.4,'🐬','swim'), EM('바다표범','통통 튀는 수영','r',1.2,'🦭','swim'), SH('모래성 돌','조개 박힌 돌','c',1,'rock','#d7ccc8'),
-    SH('튜브 배','파도 타기','u',1.4,'boat','#ffeb3b','float'), SH('닻','배를 멈춰요','c',1,'anchor','#607d8b'), SH('거북 알','모래 속에서 콩콩','u',.6,'egg','#fff3e0'),
+    EM('아기 돌고래','해변 가까이 놀러 와요','r',1.1,'🐬','swim'), EM('바다표범','통통 튀는 수영','r',1.2,'🦭','swim'), SH('모래성 돌','조개 박힌 돌','c',1,'rock','#d7ccc8'),
+    SH('튜브 배','파도 타기','u',1.4,'boat','#ffeb3b','float'), SH('바다 달팽이','분홍 고둥','c',.6,'snail','#f48fb1'), SH('거북 알','모래 속에서 콩콩','u',.6,'egg','#fff3e0'),
   ]},
   4: { name:'Lv4 깊은 바다', hint:'푸르고 고요한 큰 바다', items:[
     F('참치','빠른 어뢰','c',1.4,{body:'long',c1:'#90a4ae',c2:'#263238',pat:'belly'}), F('고등어','등이 푸른 물고기','c',1,{body:'long',c1:'#80deea',c2:'#006064',pat:'stripes',c3:'#263238'}), F('방어','겨울의 왕','u',1.3,{body:'long',c1:'#ffe082',c2:'#546e7a',pat:'belly'}),
@@ -1840,10 +1843,10 @@ const POOLS = {
     F('귀상어','망치 머리','r',1.7,{body:'long',c1:'#90a4ae',c2:'#455a64',teeth:true}), F('백상아리','바다의 왕','e',2.2,{body:'long',c1:'#cfd8dc',c2:'#37474f',pat:'belly',teeth:true}), F('고래상어','가장 큰 물고기','e',2.6,{body:'long',c1:'#78909c',c2:'#263238',pat:'spots',c3:'#fff'}),
     F('청새치','창 같은 주둥이','r',1.9,{body:'long',c1:'#64b5f6',c2:'#0d47a1',pat:'belly'}), F('가오리','날개로 헤엄쳐요','u',1.6,{body:'flat',c1:'#78909c',c2:'#37474f',pat:'spots',c3:'#eceff1'}), F('쥐가오리','바다의 천사','e',2.4,{body:'flat',c1:'#546e7a',c2:'#1b2238',pat:'belly'}),
     F('정어리 떼','큰 공처럼 몰려요','c',.5,{body:'long',c1:'#e0e0e0',c2:'#90a4ae'}), F('날치','바다 위를 날아요','u',.9,{body:'long',c1:'#b3e5fc',c2:'#01579b'}), F('바다거북 할아버지','100살 거북','r',1.4,{body:'round',c1:'#a5d6a7',c2:'#33691e',pat:'spots'}, {m:'swim'}),
-    SH('대왕 거북','바다의 현자','e',1.8,'turtle','#2e7d32','swim'), SH('문어','바위틈 마술사','u',1.1,'octo','#ef5350','drift'), SH('해파리','푸른 등불','u',1,'jelly','#80d8ff','drift'),
+    SH('대왕 거북','바다의 현자','e',1.8,'turtle','#2e7d32','swim'), SH('대왕문어','바위틈의 거인','u',1.4,'octo','#ef5350','drift'), SH('푸른 해파리','푸른 등불','u',1,'jelly','#80d8ff','drift'),
     SH('대왕 해파리','사람보다 커요','r',1.8,'jelly','#ff8a80','drift'), EM('돌고래 가족','셋이 함께 점프','r',1.4,'🐬','swim'), EM('혹등고래','노래하는 고래','e',2.4,'🐋','swim'),
     EM('흰수염고래','지구 최대 동물','e',2.8,'🐳','swim'), EM('범고래','검은 멋쟁이','e',2.2,'🐳','swim', {hue:200}), EM('오징어','먹물 발사!','u',1,'🦑','swim'),
-    SH('해초 숲','거대 다시마','c',1.8,'weed','#1b5e20','sway'), SH('붉은 산호초','바다의 숲','u',1.3,'coral','#e53935'), SH('바위 절벽','물고기 아파트','c',1.6,'rock','#37474f'),
+    SH('다시마 숲','거대 다시마','c',1.8,'weed','#1b5e20','sway'), SH('붉은 산호초','바다의 숲','u',1.3,'coral','#e53935'), SH('바위 절벽','물고기 아파트','c',1.6,'rock','#37474f'),
     SH('난파선 닻','오래된 배의 닻','u',1.2,'anchor','#5d4037'), SH('보물상자','반짝반짝 금화','e',1.1,'chest','#8d6e63'), SH('잠수부 세준','탐험 중!','r',1,'sub','#ffca28','swim'),
   ]},
   5: { name:'Lv5 심해', hint:'빛이 닿지 않는 깊은 곳', items:[
