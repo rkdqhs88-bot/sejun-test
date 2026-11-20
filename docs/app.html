@@ -351,7 +351,9 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 /* reveal card */
 .rarity{font-size:14px;font-weight:700;letter-spacing:.1em;border-radius:999px;padding:4px 14px;display:inline-block}
 .rar-c{background:#e6eaf2;color:#55607a}.rar-u{background:#d9f4e3;color:#1f8a4c}.rar-r{background:#dde7ff;color:#2b4f9e}.rar-e{background:linear-gradient(90deg,#ffd166,#f72585,#7209b7);color:#fff}
-.rvemoji{font-size:110px;line-height:1.1;animation:celbounce 1.2s ease-in-out infinite alternate;margin-top:8px}
+.rvemoji{font-size:96px;line-height:1.1;animation:celbounce 1.2s ease-in-out infinite alternate;margin:10px auto 4px;display:flex;justify-content:center;align-items:center;min-height:110px}
+.rvemoji .sp{position:static;display:inline-block;filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+.rvemoji .sp.fish svg{width:1.7em;height:1em}.rvemoji .sp:not(.fish) svg{width:1em;height:1em}
 .reveal .celcard{border:4px solid #f0c24b}
 @media (prefers-reduced-motion: reduce){.sp.sway,.bubble,.lava,.rvemoji{animation:none}}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:12px;font-size:15px;max-width:min(92vw,560px);z-index:20;box-shadow:0 6px 24px rgba(0,0,0,.25)}
@@ -670,7 +672,7 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
     <div class="rvemoji" id="rvEmoji">🐠</div>
     <h2 class="celtitle" id="rvName"></h2>
     <p class="celsub" id="rvDesc"></p>
-    <div class="acts" style="justify-content:center"><button class="btn primary big" id="rvOk">넣기 ✨</button><button class="btn" id="rvAgain">한 번 더 뽑기</button></div>
+    <div class="acts" style="justify-content:center"><button class="btn primary big" id="rvOk">넣기 ✨</button></div>
   </div>
 </div>
 <div class="celebrate" id="celebrate" hidden role="dialog" aria-modal="true" aria-labelledby="celTitle">
@@ -698,7 +700,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 12:56';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 12:57';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -2143,7 +2145,6 @@ const Play = {
     const em = $('rvEmoji'); em.style.filter = it.hue ? `hue-rotate(${it.hue}deg)` : '';
     if(it.f) em.innerHTML = `<span style="display:inline-block;width:1.7em;height:1em" class="sp fish">${fishSVG(it.f)}</span>`; else if(it.sh) em.innerHTML = `<span style="display:inline-block;width:1em;height:1em" class="sp">${SHAPES[it.sh](it.c)}</span>`; else em.textContent = it.e;
     $('rvName').textContent = it.n; $('rvDesc').textContent = it.d + (this.data.coins ? `  · 남은 코인 ${this.data.coins}개` : '  · 코인을 다 썼어요');
-    $('rvAgain').hidden = this.data.coins <= 0;
     $('reveal').hidden = false; chime(rar==='r'||rar==='e'); if(rar==='e'){ fanfare(); confettiStop = confetti(160, 3500) }
   },
   place(){ $('reveal').hidden = true; if(confettiStop){ confettiStop(); confettiStop = null } if(this.pending){ this.spawn(this.pending, true); this.pending = null; this.fixSizes(); } this.render(); },
@@ -2152,7 +2153,6 @@ const Play = {
 };
 $('pGacha').onclick = () => Play.pull();
 $('rvOk').onclick = () => Play.place();
-$('rvAgain').onclick = () => { Play.place(); Play.pull() };
 $('pPrev').onclick = () => Play.go(-1); $('pNext').onclick = () => Play.go(1);
 (() => { let sx = null, sy = null, t0 = 0; const sc = $('scene');
   sc.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; t0 = Date.now() });
