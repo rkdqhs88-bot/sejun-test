@@ -791,7 +791,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 18:13';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 18:14';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -2209,7 +2209,7 @@ const POOLS = {
   ]},
 };
 const RARITY = { c:{w:60,label:'보통',stars:'★'}, u:{w:28,label:'조금 희귀',stars:'★★'}, r:{w:10,label:'희귀!',stars:'★★★'}, e:{w:2,label:'전설!!',stars:'★★★★'} };
-const UNLOCK_AT = 30;   // 이 개수를 넘기면 다음 레벨이 열려요
+const UNLOCK_AT = 49;   // 이 개수를 넘기면(50개) 다음 레벨이 열려요
 const CREATURE_SHAPES = ['frog','crab','turtle','octo','jelly','tadpole','snake','salamander','beetle','dragonfly','strider','star','sub','whale','orca'];
 const isAlive = def => !!(def.f || def.e || def.g || (def.sh && CREATURE_SHAPES.includes(def.sh)));
 const BIRD_EMOJI = ['🦆','🪿','🐦','🦅','🦇','🐧'];
