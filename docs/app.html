@@ -361,8 +361,12 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 .hero.moving .leg{animation-duration:.6s}
 @keyframes frog{0%{transform:rotate(0) scaleY(1)}40%{transform:rotate(-28deg) scaleY(.55)}62%{transform:rotate(10deg) scaleY(1.05)}100%{transform:rotate(0) scaleY(1)}}
 .hero svg text{transform-box:fill-box;transform-origin:center;transform:scaleX(var(--flip,1))}
-.hero .lamp{transition:opacity .25s}
-.hero.lampoff .lamp{opacity:.06}
+.hero .lamp{transition:opacity .25s;filter:drop-shadow(0 0 6px rgba(255,241,118,.9))}
+.sp.legend{filter:drop-shadow(0 0 5px rgba(255,214,64,.85)) drop-shadow(0 0 14px rgba(255,193,7,.45));animation:aura 2.4s ease-in-out infinite}
+@keyframes aura{0%,100%{filter:drop-shadow(0 0 4px rgba(255,214,64,.7)) drop-shadow(0 0 10px rgba(255,193,7,.35))}50%{filter:drop-shadow(0 0 8px rgba(255,224,96,.95)) drop-shadow(0 0 20px rgba(255,193,7,.6))}}
+.hero .armDown{display:none}
+.hero.lampoff .armDown{display:block}
+.hero.lampoff .armUp{display:none}
 @media (prefers-reduced-motion: reduce){.sp .tail,.sp .fin,.sp .pulse,.sp .legs,.hero .leg,.hero .paddle,.rays i,.bubble,.glow,.surface{animation:none}}
 /* reveal card */
 .rarity{font-size:14px;font-weight:700;letter-spacing:.1em;border-radius:999px;padding:4px 14px;display:inline-block}
@@ -716,7 +720,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 13:40';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 13:41';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -2022,7 +2026,11 @@ function heroSVG(lv){
   if(lv===2){ body = `<path d="M-48,22 C-30,8 30,8 48,22 C30,34 -30,34 -48,22 Z" fill="#fbc02d" stroke="${line}"/><ellipse cx="0" cy="22" rx="22" ry="7" fill="#f57f17"/>${arms(skin)}${torso('#ef5350')}<path d="M-15,12 h30 v8 h-30 Z" fill="#1e88e5"/><g class="paddle"><g transform="rotate(25)"><path d="M-42,-2 L42,-2" stroke="#8d6e63" stroke-width="3.5" stroke-linecap="round"/><ellipse cx="-44" cy="-2" rx="5" ry="9" fill="#ff7043"/><ellipse cx="44" cy="-2" rx="5" ry="9" fill="#ff7043"/></g></g>` ; over = `<path d="M-22,-40 C-19,-58 19,-58 22,-40 Z" fill="#ef5350"/><path d="M-24,-40 C-8,-44 10,-44 30,-38 L31,-34 C10,-40 -8,-40 -24,-36 Z" fill="#ef5350" stroke="rgba(0,0,0,.15)"/><circle cx="0" cy="-57" r="3" fill="#ffcdd2"/>` }
   if(lv===3){ body = `${arms(skin)}${torso(skin)}${shorts('#ff7043')}${legs}<g class="tube"><circle cx="28" cy="14" r="14" fill="none" stroke="#ffca28" stroke-width="7" opacity=".95"/><path d="M28,0 v6 M28,22 v6 M14,14 h6 M36,14 h6" stroke="#ef6c00" stroke-width="3"/></g>`; over = `<ellipse cx="0" cy="-47" rx="30" ry="6" fill="#fbc02d"/><path d="M-19,-47 C-19,-66 19,-66 19,-47 Z" fill="#fdd835"/><path d="M-19,-49 h38" stroke="#ef6c00" stroke-width="2.5"/>` }
   if(lv===4){ body = `${arms(skin)}${torso('#1e88e5')}<path d="M-16,12 h32 v12 h-32 Z" fill="#0d47a1"/>${fins('#43a047')}`; over = mask + `<path d="M18,-31 h9 v-18" stroke="#ff7043" stroke-width="4" fill="none" stroke-linecap="round"/>` }
-  if(lv===5){ body = `<rect x="-26" y="-14" width="13" height="34" rx="6.5" fill="#fdd835" stroke="${line}"/>${arms('#263238')}${torso('#263238')}<path d="M-16,12 h32 v12 h-32 Z" fill="#1b2238"/>${fins('#424242')}<g class="lamp"><circle cx="26" cy="4" r="4" fill="#fff8b0"/><path d="M28,4 L64,-8 L64,16 Z" fill="#fff8b0" opacity=".3"/></g>`; over = mask + `<path d="M-16,-24 C-32,-20 -30,-4 -18,-10" stroke="#424242" stroke-width="3" fill="none"/><circle cx="6" cy="-19" r="4" fill="#424242"/>` }
+  if(lv===5){ const ac = '#263238';
+    const leftArm = `<path d="M-13,-4 C-22,2 -26,10 -24,18" stroke="${ac}" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="-24" cy="19" r="4.5" fill="${skin}"/>`;
+    const armDown = `<g class="armDown"><path d="M13,-4 C22,2 26,10 24,18" stroke="${ac}" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="24" cy="19" r="4.5" fill="${skin}"/><rect x="20" y="14" width="7" height="14" rx="2" fill="#546e7a" transform="rotate(-20 23 21)"/></g>`;
+    const armUp = `<g class="armUp"><defs><linearGradient id="beamG" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#fff176" stop-opacity=".95"/><stop offset=".55" stop-color="#ffee58" stop-opacity=".45"/><stop offset="1" stop-color="#ffee58" stop-opacity="0"/></linearGradient></defs><g class="lamp"><path d="M40,-7 L110,-34 L110,20 Z" fill="url(#beamG)"/><path d="M40,-7 L96,-22 L96,8 Z" fill="#fff59d" opacity=".35"/><circle cx="41" cy="-7" r="8" fill="#fff59d" opacity=".8"/></g><path d="M13,-4 C19,-9 24,-9 30,-8" stroke="${ac}" stroke-width="8" fill="none" stroke-linecap="round"/><rect x="26" y="-12" width="14" height="10" rx="2.5" fill="#546e7a" stroke="#37474f"/><rect x="38" y="-13" width="4" height="12" rx="1" fill="#fff59d"/><circle cx="30" cy="-7" r="4.5" fill="${skin}"/></g>`;
+    body = `<rect x="-26" y="-14" width="13" height="34" rx="6.5" fill="#fdd835" stroke="${line}"/>${leftArm}${torso(ac)}<path d="M-16,12 h32 v12 h-32 Z" fill="#1b2238"/>${fins('#424242')}${armDown}${armUp}`; over = mask + `<path d="M-16,-24 C-32,-20 -30,-4 -18,-10" stroke="#424242" stroke-width="3" fill="none"/><circle cx="6" cy="-19" r="4" fill="#424242"/>` }
   const swim = lv>=4 ? ' transform="rotate(70)"' : '';
   return `<svg viewBox="-64 -72 128 128"><g${swim}>${body}${head}${over}</g></svg><span class="nm"></span>`;
 }
@@ -2111,7 +2119,8 @@ const Play = {
     if(def.f) el.innerHTML = fishSVG(def.f); else if(def.sh) el.innerHTML = SHAPES[def.sh](def.c); else el.textContent = def.e;
     if(def.spin) el.innerHTML = `<span class="rot">${el.innerHTML}</span>`;
     if(def.hue) el.style.filter = `hue-rotate(${def.hue}deg)`;
-    const sp = { el, name: def.n, move: def.m, scale: def.s, x: rec.x, y: rec.y, dir: rec.dir||(Math.random()<.5?-1:1), speed: (def.sh==='lily') ? 0 : (rec.speed || (0.5+Math.random()*0.9)), phase: Math.random()*6.28, baseY: rec.y, faces: (def.f || def.sh==='snake' || def.sh==='salamander') ? 1 : (def.e ? -1 : 0), slow: !!def.slow, bank: !!def.bank, eager: 0.5 + Math.random()*1.2, alive: isAlive(def), air: def.m==='fly' || def.m==='hop' || !!def.bank, bird: isBird(def), frog: def.sh==='frog' };
+    if(def.r==='e') el.classList.add('legend');   // 전설: 황금빛 아우라
+    const sp = { el, name: def.n, move: def.m, scale: def.s * (def.r==='e' ? 1.25 : 1), rar: def.r, x: rec.x, y: rec.y, dir: rec.dir||(Math.random()<.5?-1:1), speed: (def.sh==='lily') ? 0 : (rec.speed || (0.5+Math.random()*0.9)), phase: Math.random()*6.28, baseY: rec.y, faces: (def.f || def.sh==='snake' || def.sh==='salamander') ? 1 : (def.e ? -1 : 0), slow: !!def.slow, bank: !!def.bank, eager: 0.5 + Math.random()*1.2, alive: isAlive(def), air: def.m==='fly' || def.m==='hop' || !!def.bank, bird: isBird(def), frog: def.sh==='frog' };
     if(fresh){ el.style.transition = 'opacity .6s'; el.style.opacity = '0'; requestAnimationFrame(() => el.style.opacity = '1') }
     $('sprites').appendChild(el); this.sprites.push(sp); return sp;
   },
