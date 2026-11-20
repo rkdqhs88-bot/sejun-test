@@ -698,7 +698,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 12:55';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 12:56';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1991,7 +1991,7 @@ function heroSVG(lv){
     body = `${sleeves}${jersey}${bag}${pants}${legs}${net}`;
     over = `<path d="M-23,-40 C-20,-60 20,-60 23,-40 Z" fill="#1c5ec7"/><path d="M-26,-40 C-10,-44 10,-44 30,-38 L31,-34 C10,-40 -10,-40 -26,-36 Z" fill="#1c5ec7" stroke="rgba(0,0,0,.15)"/><text x="0" y="-45" font-size="11" font-weight="900" fill="#fff" font-family="Arial" text-anchor="middle">S</text>`;
   }
-  if(lv===2){ body = `<path d="M-48,22 C-30,8 30,8 48,22 C30,34 -30,34 -48,22 Z" fill="#fbc02d" stroke="${line}"/><ellipse cx="0" cy="22" rx="22" ry="7" fill="#f57f17"/>${arms(skin)}${torso('#ef5350')}<path d="M-15,12 h30 v8 h-30 Z" fill="#1e88e5"/><g class="paddle"><g transform="rotate(25)"><path d="M-42,-2 L42,-2" stroke="#8d6e63" stroke-width="3.5" stroke-linecap="round"/><ellipse cx="-44" cy="-2" rx="5" ry="9" fill="#ff7043"/><ellipse cx="44" cy="-2" rx="5" ry="9" fill="#ff7043"/></g></g>` }
+  if(lv===2){ body = `<path d="M-48,22 C-30,8 30,8 48,22 C30,34 -30,34 -48,22 Z" fill="#fbc02d" stroke="${line}"/><ellipse cx="0" cy="22" rx="22" ry="7" fill="#f57f17"/>${arms(skin)}${torso('#ef5350')}<path d="M-15,12 h30 v8 h-30 Z" fill="#1e88e5"/><g class="paddle"><g transform="rotate(25)"><path d="M-42,-2 L42,-2" stroke="#8d6e63" stroke-width="3.5" stroke-linecap="round"/><ellipse cx="-44" cy="-2" rx="5" ry="9" fill="#ff7043"/><ellipse cx="44" cy="-2" rx="5" ry="9" fill="#ff7043"/></g></g>` ; over = `<path d="M-22,-40 C-19,-58 19,-58 22,-40 Z" fill="#ef5350"/><path d="M-24,-40 C-8,-44 10,-44 30,-38 L31,-34 C10,-40 -8,-40 -24,-36 Z" fill="#ef5350" stroke="rgba(0,0,0,.15)"/><circle cx="0" cy="-57" r="3" fill="#ffcdd2"/>` }
   if(lv===3){ body = `${arms(skin)}${torso(skin)}${shorts('#ff7043')}${legs}<g class="tube"><circle cx="28" cy="14" r="14" fill="none" stroke="#ffca28" stroke-width="7" opacity=".95"/><path d="M28,0 v6 M28,22 v6 M14,14 h6 M36,14 h6" stroke="#ef6c00" stroke-width="3"/></g>`; over = `<ellipse cx="0" cy="-47" rx="30" ry="6" fill="#fbc02d"/><path d="M-19,-47 C-19,-66 19,-66 19,-47 Z" fill="#fdd835"/><path d="M-19,-49 h38" stroke="#ef6c00" stroke-width="2.5"/>` }
   if(lv===4){ body = `${arms(skin)}${torso('#1e88e5')}<path d="M-16,12 h32 v12 h-32 Z" fill="#0d47a1"/>${fins('#43a047')}`; over = mask + `<path d="M18,-31 h9 v-18" stroke="#ff7043" stroke-width="4" fill="none" stroke-linecap="round"/>` }
   if(lv===5){ body = `<rect x="-26" y="-14" width="13" height="34" rx="6.5" fill="#fdd835" stroke="${line}"/>${arms('#263238')}${torso('#263238')}<path d="M-16,12 h32 v12 h-32 Z" fill="#1b2238"/>${fins('#424242')}<g class="lamp"><circle cx="26" cy="4" r="4" fill="#fff8b0"/><path d="M28,4 L64,-8 L64,16 Z" fill="#fff8b0" opacity=".3"/></g>`; over = mask + `<path d="M-16,-24 C-32,-20 -30,-4 -18,-10" stroke="#424242" stroke-width="3" fill="none"/><circle cx="6" cy="-19" r="4" fill="#424242"/>` }
