@@ -791,7 +791,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 18:07';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 18:13';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1893,7 +1893,7 @@ if(window.Capacitor) document.documentElement.classList.add('in-app');   // 앱 
     if(!confirm('나의 바다의 코인과 뽑은 아이템을 모두 지울까요? (되돌릴 수 없어요)')) return;
     const pw = prompt('정말 지우려면 비밀번호를 입력하세요'); if(pw === null) return; if(pw.trim() !== '1111'){ toast('비밀번호가 달라요. 초기화하지 않았어요.', 2500); return }
     const items = {}; for(let i=1;i<=MAX_LV;i++) items[i] = [];
-    Object.assign(Play.data, { coins:0, lv:1, items, pulls:0, seen:{}, since:{}, gift1:true }); Play.save(); if(Play.running) Play.render();
+    Object.assign(Play.data, { coins:0, lv:1, items, pulls:0, seen:{}, since:{}, gift1:true, gift2:true }); Play.save(); if(Play.running) Play.render();
     toast('나의 바다를 처음 상태로 되돌렸어요. 코인 0개!', 2500); setTimeout(() => location.reload(), 900);
   };
 })();
@@ -2293,7 +2293,7 @@ function bandFor(lv, it){
 const HERO_ANCHOR = { 1:0.92, 2:0.6, 3:0.92, 4:0.5, 5:0.5, 6:0.55 };   // 기준점(세로): 1은 발끝, 나머지는 몸 가운데쯤
 
 const Play = {
-  data: (() => { const d = Object.assign({ coins:0, lv:1, items:{}, pulls:0 }, LS.get('play', {})); if(!d.gift1){ d.coins = (d.coins||0) + 5; d.gift1 = true; try{ LS.set('play', d) }catch{} } return d })(),   // 2026-11-20 딱 한 번 코인 5개 선물 (그 뒤로는 시험으로만)
+  data: (() => { const d = Object.assign({ coins:0, lv:1, items:{}, pulls:0, gift1:true, gift2:true }, LS.get('play', {})); if(!d.gift1){ d.coins = (d.coins||0) + 5; d.gift1 = true; try{ LS.set('play', d) }catch{} } if(!d.gift2){ d.coins = 5; d.gift2 = true; try{ LS.set('play', d) }catch{} } return d })(),   // 2026-11-20 딱 한 번 코인 5개 선물 (그 뒤로는 시험으로만)
   save(){ LS.set('play', this.data) },
   addCoins(n){ this.data.coins += n; this.save(); $('coinMini').textContent = '🪙' + this.data.coins; if(S.mode==='h') renderHome() },
   count(lv){ return (this.data.items[lv]||[]).length },
@@ -2307,7 +2307,7 @@ const Play = {
     $('pLvName').textContent = pool.name; $('pCoins').textContent = this.data.coins; $('coinMini').textContent = '🪙' + this.data.coins;
     const n = this.count(lv); const next = POOLS[lv+1];
     $('pCount').textContent = next ? (n > UNLOCK_AT ? `아이템 ${n}개 · 다음 레벨(${next.name}) 열림! ▶` : `아이템 ${n}개 · ${UNLOCK_AT+1}개가 되면 다음 레벨이 열려요 (${UNLOCK_AT+1-n}개 남음)`) : `아이템 ${n}개 · 가장 깊은 곳이에요!`;
-    $('pPrev').disabled = lv<=1; $('pNext').disabled = !next;
+    $('pPrev').disabled = lv<=1; $('pNext').disabled = !next || !this.unlocked(lv+1);   // 잠긴 레벨로는 못 넘어가요
     $('pNext').textContent = next ? (this.unlocked(lv+1) ? '▶' : '🔒') : '▶';
     const locked = !this.unlocked(lv); $('pLock').hidden = !locked;
     if(locked) $('pLock').textContent = `🔒 ${pool.name}\n${POOLS[lv-1].name}에 아이템이 ${UNLOCK_AT+1}개 모이면 열려요!`;
@@ -2623,7 +2623,7 @@ const Play = {
     if(sp.frog){ sp.jump = { t0: performance.now(), dur: 750, y0: sp.baseY }; sp.el.classList.add('lick'); setTimeout(() => sp.el.classList.remove('lick'), 600); return }   // 개구리·두꺼비: 혀 쏙 + 제자리 점프
     if(sp.whale){ const wdir = sp.dir || 1; setTimeout(() => { sp.dart = { until: performance.now() + 1300, dir: wdir, fast: 1.5 } }, 380); sp.el.classList.add('spouting'); setTimeout(() => sp.el.classList.remove('spouting'), 1600); const sc = $('scene'), W = sc.clientWidth, H = sc.clientHeight; this.fxGlyph(sp.x/100*W, sp.y/100*H - sp.el.offsetHeight*0.45, sp.dir||1, 'rise', '💧', 9, '', 1800); this.bubbles(sp.x, sp.y, 9); sp.el.classList.remove('cast'); void sp.el.offsetWidth; sp.el.classList.add('cast'); setTimeout(() => sp.el.classList.remove('cast'), 800); return }   // 고래: 물줄기 쏴! 하고 빠르게
     sp.dart = { until: performance.now() + 750, dir: sp.dir || 1 }; if(!sp.air && sp.y > WATER_TOP[this.data.lv] + 1) this.bubbles(sp.x, sp.y, 7); },
-  go(d){ const lv = this.data.lv + d; if(!POOLS[lv]) return; this.data.lv = lv; this.save(); this.render(); },
+  go(d){ const lv = this.data.lv + d; if(!POOLS[lv] || !this.unlocked(lv)) return; this.data.lv = lv; this.save(); this.render(); },
 };
 $('pGacha').onclick = () => Play.pull();
 $('rvOk').onclick = () => Play.place();
