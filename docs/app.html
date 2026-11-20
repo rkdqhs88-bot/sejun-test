@@ -791,7 +791,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 14:12';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 14:14';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -2572,7 +2572,7 @@ const Play = {
   heroAscend(){
     if(this.data.lv !== 6 || this.ascending) return; this.ascending = true;
     const he = $('hero'); he.classList.add('ascend'); const h = this.hero; const hb = HERO_BAND[6];
-    h.tx = h.x; h.ty = 7;   // 하늘로!
+    h.tx = h.x; h.ty = 21;   // 하늘로! (머리 위에 여백을 조금 남기고)
     for(const sp of this.sprites){ if(sp.alive && !sp.sink) sp.sink = { until: performance.now() + 2600, y0: sp.baseY } }
     const sc = $('scene'), W = sc.clientWidth, H = sc.clientHeight; this.fxGlyph(h.x/100*W, h.y/100*H, 1, 'burst', '☁️', 10, 'cloudpuff', 1200); this.fxGlyph(h.x/100*W, h.y/100*H, 1, 'rise', '✨', 10, '', 2000);
     const r = document.createElement('div'); r.className='heartrain starrain'; const st = ['⭐','✨','🌟','💫']; r.innerHTML = Array.from({length:80},()=>`<i style="left:${Math.random()*100}%;animation-delay:${Math.random()*2}s;animation-duration:${1.4+Math.random()*1.2}s;font-size:${14+Math.random()*20}px">${st[Math.floor(Math.random()*st.length)]}</i>`).join(''); sc.appendChild(r); setTimeout(() => r.remove(), 5200);   // 하늘에서 별빛이 쏟아져요
