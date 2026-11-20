@@ -791,7 +791,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 18:14';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 18:16';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1893,7 +1893,7 @@ if(window.Capacitor) document.documentElement.classList.add('in-app');   // 앱 
     if(!confirm('나의 바다의 코인과 뽑은 아이템을 모두 지울까요? (되돌릴 수 없어요)')) return;
     const pw = prompt('정말 지우려면 비밀번호를 입력하세요'); if(pw === null) return; if(pw.trim() !== '1111'){ toast('비밀번호가 달라요. 초기화하지 않았어요.', 2500); return }
     const items = {}; for(let i=1;i<=MAX_LV;i++) items[i] = [];
-    Object.assign(Play.data, { coins:0, lv:1, items, pulls:0, seen:{}, since:{}, gift1:true, gift2:true }); Play.save(); if(Play.running) Play.render();
+    Object.assign(Play.data, { coins:0, lv:1, items, pulls:0, seen:{}, since:{}, gift1:true, gift2:true, gift3:true }); Play.save(); if(Play.running) Play.render();
     toast('나의 바다를 처음 상태로 되돌렸어요. 코인 0개!', 2500); setTimeout(() => location.reload(), 900);
   };
 })();
@@ -2293,7 +2293,7 @@ function bandFor(lv, it){
 const HERO_ANCHOR = { 1:0.92, 2:0.6, 3:0.92, 4:0.5, 5:0.5, 6:0.55 };   // 기준점(세로): 1은 발끝, 나머지는 몸 가운데쯤
 
 const Play = {
-  data: (() => { const d = Object.assign({ coins:0, lv:1, items:{}, pulls:0, gift1:true, gift2:true }, LS.get('play', {})); if(!d.gift1){ d.coins = (d.coins||0) + 5; d.gift1 = true; try{ LS.set('play', d) }catch{} } if(!d.gift2){ d.coins = 5; d.gift2 = true; try{ LS.set('play', d) }catch{} } return d })(),   // 2026-11-20 딱 한 번 코인 5개 선물 (그 뒤로는 시험으로만)
+  data: (() => { const d = Object.assign({ coins:0, lv:1, items:{}, pulls:0, gift1:true, gift2:true, gift3:true }, LS.get('play', {})); if(!d.gift1){ d.coins = (d.coins||0) + 5; d.gift1 = true; try{ LS.set('play', d) }catch{} } if(!d.gift2){ d.coins = 5; d.gift2 = true; try{ LS.set('play', d) }catch{} } if(!d.gift3){ d.coins = 5; d.gift3 = true; try{ LS.set('play', d) }catch{} } return d })(),   // 2026-11-20 딱 한 번 코인 5개 선물 (그 뒤로는 시험으로만)
   save(){ LS.set('play', this.data) },
   addCoins(n){ this.data.coins += n; this.save(); $('coinMini').textContent = '🪙' + this.data.coins; if(S.mode==='h') renderHome() },
   count(lv){ return (this.data.items[lv]||[]).length },
@@ -2352,7 +2352,7 @@ const Play = {
     let moved = false;
     for(const rec of this.data.items[lv]){ const def = POOLS[lv].items[rec.id]; if(!def) continue; const [lo, hi] = bandFor(lv, def); if(rec.y < lo || rec.y > hi){ rec.y = lo + Math.random()*(hi-lo); moved = true } }
     if(moved) this.save();
-    for(const it of this.data.items[lv]) this.spawn(it, false);
+    for(const it of this.data.items[lv]) if(POOLS[lv].items[it.id]) this.spawn(it, false);
     const hero = $('hero'); hero.innerHTML = heroSVG(lv); hero.querySelector('.nm').textContent = (SET.name||'나'); const hb = HERO_BAND[lv]; const hy = (hb[0]+hb[1])/2; this.hero = {x:50,y:hy,tx:50,ty:hy,dir:1};
     this.fixSizes();
   },
@@ -2483,14 +2483,14 @@ const Play = {
     if(it.n==='연잎') rec.speed = 0;   // 연잎은 제자리에
     if(it.needs){ const pads = this.data.items[lv].filter(r => POOLS[lv].items[r.id]?.n === it.needs); if(pads.length){ const pad = pick(pads); rec.x = pad.x; rec.y = pad.y - 3.5 } }
     this.data.items[lv].push(rec); this.save();
-    this.pending = rec;
+    this.pending = rec; this.pendingLvOf = lv;   // 뽑은 레벨에만 들어가요 (레벨끼리 섞이지 않게)
     const r = RARITY[rar]; $('rvRarity').textContent = `${r.stars} ${r.label}`; $('rvRarity').className = 'rarity rar-' + rar;
     const em = $('rvEmoji'); em.style.filter = it.hue ? `hue-rotate(${it.hue}deg)` : '';
     if(it.f) em.innerHTML = `<span style="display:inline-block;width:1.7em;height:1em" class="sp fish">${fishSVG(it.f)}</span>`; else if(it.g) em.innerHTML = `<span style="display:inline-block;width:1.3em;height:1.5em" class="sp god">${charSVG(it.g)}</span>`; else if(it.sh) em.innerHTML = `<span style="display:inline-block;width:1em;height:1em" class="sp">${SHAPES[it.sh](it.c)}</span>`; else em.textContent = it.e;
     $('rvName').textContent = it.n; $('rvDesc').textContent = it.d + (this.data.coins ? `  · 남은 코인 ${this.data.coins}개` : '  · 코인을 다 썼어요');
     $('reveal').hidden = false; chime(rar==='r'||rar==='e'); if(rar==='e'){ fanfare(); confettiStop = confetti(160, 3500) }
   },
-  place(){ $('reveal').hidden = true; if(confettiStop){ confettiStop(); confettiStop = null } if(this.pending){ this.spawn(this.pending, true); this.pending = null; this.fixSizes(); } this.render();
+  place(){ $('reveal').hidden = true; if(confettiStop){ confettiStop(); confettiStop = null } if(this.pending){ if(this.pendingLvOf === this.data.lv) this.spawn(this.pending, true); this.pending = null; this.fixSizes(); } this.render();
     const lv = this.data.lv; if(POOLS[lv+1] && this.count(lv) === UNLOCK_AT + 1 && !(this.data.seen||{})[lv+1]){ (this.data.seen ||= {})[lv+1] = true; this.save(); setTimeout(() => this.unlockParty(lv+1), 400) } },
   async unlockParty(next){
     const el = $('celebrate'); el.className = 'celebrate perfect';
