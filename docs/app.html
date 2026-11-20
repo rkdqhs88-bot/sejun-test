@@ -381,11 +381,6 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
       </div>
       <p class="help" id="sModelHelp"></p>
     </div>
-    <div class="row" style="margin-top:10px">
-      <span style="font-size:14px;color:var(--muted);font-weight:500">🪙 아빠 보너스 코인:</span>
-      <button class="btn" id="sCoin1">+1</button><button class="btn" id="sCoin5">+5</button>
-      <span class="help" style="margin:0">(특별히 잘했을 때, 또는 바다 테스트용)</span>
-    </div>
     <p class="help" id="sBuildInfo" style="margin-top:12px"></p>
     <div class="acts"><button class="btn primary" id="sSave">저장</button><button class="btn" id="sUpdate">🔄 지금 업데이트 확인</button><button class="btn" id="sClose">닫기</button></div>
   </section>
@@ -645,7 +640,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 12:26';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 12:27';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -747,8 +742,6 @@ function modelHelp(){ $('sModelHelp').textContent = $('sProvider').value==='gemi
 $('sProvider').onchange = modelHelp;
 $('gearBtn').onclick = () => { const s = $('settings'); s.hidden = !s.hidden; if(!s.hidden){ loadSettingsUi(); s.scrollIntoView({behavior:'smooth'}) } };
 $('sClose').onclick = () => { $('settings').hidden = true };
-$('sCoin1').onclick = () => { Play.addCoins(1); toast(`🪙 코인 +1 (모두 ${Play.data.coins}개)`) };
-$('sCoin5').onclick = () => { Play.addCoins(5); toast(`🪙 코인 +5 (모두 ${Play.data.coins}개)`) };
 $('sSave').onclick = () => {
   SET.name = $('sName').value.trim(); SET.reads = +$('sReads').value || 2; SET.rate = +$('sRate').value || 0.9; SET.spacing = $('sSpacing').checked;
   SET.provider = $('sProvider').value; SET.key = $('sKey').value.trim(); SET.model = $('sModel').value.trim();
@@ -2002,7 +1995,7 @@ $('pPrev').onclick = () => Play.go(-1); $('pNext').onclick = () => Play.go(1);
     if(Math.hypot(dx,dy) < 10 && Date.now()-t0 < 500){ const r = sc.getBoundingClientRect(); Play.hero.tx = Math.max(6, Math.min(94, (e.clientX-r.left)/r.width*100)); const hb = HERO_BAND[Play.data.lv]; Play.hero.ty = Math.max(hb[0], Math.min(hb[1], (e.clientY-r.top)/r.height*100)) }   // 탭한 곳으로 세준이가 헤엄쳐 가요
   }) })();
 window.addEventListener('resize', () => { if(S.mode==='p') Play.fixSizes() });
-if(location.hostname==='localhost') window.__play = Play;
+window.__play = Play;   // PC 확인용 (콘솔에서 __play.addCoins(5))
 
 /* ---------- boot ---------- */
 renderHistory('historyV'); renderHistory('historyD');
