@@ -277,6 +277,18 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 /* 광안대교: 노을 하늘 → 다리 → 깊고 푸른 바다 */
 .scene.lv4 .scenebg{background:linear-gradient(#ffb199 0%,#ffd8a8 9%,#9ac8e8 16%,#1d7fc4 18%,#0f5ea3 40%,#0a3f78 75%,#07305c 92%,#12304a 100%)}
 .scene.lv4 .scenebg::before{content:"";position:absolute;right:14%;top:5%;width:46px;height:46px;border-radius:50%;background:radial-gradient(#fff3c4,#ffb74d 60%,rgba(255,183,77,0) 72%);box-shadow:0 0 36px 10px rgba(255,200,120,.5)}
+.scenebg::before,.scenebg::after{z-index:0}
+.cliff{position:absolute;right:0;top:9%;width:36%;height:36%;pointer-events:none;z-index:2}
+.cliff svg{width:100%;height:100%;display:block;overflow:visible}
+.cliff .wf{stroke-dasharray:14 10;animation:fall .5s linear infinite}
+.cliff .wf2{stroke-dasharray:6 14;animation:fall .35s linear infinite}
+@keyframes fall{to{stroke-dashoffset:-24}}
+.cliff .mist{animation:mist 1.6s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+@keyframes mist{from{opacity:.45;transform:scale(.9)}to{opacity:.85;transform:scale(1.15)}}
+.cliff .drop{animation:drop 1.1s ease-in infinite}
+@keyframes drop{0%{transform:translateY(0);opacity:0}20%{opacity:.9}100%{transform:translateY(36px);opacity:0}}
+.foam{position:absolute;pointer-events:none;z-index:3;border-radius:50%;background:radial-gradient(rgba(255,255,255,.85),rgba(255,255,255,.25) 60%,transparent 72%);animation:foam 1.8s ease-in-out infinite alternate}
+@keyframes foam{from{transform:scale(.9);opacity:.7}to{transform:scale(1.1);opacity:1}}
 .bridge{position:absolute;left:0;right:0;top:3%;height:16%;pointer-events:none}
 .bridge svg{width:100%;height:100%;display:block}
 .city{position:absolute;right:0;width:46%;top:6%;height:16%;pointer-events:none}
@@ -673,7 +685,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 12:42';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 12:45';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1929,11 +1941,10 @@ const WATER_TOP = { 1:40, 2:31, 3:22, 4:18, 5:0 };   // 화면 위에서 물이 
 // 기본 풍경(뽑기와 무관하게 항상 있는 것): 냇가의 꽃·자갈·풀, 강가의 나무, 해변의 파라솔·구름
 const DECOR = {
   1: [ {sh:'cloud',c:'#fff',x:14,y:5,s:1.4},{sh:'cloud',c:'#fff',x:66,y:7,s:1.1},
-       {sh:'pine',c:'#2e6b3a',x:4,y:28,s:1.8},{sh:'pine',c:'#35774a',x:12,y:30,s:1.4},{sh:'pine',c:'#2e6b3a',x:34,y:29,s:1.6},{sh:'pine',c:'#35774a',x:62,y:28,s:1.9},{sh:'pine',c:'#2e6b3a',x:74,y:30,s:1.3},{sh:'pine',c:'#35774a',x:92,y:29,s:1.7},
-       {sh:'falls',c:'#dff6ff',x:84,y:33,s:1.6},
-       {sh:'boulder',c:'#8d9aa5',x:8,y:38.5,s:1.6},{sh:'boulder',c:'#a0aab3',x:28,y:39,s:1.2},{sh:'boulder',c:'#7f8b96',x:48,y:38.5,s:1.8},{sh:'boulder',c:'#a0aab3',x:68,y:39,s:1.3},{sh:'boulder',c:'#8d9aa5',x:96,y:38.5,s:1.5},
-       {sh:'tuft',c:'#558b2f',x:6,y:36,s:1},{sh:'flower',c:'#f06292',x:12,y:35,s:1},{sh:'flower',c:'#ffca28',x:22,y:36,s:.9},{sh:'tuft',c:'#7cb342',x:30,y:37,s:.9},{sh:'flower',c:'#ba68c8',x:44,y:35,s:1},{sh:'tuft',c:'#558b2f',x:52,y:37,s:1.1},{sh:'flower',c:'#ef5350',x:66,y:36,s:.9},{sh:'flower',c:'#fff',x:76,y:35,s:.8},{sh:'tuft',c:'#7cb342',x:86,y:37,s:1},{sh:'flower',c:'#ffca28',x:94,y:36,s:.9},
-       {sh:'pebble',c:'#9e9e9e',x:9,y:39.5,s:.8},{sh:'pebble',c:'#bcaaa4',x:26,y:39.8,s:.6},{sh:'pebble',c:'#8d8d8d',x:38,y:39.5,s:.9},{sh:'pebble',c:'#a1887f',x:58,y:39.8,s:.7},{sh:'pebble',c:'#9e9e9e',x:72,y:39.5,s:.8},{sh:'pebble',c:'#bcaaa4',x:90,y:39.7,s:.6} ],
+       {sh:'pine',c:'#2e6b3a',x:4,y:28,s:1.8},{sh:'pine',c:'#35774a',x:12,y:30,s:1.4},{sh:'pine',c:'#2e6b3a',x:34,y:29,s:1.6},{sh:'pine',c:'#35774a',x:58,y:28,s:1.9},
+       {sh:'boulder',c:'#8d9aa5',x:8,y:38.5,s:1.6},{sh:'boulder',c:'#a0aab3',x:28,y:39,s:1.2},{sh:'boulder',c:'#7f8b96',x:48,y:38.5,s:1.8},{sh:'boulder',c:'#a0aab3',x:62,y:39,s:1.3},
+       {sh:'tuft',c:'#558b2f',x:6,y:36,s:1},{sh:'flower',c:'#f06292',x:12,y:35,s:1},{sh:'flower',c:'#ffca28',x:22,y:36,s:.9},{sh:'tuft',c:'#7cb342',x:30,y:37,s:.9},{sh:'flower',c:'#ba68c8',x:44,y:35,s:1},{sh:'tuft',c:'#558b2f',x:52,y:37,s:1.1},{sh:'flower',c:'#ef5350',x:58,y:36,s:.9},
+       {sh:'pebble',c:'#9e9e9e',x:9,y:39.5,s:.8},{sh:'pebble',c:'#bcaaa4',x:26,y:39.8,s:.6},{sh:'pebble',c:'#8d8d8d',x:38,y:39.5,s:.9},{sh:'pebble',c:'#a1887f',x:56,y:39.8,s:.7} ],
   2: [ {sh:'cloud',c:'#fff',x:18,y:5,s:1.5},{sh:'cloud',c:'#fff',x:72,y:7,s:1.3},{sh:'birds',c:'#455a64',x:40,y:9,s:1.2},{sh:'birds',c:'#455a64',x:58,y:6,s:.9},
        {sh:'reed',c:'#b8a24a',x:4,y:30,s:1.3},{sh:'reed',c:'#c9b35a',x:10,y:30.5,s:1.1},{sh:'reed',c:'#b8a24a',x:17,y:30,s:1.4},{sh:'reed',c:'#c9b35a',x:30,y:30.5,s:1.2},{sh:'reed',c:'#b8a24a',x:38,y:30,s:1.3},{sh:'reed',c:'#c9b35a',x:52,y:30.5,s:1.1},{sh:'reed',c:'#b8a24a',x:60,y:30,s:1.4},{sh:'reed',c:'#c9b35a',x:73,y:30.5,s:1.2},{sh:'reed',c:'#b8a24a',x:81,y:30,s:1.3},{sh:'reed',c:'#c9b35a',x:94,y:30.5,s:1.2},
        {sh:'tree',c:'#4f8a3f',x:24,y:27,s:1.1},{sh:'tree',c:'#5c9a4a',x:67,y:27,s:1.2} ],
@@ -2007,6 +2018,26 @@ const Play = {
     const nb = lv===5 ? 6 : lv>=3 ? 16 : 8;
     if(lv>=3) for(let i=0;i<nb;i++){ const b = document.createElement('div'); b.className='bubble'; const sz = 5+Math.random()*14; b.style.cssText = `left:${Math.random()*100}%;width:${sz}px;height:${sz}px;animation-duration:${7+Math.random()*10}s;animation-delay:${-Math.random()*14}s`; bg.appendChild(b) }
     if(lv>=4){ const v = document.createElement('div'); v.className='vignette'; bg.appendChild(v) }
+    if(lv===1){
+      const cl = document.createElement('div'); cl.className='cliff';
+      cl.innerHTML = `<svg viewBox="0 0 300 300" preserveAspectRatio="none">
+        <defs><linearGradient id="rk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a97a3"/><stop offset="1" stop-color="#4f5b66"/></linearGradient>
+        <linearGradient id="wfg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eaf8ff" stop-opacity=".95"/><stop offset="1" stop-color="#ffffff" stop-opacity=".75"/></linearGradient></defs>
+        <!-- 층층이 쌓인 바위 절벽 -->
+        <path d="M40,300 L48,230 C40,200 70,180 60,150 C50,120 90,100 80,70 C72,40 110,20 150,10 L300,0 L300,300 Z" fill="url(#rk)"/>
+        <path d="M60,150 C90,160 120,150 150,158 M80,70 C110,80 140,74 170,82 M48,230 C80,238 110,230 140,236 M150,10 C180,22 210,16 240,24" stroke="rgba(0,0,0,.18)" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M70,100 C85,92 100,94 112,100 M95,190 C110,182 125,184 140,190 M190,60 C205,52 220,54 232,60 M210,140 C225,132 240,134 252,140" stroke="rgba(255,255,255,.28)" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M250,110 C262,118 280,112 300,118 L300,135 C280,128 262,134 250,126 Z M150,210 C166,218 184,212 200,220 L200,236 C184,228 166,234 150,226 Z" fill="rgba(0,0,0,.15)"/>
+        <!-- 폭포 -->
+        <path d="M168,8 C176,60 172,120 180,180 C186,230 182,270 184,300 L236,300 C232,270 238,230 232,180 C224,120 230,60 224,8 Z" fill="url(#wfg)"/>
+        <g stroke="#fff" stroke-linecap="round" fill="none"><path class="wf" d="M178,14 C184,70 180,130 188,200 C192,250 190,280 192,300" stroke-width="5" opacity=".9"/><path class="wf2" d="M198,12 C200,80 196,140 204,210 C208,250 206,280 208,300" stroke-width="4" opacity=".8"/><path class="wf" d="M216,14 C212,70 218,130 212,200 C208,250 212,280 210,300" stroke-width="5" opacity=".85" style="animation-delay:-.2s"/><path class="wf2" d="M226,20 C222,90 226,150 220,220 C218,260 222,285 220,300" stroke-width="3" opacity=".7" style="animation-delay:-.1s"/></g>
+        <g fill="#fff"><circle class="drop" cx="160" cy="40" r="3" style="animation-delay:-.2s"/><circle class="drop" cx="244" cy="60" r="2.5" style="animation-delay:-.6s"/><circle class="drop" cx="162" cy="150" r="2.5" style="animation-delay:-.9s"/><circle class="drop" cx="246" cy="190" r="3" style="animation-delay:-.4s"/></g>
+        <!-- 물보라 -->
+        <g fill="#fff"><circle class="mist" cx="170" cy="292" r="26" opacity=".6"/><circle class="mist" cx="210" cy="298" r="34" opacity=".7" style="animation-delay:-.6s"/><circle class="mist" cx="250" cy="292" r="24" opacity=".6" style="animation-delay:-1s"/><circle class="mist" cx="140" cy="300" r="18" opacity=".5" style="animation-delay:-.3s"/></g>
+      </svg>`;
+      bg.appendChild(cl);
+      for(const [x,y,w,d] of [[80,42,14,0],[86,44,10,-.6],[76,45,9,-1.1],[91,43,8,-.9]]){ const f = document.createElement('div'); f.className='foam'; f.style.cssText = `left:${x}%;top:${y}%;width:${w}%;height:${w*0.5}%;transform:translate(-50%,-50%);animation-delay:${d}s`; bg.appendChild(f) }
+    }
     if(lv===3){ const c = document.createElement('div'); c.className='city'; c.innerHTML = `<svg viewBox="0 0 400 100" preserveAspectRatio="xMaxYMax meet"><g fill="#c7d3df" stroke="#9fb0c0" stroke-width="1"><rect x="20" y="40" width="26" height="60"/><rect x="52" y="18" width="30" height="82"/><rect x="88" y="52" width="22" height="48"/><rect x="118" y="6" width="34" height="94"/><rect x="160" y="34" width="26" height="66"/><rect x="194" y="22" width="40" height="78"/><rect x="242" y="48" width="22" height="52"/><rect x="272" y="2" width="36" height="98"/><rect x="316" y="30" width="28" height="70"/><rect x="352" y="56" width="30" height="44"/></g><g fill="#eef4f8"><rect x="124" y="14" width="22" height="4"/><rect x="278" y="10" width="24" height="4"/><rect x="200" y="30" width="28" height="4"/></g><g fill="rgba(70,90,110,.35)"><rect x="26" y="48" width="4" height="6"/><rect x="34" y="48" width="4" height="6"/><rect x="58" y="26" width="4" height="6"/><rect x="68" y="26" width="4" height="6"/><rect x="58" y="40" width="4" height="6"/><rect x="68" y="40" width="4" height="6"/><rect x="126" y="24" width="4" height="6"/><rect x="138" y="24" width="4" height="6"/><rect x="126" y="40" width="4" height="6"/><rect x="138" y="40" width="4" height="6"/><rect x="200" y="42" width="4" height="6"/><rect x="214" y="42" width="4" height="6"/><rect x="280" y="20" width="4" height="6"/><rect x="292" y="20" width="4" height="6"/><rect x="280" y="36" width="4" height="6"/><rect x="292" y="36" width="4" height="6"/></g></svg>`; bg.appendChild(c) }
     if(lv===4){ const b = document.createElement('div'); b.className='bridge'; b.innerHTML = `<svg viewBox="0 0 1000 120" preserveAspectRatio="none"><path d="M0,78 H1000" stroke="#e8edf2" stroke-width="10"/><path d="M0,86 H1000" stroke="#9fb0c0" stroke-width="4"/><g stroke="#e8edf2" stroke-width="9" stroke-linecap="round"><path d="M250,20 V96 M750,20 V96"/></g><path d="M0,60 Q250,-10 500,60 T1000,60" stroke="#dfe6ee" stroke-width="5" fill="none"/><g stroke="#dfe6ee" stroke-width="1.6" opacity=".9"><path d="M60,74 V48 M120,74 V32 M180,74 V22 M320,74 V22 M380,74 V32 M440,74 V48 M560,74 V48 M620,74 V32 M680,74 V22 M820,74 V22 M880,74 V32 M940,74 V48"/></g><g fill="#ffd166"><circle cx="100" cy="72" r="3"/><circle cx="200" cy="72" r="3"/><circle cx="300" cy="72" r="3"/><circle cx="400" cy="72" r="3"/><circle cx="500" cy="72" r="3"/><circle cx="600" cy="72" r="3"/><circle cx="700" cy="72" r="3"/><circle cx="800" cy="72" r="3"/><circle cx="900" cy="72" r="3"/></g><g fill="rgba(60,70,90,.9)"><rect x="236" y="86" width="28" height="34"/><rect x="736" y="86" width="28" height="34"/></g></svg>`; bg.appendChild(b) }
     if(lv===4){ const sf = document.createElement('div'); sf.className='surface'; sf.style.top = (WATER_TOP[4]-2) + '%'; bg.appendChild(sf) }
