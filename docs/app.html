@@ -713,7 +713,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 13:35';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 13:36';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -2275,7 +2275,7 @@ $('pPrev').onclick = () => Play.go(-1); $('pNext').onclick = () => Play.go(1);
       const sp = hit && Play.sprites.find(o => o.el === hit);
       if(sp && sp.alive){ Play.dart(sp); return }           // 생물을 톡: 슝! (물속 생물만 거품)
       const wt = WATER_TOP[Play.data.lv];
-      if(yp > wt + 2 && yp < WATER_BOT[Play.data.lv] + 2){ Play.dropFood(xp, Math.min(WATER_BOT[Play.data.lv]-2, yp)); if(Play.data.lv >= 4){ Play.hero.tx = xp; Play.hero.ty = Math.max(HERO_BAND[Play.data.lv][0], Math.min(HERO_BAND[Play.data.lv][1], yp)) } return }   // 물을 톡: 먹이
+      if(yp > wt + 2 && yp < WATER_BOT[Play.data.lv] + 2){ Play.dropFood(xp, Math.min(WATER_BOT[Play.data.lv]-2, yp)); return }   // 먹이는 생물만 가요 (세준이는 안 감)   // 물을 톡: 먹이
       Play.hero.tx = Math.max(6, Math.min(94, xp)); const hb = HERO_BAND[Play.data.lv]; Play.hero.ty = Math.max(hb[0], Math.min(hb[1], yp)); if(Play.data.lv===1) Play.hero.tx = Math.min(58, Play.hero.tx);   // 둑·하늘을 톡: 세준이가 그쪽으로
     }
   }) })();
