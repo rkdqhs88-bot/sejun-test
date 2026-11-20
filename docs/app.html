@@ -332,9 +332,21 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 .hero{position:absolute;left:0;top:0;width:90px;height:90px;pointer-events:none;will-change:transform;filter:drop-shadow(0 4px 6px rgba(0,0,0,.3));transition:none}
 .hero svg{width:100%;height:100%;overflow:visible}
 .hero .nm{position:absolute;left:50%;top:-18px;transform:translateX(-50%);background:rgba(255,255,255,.85);color:#1b2238;font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;white-space:nowrap}
-.hero .hk{transform-box:fill-box;transform-origin:top center;animation:kick .6s ease-in-out infinite alternate}
-@keyframes kick{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
-@media (prefers-reduced-motion: reduce){.sp .tail,.sp .fin,.sp .pulse,.sp .legs,.hero .hk,.rays i,.bubble,.glow,.surface{animation:none}}
+.hero .net{transform-box:fill-box;transform-origin:0% 100%}
+.hero.swing .net{animation:netswing .8s ease-in-out}
+@keyframes netswing{0%{transform:rotate(0)}35%{transform:rotate(-80deg)}55%{transform:rotate(-70deg)}100%{transform:rotate(0)}}
+.hero .paddle{transform-box:fill-box;transform-origin:center}
+.hero.moving .paddle{animation:paddling .5s ease-in-out infinite alternate}
+@keyframes paddling{from{transform:rotate(-30deg)}to{transform:rotate(30deg)}}
+.hero .tube{transform-box:fill-box;transform-origin:center}
+.hero.throw .tube{animation:tubethrow 1.4s ease-in-out}
+@keyframes tubethrow{0%{transform:translate(0,0) rotate(0)}45%{transform:translate(50px,-75px) rotate(360deg)}100%{transform:translate(0,0) rotate(720deg)}}
+.hero .leg{transform-box:fill-box;transform-origin:top center;animation:frog 1.3s ease-in-out infinite}
+.hero.moving .leg{animation-duration:.6s}
+@keyframes frog{0%{transform:rotate(0) scaleY(1)}40%{transform:rotate(-28deg) scaleY(.55)}62%{transform:rotate(10deg) scaleY(1.05)}100%{transform:rotate(0) scaleY(1)}}
+.hero .lamp{transition:opacity .25s}
+.hero.lampoff .lamp{opacity:.06}
+@media (prefers-reduced-motion: reduce){.sp .tail,.sp .fin,.sp .pulse,.sp .legs,.hero .leg,.hero .paddle,.rays i,.bubble,.glow,.surface{animation:none}}
 /* reveal card */
 .rarity{font-size:14px;font-weight:700;letter-spacing:.1em;border-radius:999px;padding:4px 14px;display:inline-block}
 .rar-c{background:#e6eaf2;color:#55607a}.rar-u{background:#d9f4e3;color:#1f8a4c}.rar-r{background:#dde7ff;color:#2b4f9e}.rar-e{background:linear-gradient(90deg,#ffd166,#f72585,#7209b7);color:#fff}
@@ -685,7 +697,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 12:45';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 12:53';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1965,14 +1977,23 @@ function heroSVG(lv){
   const arms = c => `<path d="M-13,-4 C-22,2 -26,10 -24,18" stroke="${c}" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="-24" cy="19" r="4.5" fill="${skin}"/><path d="M13,-4 C22,2 26,10 24,18" stroke="${c}" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="24" cy="19" r="4.5" fill="${skin}"/>`;
   const shorts = c => `<path d="M-16,12 L16,12 L15,28 L4,28 L0,20 L-4,28 L-15,28 Z" fill="${c}" stroke="${line}" stroke-width="1.5" stroke-linejoin="round"/>`;
   const legs = `<path d="M-8,28 V40" stroke="${skin}" stroke-width="8" stroke-linecap="round"/><path d="M8,28 V40" stroke="${skin}" stroke-width="8" stroke-linecap="round"/><ellipse cx="-8" cy="43" rx="6" ry="3" fill="${skin2}"/><ellipse cx="8" cy="43" rx="6" ry="3" fill="${skin2}"/>`;
-  const fins = c => `<g class="hk"><path d="M-8,28 V36 L-18,52 C-10,54 0,52 -1,36 Z" fill="${c}"/></g><g class="hk" style="animation-delay:-.3s"><path d="M8,28 V36 L0,52 C8,54 18,52 15,36 Z" fill="${c}"/></g>`;
+  const fins = c => `<g class="leg"><path d="M-8,26 V36 L-18,52 C-10,54 0,52 -1,36 Z" fill="${c}"/></g><g class="leg" style="animation-delay:-.55s"><path d="M8,26 V36 L0,52 C8,54 18,52 15,36 Z" fill="${c}"/></g>`;
   const mask = `<rect x="-18" y="-35" width="36" height="14" rx="7" fill="rgba(191,239,255,.6)" stroke="#2d2420" stroke-width="2.5"/><path d="M-18,-28 h-4 M18,-28 h4" stroke="#2d2420" stroke-width="2.5"/>`;
   let body='', over='';
-  if(lv===1){ body = `${arms(skin)}${torso('#66bb6a')}${shorts('#1e88e5')}${legs}<path d="M24,18 L60,-26" stroke="#8d6e63" stroke-width="4" stroke-linecap="round"/><g transform="rotate(40 66 -34)"><ellipse cx="66" cy="-34" rx="13" ry="11" fill="rgba(255,255,255,.35)" stroke="#e0e0e0" stroke-width="2.5"/><path d="M56,-38 h20 M56,-30 h20 M60,-44 v20 M66,-45 v22 M72,-44 v20" stroke="#e0e0e0" stroke-width="1.2" opacity=".9"/></g>` }
-  if(lv===2){ body = `<path d="M-48,22 C-30,8 30,8 48,22 C30,34 -30,34 -48,22 Z" fill="#fbc02d" stroke="${line}"/><ellipse cx="0" cy="22" rx="22" ry="7" fill="#f57f17"/>${arms(skin)}${torso('#ef5350')}<path d="M-15,12 h30 v8 h-30 Z" fill="#1e88e5"/><g transform="rotate(25)"><path d="M-42,-2 L42,-2" stroke="#8d6e63" stroke-width="3.5" stroke-linecap="round"/><ellipse cx="-44" cy="-2" rx="5" ry="9" fill="#ff7043"/><ellipse cx="44" cy="-2" rx="5" ry="9" fill="#ff7043"/></g>` }
-  if(lv===3){ body = `${arms(skin)}${torso(skin)}${shorts('#ff7043')}${legs}<circle cx="28" cy="14" r="14" fill="none" stroke="#ffca28" stroke-width="7" opacity=".95"/>`; over = `<ellipse cx="0" cy="-47" rx="30" ry="6" fill="#fbc02d"/><path d="M-19,-47 C-19,-66 19,-66 19,-47 Z" fill="#fdd835"/><path d="M-19,-49 h38" stroke="#ef6c00" stroke-width="2.5"/>` }
+  if(lv===1){
+    // 삼성 라이온즈 스타일 야구 유니폼(흰 저지에 파란 줄무늬·파란 모자) + 크로스 잠자리통 + 잠자리채
+    const jersey = `<path d="M-15,-6 C-15,-14 15,-14 15,-6 L16,14 C16,21 -16,21 -16,14 Z" fill="#ffffff" stroke="${line}" stroke-width="1.5"/><g stroke="#1c5ec7" stroke-width="1.2" opacity=".5"><path d="M-10,-11 V20 M-4,-12 V20 M2,-12 V20 M8,-11 V20"/></g><path d="M-1,-12 V4" stroke="#1c5ec7" stroke-width="2"/><circle cx="-1" cy="-8" r="1.3" fill="#1c5ec7"/><circle cx="-1" cy="-2" r="1.3" fill="#1c5ec7"/><text x="7" y="10" font-size="9" font-weight="700" fill="#1c5ec7" font-family="Arial" text-anchor="middle">7</text>`;
+    const sleeves = `<path d="M-13,-4 C-22,2 -26,10 -24,18" stroke="#1c5ec7" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M-19,6 C-22,10 -24,14 -24,18" stroke="${skin}" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="-24" cy="19" r="4.5" fill="${skin}"/><path d="M13,-4 C22,2 26,10 24,18" stroke="#1c5ec7" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M19,6 C22,10 24,14 24,18" stroke="${skin}" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="24" cy="19" r="4.5" fill="${skin}"/>`;
+    const pants = `<path d="M-16,12 L16,12 L15,30 L4,30 L0,22 L-4,30 L-15,30 Z" fill="#1c5ec7" stroke="${line}" stroke-width="1.5" stroke-linejoin="round"/>`;
+    const bag = `<path d="M-14,-6 L14,16" stroke="#6d4c41" stroke-width="3.5" stroke-linecap="round"/><g transform="translate(18,20)"><rect x="-9" y="-7" width="18" height="14" rx="3" fill="#8bc34a" stroke="#33691e" stroke-width="1.5"/><path d="M-6,-7 V7 M-2,-7 V7 M2,-7 V7 M6,-7 V7 M-9,-2 H9 M-9,2 H9" stroke="#33691e" stroke-width=".8" opacity=".8"/><rect x="-4" y="-10" width="8" height="4" rx="2" fill="#6d4c41"/></g>`;
+    const net = `<g class="net"><path d="M24,18 L60,-26" stroke="#8d6e63" stroke-width="4" stroke-linecap="round"/><g transform="rotate(40 66 -34)"><ellipse cx="66" cy="-34" rx="13" ry="11" fill="rgba(255,255,255,.35)" stroke="#e0e0e0" stroke-width="2.5"/><path d="M56,-38 h20 M56,-30 h20 M60,-44 v20 M66,-45 v22 M72,-44 v20" stroke="#e0e0e0" stroke-width="1.2" opacity=".9"/></g></g>`;
+    body = `${sleeves}${jersey}${bag}${pants}${legs}${net}`;
+    over = `<path d="M-23,-40 C-20,-60 20,-60 23,-40 Z" fill="#1c5ec7"/><path d="M-26,-40 C-10,-44 10,-44 30,-38 L31,-34 C10,-40 -10,-40 -26,-36 Z" fill="#1c5ec7" stroke="rgba(0,0,0,.15)"/><text x="0" y="-45" font-size="11" font-weight="900" fill="#fff" font-family="Arial" text-anchor="middle">S</text>`;
+  }
+  if(lv===2){ body = `<path d="M-48,22 C-30,8 30,8 48,22 C30,34 -30,34 -48,22 Z" fill="#fbc02d" stroke="${line}"/><ellipse cx="0" cy="22" rx="22" ry="7" fill="#f57f17"/>${arms(skin)}${torso('#ef5350')}<path d="M-15,12 h30 v8 h-30 Z" fill="#1e88e5"/><g class="paddle"><g transform="rotate(25)"><path d="M-42,-2 L42,-2" stroke="#8d6e63" stroke-width="3.5" stroke-linecap="round"/><ellipse cx="-44" cy="-2" rx="5" ry="9" fill="#ff7043"/><ellipse cx="44" cy="-2" rx="5" ry="9" fill="#ff7043"/></g></g>` }
+  if(lv===3){ body = `${arms(skin)}${torso(skin)}${shorts('#ff7043')}${legs}<g class="tube"><circle cx="28" cy="14" r="14" fill="none" stroke="#ffca28" stroke-width="7" opacity=".95"/><path d="M28,0 v6 M28,22 v6 M14,14 h6 M36,14 h6" stroke="#ef6c00" stroke-width="3"/></g>`; over = `<ellipse cx="0" cy="-47" rx="30" ry="6" fill="#fbc02d"/><path d="M-19,-47 C-19,-66 19,-66 19,-47 Z" fill="#fdd835"/><path d="M-19,-49 h38" stroke="#ef6c00" stroke-width="2.5"/>` }
   if(lv===4){ body = `${arms(skin)}${torso('#1e88e5')}<path d="M-16,12 h32 v12 h-32 Z" fill="#0d47a1"/>${fins('#43a047')}`; over = mask + `<path d="M18,-31 h9 v-18" stroke="#ff7043" stroke-width="4" fill="none" stroke-linecap="round"/>` }
-  if(lv===5){ body = `<rect x="-26" y="-14" width="13" height="34" rx="6.5" fill="#fdd835" stroke="${line}"/>${arms('#263238')}${torso('#263238')}<path d="M-16,12 h32 v12 h-32 Z" fill="#1b2238"/>${fins('#424242')}<g class="light"><circle cx="26" cy="4" r="4" fill="#fff8b0"/><path d="M28,4 L64,-8 L64,16 Z" fill="#fff8b0" opacity=".25"/></g>`; over = mask + `<path d="M-16,-24 C-32,-20 -30,-4 -18,-10" stroke="#424242" stroke-width="3" fill="none"/><circle cx="6" cy="-19" r="4" fill="#424242"/>` }
+  if(lv===5){ body = `<rect x="-26" y="-14" width="13" height="34" rx="6.5" fill="#fdd835" stroke="${line}"/>${arms('#263238')}${torso('#263238')}<path d="M-16,12 h32 v12 h-32 Z" fill="#1b2238"/>${fins('#424242')}<g class="lamp"><circle cx="26" cy="4" r="4" fill="#fff8b0"/><path d="M28,4 L64,-8 L64,16 Z" fill="#fff8b0" opacity=".3"/></g>`; over = mask + `<path d="M-16,-24 C-32,-20 -30,-4 -18,-10" stroke="#424242" stroke-width="3" fill="none"/><circle cx="6" cy="-19" r="4" fill="#424242"/>` }
   const swim = lv>=4 ? ' transform="rotate(70)"' : '';
   return `<svg viewBox="-64 -72 128 128"><g${swim}>${body}${head}${over}</g></svg><span class="nm"></span>`;
 }
@@ -2082,9 +2103,23 @@ const Play = {
       sp.el.style.transform = `translate(${x/100*W}px, ${y/100*H}px) translate(-50%,-50%) scaleX(${flip})`;
     }
     // hero swims toward its target
-    const h = this.hero; const dx = h.tx - h.x, dy = h.ty - h.y, dist = Math.hypot(dx, dy);
-    if(dist > 0.5){ const sp = Math.min(dist, 18*dt); h.x += dx/dist*sp; h.y += dy/dist*sp; if(Math.abs(dx) > 0.3) h.dir = dx > 0 ? 1 : -1 }
-    else if(Math.random() < 0.004){ const hb = HERO_BAND[this.data.lv]; h.tx = 10+Math.random()*80; h.ty = hb[0] + Math.random()*(hb[1]-hb[0]) }
+    const h = this.hero, lvh = this.data.lv; const dx = h.tx - h.x, dy = h.ty - h.y, dist = Math.hypot(dx, dy);
+    const he0 = $('hero');
+    if(dist > 0.5){
+      // 카약은 슝슝 빠르게, 바다·심해는 다리를 오므렸다 펴며 밀려 나가듯이(맥박처럼) 나아가요
+      const pulse = lvh>=4 ? (0.35 + 0.65*Math.max(0, Math.sin(now/600*Math.PI*2))) : 1;
+      const base = lvh===2 ? 34 : lvh===1 ? 14 : 20;
+      const sp = Math.min(dist, base*pulse*dt); h.x += dx/dist*sp; h.y += dy/dist*sp; if(Math.abs(dx) > 0.3) h.dir = dx > 0 ? 1 : -1;
+      he0.classList.add('moving');
+    } else {
+      he0.classList.remove('moving');
+      if(Math.random() < 0.004){ const hb = HERO_BAND[lvh]; h.tx = 10+Math.random()*(lvh===1 ? 48 : 80); h.ty = hb[0] + Math.random()*(hb[1]-hb[0]) }
+      // 가끔 하는 동작: 잠자리채 휘두르기 / 튜브 던지기
+      if(lvh===1 && Math.random() < 0.005 && !he0.classList.contains('swing')){ he0.classList.add('swing'); setTimeout(() => he0.classList.remove('swing'), 900) }
+      if(lvh===3 && Math.random() < 0.004 && !he0.classList.contains('throw')){ he0.classList.add('throw'); setTimeout(() => he0.classList.remove('throw'), 1500) }
+    }
+    if(lvh===5 && Math.random() < 0.004) he0.classList.toggle('lampoff');   // 심해: 손전등 껐다 켰다
+    if(lvh===1 && h.tx > 58) h.tx = 58;   // 계곡 바위 절벽 안쪽으로는 안 들어가요
     const lvNow = this.data.lv; const walking = lvNow===1 && dist > 0.5;
     const bob = lvNow===1 ? (walking ? -Math.abs(Math.sin(now/120))*0.6 : 0) : Math.sin(now/600)*0.6;
     const he = $('hero'); he.style.transform = `translate(${h.x/100*W}px, ${(h.y+bob)/100*H}px) translate(-50%,-${Math.round(HERO_ANCHOR[lvNow]*100)}%)`; const hs = he.firstElementChild; if(hs) hs.style.transform = `scaleX(${h.dir})`;
@@ -2122,7 +2157,7 @@ $('pPrev').onclick = () => Play.go(-1); $('pNext').onclick = () => Play.go(1);
   sc.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; t0 = Date.now() });
   sc.addEventListener('pointerup', e => { if(sx==null) return; const dx = e.clientX - sx, dy = e.clientY - sy; sx = null;
     if(Math.abs(dx) > 90 && Math.abs(dy) < 60){ Play.go(dx < 0 ? 1 : -1); return }
-    if(Math.hypot(dx,dy) < 10 && Date.now()-t0 < 500){ const r = sc.getBoundingClientRect(); Play.hero.tx = Math.max(6, Math.min(94, (e.clientX-r.left)/r.width*100)); const hb = HERO_BAND[Play.data.lv]; Play.hero.ty = Math.max(hb[0], Math.min(hb[1], (e.clientY-r.top)/r.height*100)) }   // 탭한 곳으로 세준이가 헤엄쳐 가요
+    if(Math.hypot(dx,dy) < 10 && Date.now()-t0 < 500){ const r = sc.getBoundingClientRect(); Play.hero.tx = Math.max(6, Math.min(94, (e.clientX-r.left)/r.width*100)); const hb = HERO_BAND[Play.data.lv]; Play.hero.ty = Math.max(hb[0], Math.min(hb[1], (e.clientY-r.top)/r.height*100)); if(Play.data.lv===1) Play.hero.tx = Math.min(58, Play.hero.tx) }   // 탭한 곳으로 세준이가 헤엄쳐 가요
   }) })();
 window.addEventListener('resize', () => { if(S.mode==='p') Play.fixSizes() });
 window.__play = Play;   // PC 확인용 (콘솔에서 __play.addCoins(5))
