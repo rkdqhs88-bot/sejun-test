@@ -227,7 +227,33 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 .home{display:flex;flex-direction:column;align-items:center;text-align:center;padding:28px 0 20px;gap:10px}
 .hometitle{font-family:var(--display);font-size:46px;color:#d6457a;line-height:1.1}
 .homesub{margin:0;color:var(--muted);font-size:18px}
-.tiles3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;width:100%;max-width:820px;margin-top:14px}
+.tiles3{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;width:100%;max-width:980px;margin-top:14px}
+@media (max-width:860px){.tiles3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.t-s{background:linear-gradient(160deg,#9c6ade,#5e35b1)}
+.wrows{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.wrow{display:grid;grid-template-columns:34px minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.3fr) 44px;gap:8px;align-items:center}
+.wrow .idx{color:var(--muted);font-size:14px;text-align:right}
+.wrow input{min-height:46px;font-size:17px;padding:8px 10px}
+.wrow input.en{font-weight:600}
+.wrow .del{min-height:44px;padding:0;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:#b43b3b;font-size:18px;cursor:pointer}
+.whead{display:grid;grid-template-columns:34px minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.3fr) 44px;gap:8px;font-size:13px;color:var(--muted);margin-top:10px;padding:0 2px}
+@media (max-width:680px){.wrow,.whead{grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) 40px}.wrow .ex,.whead .ex{display:none}}
+.okmark{display:inline-flex;align-items:center;gap:6px;color:#1b8a4c;font-weight:600}
+.recbox{display:flex;flex-direction:column;align-items:center;gap:14px;padding:26px 16px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin-top:14px}
+.micbig{width:120px;height:120px;border-radius:50%;display:grid;place-items:center;font-size:58px;background:#eef2ff;border:4px solid #c5cae9;transition:all .3s}
+.recbox.on .micbig{background:#ffebee;border-color:#ef5350;animation:micpulse 1.1s ease-in-out infinite}
+@keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(239,83,80,.45)}50%{box-shadow:0 0 0 22px rgba(239,83,80,0)}}
+.rectime{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
+.level{width:min(420px,90%);height:12px;border-radius:6px;background:#e3e6ee;overflow:hidden}
+.level i{display:block;height:100%;width:0;background:linear-gradient(90deg,#66bb6a,#ffca28,#ef5350);transition:width .08s}
+.sres{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.sline{display:grid;grid-template-columns:40px 1fr;gap:10px;align-items:start;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel)}
+.sline.ok{border-color:#a5d6a7;background:#f1f8f1}.sline.part{border-color:#ffe082;background:#fffbea}.sline.miss{border-color:#ef9a9a;background:#fff3f3}
+.sline .bdg{font-size:22px;text-align:center}
+.sline .txt{font-size:18px;font-weight:600;line-height:1.4}
+.sline .heard{font-size:14px;color:var(--muted);margin-top:4px}
+.peekbox{margin-top:12px;padding:12px 14px;border-radius:12px;background:#fff8e1;border:1px solid #ffe082;font-size:17px;line-height:1.7}
+.card.scriptbox p.line{margin:0;padding:6px 0;border-bottom:1px dashed var(--line);font-size:18px}
 .tile3{border:none;border-radius:24px;padding:26px 12px 22px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;color:#fff;box-shadow:0 10px 28px rgba(0,0,0,.18);transition:transform .15s}
 .tile3:active{transform:scale(.97)}
 .tile3 .ic{font-size:64px;line-height:1.1}
@@ -469,6 +495,7 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
       <button role="tab" id="mode-h" aria-selected="true" data-mode="h" title="첫 화면">🏠</button>
       <button role="tab" id="mode-v" aria-selected="false" data-mode="v">영단어</button>
       <button role="tab" id="mode-d" aria-selected="false" data-mode="d">받아쓰기</button>
+      <button role="tab" id="mode-s" aria-selected="false" data-mode="s">스크립트</button>
       <button role="tab" id="mode-p" aria-selected="false" data-mode="p">나의 바다 <span class="coinmini" id="coinMini">🪙0</span></button>
       <button class="gear" id="gearBtn" title="설정" aria-label="설정">⚙️</button>
     </nav>
@@ -565,6 +592,7 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
       <div class="tiles3">
         <button class="tile3 t-v" data-go="v"><span class="ic">📚</span><b>영단어</b><span>시험 보고 코인 받기</span></button>
         <button class="tile3 t-d" data-go="d"><span class="ic">✏️</span><b>받아쓰기</b><span>듣고 받아쓰기</span></button>
+        <button class="tile3 t-s" data-go="s"><span class="ic">🎙️</span><b>스크립트 외우기</b><span>대본 외워서 말하기</span></button>
         <button class="tile3 t-p" data-go="p"><span class="ic">🐠</span><b>나의 바다</b><span id="homeCoins">🪙 코인 0개</span></button>
       </div>
       <div class="coinrule">
@@ -597,6 +625,76 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
     </div>
   </section>
 
+  <!-- ===== SCRIPT (대본 외우기) ===== -->
+  <section id="mode-s-root" hidden>
+    <nav class="steps" role="tablist" aria-label="스크립트 단계">
+      <button role="tab" id="stab-prep" aria-selected="true" data-view="s-prep">1 · 대본 준비</button>
+      <button role="tab" id="stab-test" aria-selected="false" data-view="s-test" disabled>2 · 말하기 테스트</button>
+    </nav>
+
+    <section id="s-prep">
+      <div class="card">
+        <h2><span class="num">1</span>외워야 하는 영어 대본 사진</h2>
+        <p class="help">영어 대본(스크립트)을 찍어 주세요. (여러 장 가능)<br>문장 단위로 정리하고, 틀린 스펠링은 앞뒤 문맥을 보고 고쳐서 정답지를 만들어요.</p>
+        <div class="row">
+          <button class="btn" id="sCam">📷 사진 찍기</button>
+          <button class="btn" id="sPick">🖼️ 사진 선택</button>
+          <button class="btn primary" id="readScript" disabled>✨ 사진에서 대본 읽기</button>
+          <input type="file" id="sCamIn" accept="image/*" capture="environment" multiple hidden>
+          <input type="file" id="sPickIn" accept="image/*" multiple hidden>
+        </div>
+        <div class="thumbs" id="sThumbs"></div>
+        <div class="status" id="sStatus"></div>
+        <label class="f" style="margin-top:12px">대본 문장 <span style="font-weight:400">(한 줄에 한 문장 · 필요하면 직접 고쳐요)</span>
+          <textarea id="scriptList" placeholder="Hello, my name is Sejun.&#10;I am seven years old.&#10;I like to play soccer."></textarea>
+        </label>
+        <div class="row" style="margin-top:10px">
+          <button class="btn" id="sListen">🔊 대본 듣기</button>
+          <button class="btn primary" id="sConfirm" disabled>✅ 정답지로 확정</button>
+          <span class="okmark" id="sOk" hidden></span>
+        </div>
+        <div class="status" id="sCount"></div>
+      </div>
+      <div class="card">
+        <h2><span class="num">2</span>말하기 테스트</h2>
+        <p class="help">시작을 누르면 태블릿 마이크로 녹음이 시작돼요. 대본을 안 보고 외운 대로 말한 뒤 <b>다 말했어요</b>를 누르고, <b>채점하기</b>를 누르면 녹음을 듣고 정답지와 비교해 점수를 알려 줘요.</p>
+        <div class="row">
+          <button class="btn primary big" id="sStart" disabled>🎙️ 테스트 시작 (녹음)</button>
+          <button class="btn" id="sResume" hidden>하던 테스트로 →</button>
+        </div>
+        <div class="hist" id="historyS" style="margin-top:12px"></div>
+      </div>
+    </section>
+
+    <section id="s-test" hidden>
+      <div class="result" id="sresult" hidden>
+        <div class="score"><span id="sScoreNum">0</span><small id="sScoreDen">/0문장</small></div>
+        <div class="detail"><b id="sScoreText"></b><p id="sScoreNote"></p></div>
+        <div class="acts">
+          <button class="btn" id="sAgain">🔁 다시 테스트</button>
+          <button class="btn" id="sNewScript">새 대본</button>
+        </div>
+      </div>
+      <div class="recbox" id="recbox">
+        <div class="micbig" id="micIcon">🎙️</div>
+        <div class="rectime" id="recTime">00:00</div>
+        <div class="level"><i id="recLevel"></i></div>
+        <div class="status" id="recStatus" style="margin:0"></div>
+        <div class="row" style="justify-content:center">
+          <button class="btn primary big" id="sStop">⏹ 다 말했어요</button>
+          <button class="btn" id="sPlayRec" hidden>▶ 녹음 들어보기</button>
+          <button class="btn" id="sRedo" hidden>🔁 다시 녹음</button>
+          <button class="btn primary big" id="sGrade" hidden>✅ 채점하기</button>
+          <button class="btn" id="sPeek" title="대본을 잠깐 보여 줍니다">👀 대본 보기</button>
+        </div>
+        <div class="status" id="sGradeStatus" style="margin:0"></div>
+      </div>
+      <div class="peekbox" id="sPeekBox" hidden></div>
+      <div class="sres" id="sLines"></div>
+      <div class="status" id="sTranscript" style="white-space:pre-wrap"></div>
+    </section>
+  </section>
+
   <!-- ===== VOCAB ===== -->
   <section id="mode-v-root" hidden>
     <nav class="steps" role="tablist" aria-label="영단어 단계">
@@ -617,7 +715,16 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
         </div>
         <div class="thumbs" id="wordThumbs"></div>
         <div class="status" id="wordStatus"></div>
-        <label class="f" style="margin-top:12px">단어 목록 <span style="font-weight:400">(한 줄에 하나, <code>영어 = 뜻</code>, 예문이 있으면 <code>| 예문</code>)</span>
+        <div class="f" style="margin-top:12px">단어 목록 <span style="font-weight:400">(칸을 눌러 바로 고치고, 아래 <b>단어 추가</b>로 더 넣어요)</span></div>
+        <div class="whead"><span></span><span>영어</span><span>뜻</span><span class="ex">예문 (선택)</span><span></span></div>
+        <div class="wrows" id="wordRows"></div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn" id="wordAdd">＋ 단어 추가</button>
+          <button class="btn" id="wordTextToggle">📝 텍스트로 한꺼번에 고치기</button>
+          <button class="btn primary" id="wordConfirm" disabled>✅ 단어 목록 확정</button>
+          <span class="okmark" id="wordOk" hidden>✔ 확정됨 — 이제 문제를 만들 수 있어요</span>
+        </div>
+        <label class="f" id="wordTextWrap" hidden style="margin-top:10px">텍스트 편집 <span style="font-weight:400">(한 줄에 하나, <code>영어 = 뜻</code>, 예문이 있으면 <code>| 예문</code>)</span>
           <textarea id="wordList" placeholder="apple = 사과 | I like apples.&#10;library = 도서관&#10;take care of = ~을 돌보다"></textarea>
         </label>
         <div class="status" id="wordCount"></div>
@@ -791,7 +898,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 18:26';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 18:33';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -805,9 +912,10 @@ const S = {
   tool:'pen', penWidth:3.4, penOnly:false, penSeen:false, lastKey:null, ctl:null,
   v: { wordPhotos:[], samplePhotos:[], test: LS.get('test', null), strokes: LS.get('strokes', {}), grades: LS.get('grades', null), practiced: LS.get('practicedV', {}) },
   d: { photos:[], items:[], order: null, pos:0, phase:'idle', strokes:{}, grades:null, practiced:{} , ...LS.get('dict', {}) },
+  s: { photos:[], lines:[], confirmed:false, savedAt:0, phase:'idle', result:null, liveText:'', ...LS.get('script', {}) },
   pad: null,
 };
-S.d.photos = [];
+S.d.photos = []; S.s.photos = []; S.s.wav = null; S.s.phase = S.s.result ? 'graded' : 'idle';
 const canvases = new Map(); // key -> canvas
 const live = new Map();     // pointerId -> {key, c, stroke}
 const scrolls = new Map();  // pointerId -> lastY
@@ -825,7 +933,7 @@ function status(el, msg, busy){
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a }
 function isHangul(ch){ const c = ch.charCodeAt(0); return (c>=0xAC00&&c<=0xD7A3)||(c>=0x3131&&c<=0x318E) }
 function nameI(name){ name = (name||'').trim(); if(!name) return '우리 아이'; const c = name.charCodeAt(name.length-1); return (c>=0xAC00&&c<=0xD7A3&&((c-0xAC00)%28)) ? name+'이' : name }
-function updateBrand(){ const what = S.mode==='d' ? '받아쓰기' : S.mode==='p' ? '나의 바다' : S.mode==='h' ? '학습 앱' : '영단어 시험'; $('brandText').textContent = `♥ 사랑하는 ${nameI(SET.name)} ${what} ♥`; document.title = `사랑하는 ${nameI(SET.name)} ${what}` }
+function updateBrand(){ const what = S.mode==='d' ? '받아쓰기' : S.mode==='s' ? '스크립트 외우기' : S.mode==='p' ? '나의 바다' : S.mode==='h' ? '학습 앱' : '영단어 시험'; $('brandText').textContent = `♥ 사랑하는 ${nameI(SET.name)} ${what} ♥`; document.title = `사랑하는 ${nameI(SET.name)} ${what}` }
 function nameTopic(name){ name = (name||'').trim(); if(!name) return '우리 아이는'; const ch = name[name.length-1]; const c = ch.charCodeAt(0); if(c>=0xAC00&&c<=0xD7A3){ return ((c-0xAC00)%28) ? name+'이는' : name+'는' } return name+'는' }
 function errCopy(e){
   const m = {
@@ -837,6 +945,7 @@ function errCopy(e){
     invalid_json:'답을 정리하다 실패했어요. 한 번 더 눌러 주세요.', empty_completion:'답이 비어 있었어요. 다시 시도해 주세요.',
     prompt_too_large:'내용이 너무 많아요. 개수를 줄여 주세요.', cancelled:'중지했어요.',
     auth:'API 키가 틀렸거나 권한이 없어요. ⚙️ 설정에서 키를 확인해 주세요.', network:'인터넷 연결을 확인해 주세요.',
+    audio_unsupported:'이 환경에서는 녹음 채점을 할 수 없어요. 태블릿 앱(Gemini 키)에서 해 주세요.', mic_denied:'마이크를 쓸 수 없어요. 앱의 마이크 권한을 허용해 주세요.', no_recording:'녹음이 없어요. 먼저 테스트 시작을 눌러 말해 주세요.',
   };
   const base = m[e?.code] || (e?.message ? `문제가 생겼어요: ${String(e.message).slice(0,160)}` : '잠깐 문제가 생겼어요. 다시 시도해 주세요.');
   const detail = [e?.code, (!m[e?.code] || e?.code==='upstream_error' || e?.code==='invalid_json') && e?.message ? String(e.message).slice(0,160) : ''].filter(Boolean).join(' · ');
@@ -847,10 +956,10 @@ function errCopy(e){
 /* ---------- navigation ---------- */
 function setMode(m){
   S.mode = m;
-  for(const k of ['h','v','d','p']){ $('mode-'+k).setAttribute('aria-selected', m===k); $('mode-'+k+'-root').hidden = m!==k }
+  for(const k of ['h','v','d','s','p']){ $('mode-'+k).setAttribute('aria-selected', m===k); $('mode-'+k+'-root').hidden = m!==k }
   document.body.classList.toggle('mode-p', m==='p');
   updateBrand();
-  if(m==='v' || m==='d') showView(m==='v' ? (S.view.startsWith('v')?S.view:'v-prep') : (S.view.startsWith('d')?S.view:'d-prep'));
+  if(m==='v' || m==='d' || m==='s') showView(S.view.startsWith(m+'-') ? S.view : m+'-prep');
   else { S.view = m; updateTools(); scrollTop(); }
   if(m==='p') Play.enter(); else Play.leave();
   if(m==='h') renderHome();
@@ -859,7 +968,7 @@ function renderHome(){ $('homeTitle').textContent = `♥ 사랑하는 ${nameI(SE
 document.querySelectorAll('.tile3[data-go]').forEach(b => b.onclick = () => setMode(b.dataset.go));
 function showView(v){
   S.view = v;
-  for(const id of ['v-prep','v-test','d-prep','d-test']) $(id).hidden = id!==v;
+  for(const id of ['v-prep','v-test','d-prep','d-test','s-prep','s-test']) $(id).hidden = id!==v;
   document.querySelectorAll('.steps button').forEach(b => b.setAttribute('aria-selected', b.dataset.view===v));
   updateTools(); requestAnimationFrame(fitAll); scrollTop();
 }
@@ -923,13 +1032,15 @@ const AI = {
     const tier = o.tier || 'default';
     try{
       if(this.sampleFn){
+        if(o.audio) throw {code:'audio_unsupported'};
         const opts = { modelTier: tier==='quick' ? 'quick' : 'default', cache:false, signal };
         if(images && images.length) opts.images = images;
         return await this.sampleFn.json(prompt, opts);
       }
       const c = cred(); if(!c) throw {code:'sampling_disabled', message:'no key'};
       const parts = []; for(const f of (images||[])) parts.push(await toJpegB64(f));
-      const text = c.provider==='gemini' ? await this.gemini(prompt, parts, signal, c, tier) : await this.anthropic(prompt, parts, signal, c);
+      if(o.audio && c.provider!=='gemini') throw {code:'audio_unsupported'};
+      const text = c.provider==='gemini' ? await this.gemini(prompt, parts, signal, c, tier, o.audio) : await this.anthropic(prompt, parts, signal, c);
       return parseLoose(text);
     } finally { S.ctl = null }
   },
@@ -948,11 +1059,11 @@ const AI = {
     if(!txt.trim()) throw {code:'empty_completion'};
     return txt;
   },
-  async gemini(prompt, parts, signal, c, tier){
+  async gemini(prompt, parts, signal, c, tier, audio){
     // quick(사진 읽기): 가벼운 모델 먼저. default(출제·채점): 일반 모델 먼저. 한 모델이 45초 안에 답이 없거나 바쁘면 다음 모델로.
     const order = tier==='quick' ? GEMINI_QUICK : GEMINI_MODELS;
     const chain = [...new Set([...(c.model ? [c.model] : []), ...order])];
-    const contents = [{ role:'user', parts:[ ...parts.map(p => ({inline_data:{mime_type:'image/jpeg', data:p}})), {text: prompt} ] }];
+    const contents = [{ role:'user', parts:[ ...parts.map(p => ({inline_data:{mime_type:'image/jpeg', data:p}})), ...(audio ? [{inline_data:{mime_type:audio.mime, data:audio.data}}] : []), {text: prompt} ] }];
     let r, lastMsg = '';
     for(let i=0;i<chain.length;i++){
       const model = chain[i];
@@ -1256,15 +1367,45 @@ function updateCount(){
   const n = parseWords(wordsText()).length;
   $('wordCount').textContent = n ? `단어 ${n}개` : '';
   $('qCount').placeholder = n ? `전체 (${n})` : '전체';
-  LS.set('words', wordsText()); refreshButtons();
+  LS.set('words', wordsText()); LS.set('wordsOk', !!S.v.wordsOk); refreshButtons();
 }
 $('wordList').value = LS.get('words', '');
-$('wordList').addEventListener('input', updateCount);
+$('wordList').addEventListener('input', () => { S.v.wordsOk = false; updateCount(); });
+/* 단어 칸 편집기: 칸을 누르면 그 자리에서 바로 고쳐요 (텍스트 상자는 숨겨 두고 서로 맞춰 둡니다) */
+function rowsToText(){ return [...$('wordRows').querySelectorAll('.wrow')].map(r => { const en = r.querySelector('.en').value.trim(), ko = r.querySelector('.ko').value.trim(), ex = r.querySelector('.ex').value.trim(); if(!en && !ko && !ex) return ''; return en + (ko ? ' = ' + ko : '') + (ex ? ' | ' + ex : '') }).filter(Boolean).join('\n') }
+function syncFromRows(){ $('wordList').value = rowsToText(); S.v.wordsOk = false; updateCount() }
+function renderWordRows(focusLast){
+  const host = $('wordRows'); host.innerHTML = '';
+  const items = parseWords(wordsText());
+  const mk = (it, i) => { const r = document.createElement('div'); r.className = 'wrow';
+    r.innerHTML = `<span class="idx">${i+1}</span><input class="en" placeholder="apple" autocapitalize="off" autocomplete="off" spellcheck="false"><input class="ko" placeholder="사과"><input class="ex" placeholder="I like apples."><button class="del" title="지우기">🗑</button>`;
+    r.querySelector('.en').value = it.word||''; r.querySelector('.ko').value = it.meaning||''; r.querySelector('.ex').value = it.example||'';
+    r.querySelectorAll('input').forEach(inp => inp.addEventListener('input', syncFromRows));
+    r.querySelector('.del').onclick = () => { r.remove(); syncFromRows(); renderWordRows() };
+    return r };
+  items.forEach((it,i) => host.appendChild(mk(it, i)));
+  if(focusLast){ const last = host.lastElementChild; if(last){ const inp = last.querySelector('.en'); inp.focus(); try{ inp.setSelectionRange(inp.value.length, inp.value.length) }catch{} } }
+}
+$('wordAdd').onclick = () => { const host = $('wordRows'); const r = document.createElement('div'); r.className='wrow'; const i = host.children.length;
+  r.innerHTML = `<span class="idx">${i+1}</span><input class="en" placeholder="apple" autocapitalize="off" autocomplete="off" spellcheck="false"><input class="ko" placeholder="사과"><input class="ex" placeholder="I like apples."><button class="del" title="지우기">🗑</button>`;
+  r.querySelectorAll('input').forEach(inp => inp.addEventListener('input', syncFromRows)); r.querySelector('.del').onclick = () => { r.remove(); syncFromRows(); renderWordRows() };
+  host.appendChild(r); r.querySelector('.en').focus(); };
+$('wordTextToggle').onclick = () => { const w = $('wordTextWrap'); w.hidden = !w.hidden; $('wordTextToggle').textContent = w.hidden ? '📝 텍스트로 한꺼번에 고치기' : '🔼 텍스트 편집 닫기'; if(w.hidden) renderWordRows() };
+$('wordConfirm').onclick = () => { if(!parseWords(wordsText()).length){ toast('단어가 없어요.'); return } S.v.wordsOk = true; LS.set('wordsOk', true); refreshButtons(); toast('단어 목록을 확정했어요. 이제 문제를 만들 수 있어요!', 2500); $('makeTest').scrollIntoView({behavior:'smooth', block:'center'}) };
+S.v.wordsOk = !!LS.get('wordsOk', false);
+renderWordRows();
 
 function refreshButtons(){
   const ai = !!AI.backend;
   $('readWords').disabled = !(ai && S.v.wordPhotos.length);
-  $('makeTest').disabled = !(ai && (parseWords(wordsText()).length || S.v.wordPhotos.length));
+  const nW = parseWords(wordsText()).length;
+  $('makeTest').disabled = !(ai && ((S.v.wordsOk && nW) || (!nW && S.v.wordPhotos.length)));
+  $('wordConfirm').disabled = !nW || !!S.v.wordsOk; $('wordOk').hidden = !(nW && S.v.wordsOk);
+  $('readScript').disabled = !(ai && S.s.photos.length);
+  const nS = scriptLines().length; $('sConfirm').disabled = !nS; $('sListen').disabled = !nS;
+  $('sStart').disabled = !(S.s.confirmed && S.s.lines.length);
+  $('sResume').hidden = !(S.s.phase && S.s.phase!=='idle'); $('stab-test').disabled = !(S.s.phase && S.s.phase!=='idle');
+  $('sGrade').disabled = !(ai && (S.s.wav || S.s.liveText));
   $('openTest').hidden = !S.v.test;
   $('vtab-test').disabled = !S.v.test;
   $('gradeBtn').disabled = !ai;
@@ -1288,8 +1429,8 @@ async function readWordsFromPhotos(){
   if(!lines.length) throw {code:'empty_completion'};
   const cur = wordsText().trim();
   $('wordList').value = (cur ? cur + '\n' : '') + lines.join('\n');
-  updateCount();
-  status($('wordStatus'), `단어 ${lines.length}개를 읽었어요. 틀린 글자가 있으면 아래에서 고쳐 주세요.`);
+  S.v.wordsOk = false; LS.set('wordsOk', false); updateCount(); renderWordRows();
+  status($('wordStatus'), `단어 ${lines.length}개를 읽었어요. 칸을 눌러 고친 뒤 ✅ 단어 목록 확정을 눌러 주세요.`);
   return lines.length;
 }
 $('readWords').onclick = async () => {
@@ -1564,9 +1705,14 @@ $('padDone').onclick = () => {
   if(!S.pad) return;
   const written = [0,1,2].filter(r => hasInk(`pr:${padSeq}:${r}`)).length;
   if(written<3){ toast(`아직 ${3-written}번 더 써야 해요. 세 칸을 모두 채워 주세요!`); return }
-  if(S.pad.mode==='v'){ S.v.practiced[S.pad.item.n] = true; LS.set('practicedV', S.v.practiced); applyGrades() }
-  else { S.d.practiced[S.pad.item.pos] = true; saveDict(); renderDictResults() }
-  toast(`잘했어요! ${SET.name} 최고 👏`, 3000); closePad();
+  let allDone = false, bonusKey = '';
+  if(S.pad.mode==='v'){ S.v.practiced[S.pad.item.n] = true; LS.set('practicedV', S.v.practiced); applyGrades();
+    const wrong = allQ().filter(q => !(S.v.grades?.[q.n]?.correct)); allDone = wrong.length > 0 && wrong.every(q => S.v.practiced[q.n]); bonusKey = 'v:' + (S.v.test?.t || S.v.test?.id || JSON.stringify(allQ().map(q=>q.n))) }
+  else { S.d.practiced[S.pad.item.pos] = true; saveDict(); renderDictResults();
+    const wrong = S.d.order.map((_,pos)=>pos).filter(pos => !(S.d.grades?.[pos]?.correct)); allDone = wrong.length > 0 && wrong.every(pos => S.d.practiced[pos]); bonusKey = 'd:' + (S.d.startedAt || S.d.order.join(',')) }
+  closePad();
+  if(allDone && LS.get('bonusKey', '') !== bonusKey){ LS.set('bonusKey', bonusKey); practiceBonus() }   // 틀린 문제 다시 공부 다 하면 코인 1개 보너스 (한 시험에 한 번)
+  else toast(`잘했어요! ${SET.name} 최고 👏`, 3000);
 };
 
 /* =================================================================== */
@@ -1790,9 +1936,135 @@ $('dRetryWrong').onclick = () => { const wrong = S.d.order.filter((idx,pos) => !
 $('dRedo').onclick = () => { $('dCountIn').value=''; startDict(S.d.items.slice()) };
 
 /* ---------- history ---------- */
-function pushHistory(id, sum){ const k = id==='historyV' ? 'history' : 'historyD'; const h = LS.get(k, []); h.unshift({t:Date.now(), ok:sum.ok, total:sum.total, pct:sum.pct}); LS.set(k, h.slice(0,12)); renderHistory(id) }
+/* ---------- 스크립트 외우기 (대본 사진 → 정답지 → 마이크 녹음 → 음성 채점) ---------- */
+function scriptLines(){ return $('scriptList').value.split('\n').map(t => t.trim().replace(/^\d+[.)]\s*/, '')).filter(Boolean) }
+function saveScript(){ LS.set('script', { lines:S.s.lines, confirmed:S.s.confirmed, savedAt:S.s.savedAt, phase:S.s.phase, result:S.s.result, liveText:S.s.liveText, text:$('scriptList').value }) }
+bindPhotos(S.s.photos, 'sCam','sPick','sCamIn','sPickIn', $('sThumbs'));
+{ const saved = LS.get('script', {}); if(saved.text) $('scriptList').value = saved.text; else if(saved.lines?.length) $('scriptList').value = saved.lines.join('\n'); }
+function renderScriptOk(){ const n = S.s.lines.length; $('sOk').hidden = !(S.s.confirmed && n); if(S.s.confirmed && n){ const d = S.s.savedAt ? new Date(S.s.savedAt) : null; $('sOk').textContent = `✔ 정답지 ${n}문장 저장됨` + (d ? ` (${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')})` : '') } const m = scriptLines().length; $('sCount').textContent = m ? `${m}문장` + (S.s.confirmed && m !== n ? ' · 고친 내용이 있어요 → 다시 확정해 주세요' : '') : '' }
+$('scriptList').addEventListener('input', () => { S.s.confirmed = false; saveScript(); renderScriptOk(); refreshButtons() });
+$('readScript').onclick = async () => {
+  $('readScript').disabled = true; status($('sStatus'), '선생님이 대본을 읽고 정리하는 중이에요… (10~40초)', true);
+  try{
+    const data = await AI.json(
+`이 사진은 초등학생이 외워야 하는 영어 대본(스크립트)입니다.
+사진의 영어 문장을 빠짐없이, 적힌 순서대로 읽어서 "문장 단위"로 한 줄씩 정리해 주세요.
+- 한 문장이 사진에서 여러 줄로 나뉘어 있으면 한 줄로 합치고, 한 줄에 두 문장이 있으면 둘로 나눕니다(마침표·물음표·느낌표 기준).
+- 오타나 사진 인식 오류로 보이는 스펠링은 앞뒤 문맥을 보고 올바른 영어 단어로 고칩니다. 문장의 뜻이나 단어 자체는 바꾸지 않습니다.
+- 대사 앞의 화자 이름(예: "A:", "Tom:")이 있으면 그대로 두고, 줄 번호나 쪽 번호는 뺍니다. 한국어 해석이 함께 있으면 뺍니다.
+- 첫 글자 대문자와 문장 끝 문장부호를 바르게 갖춥니다.
+반드시 JSON 문자열 배열만 출력하세요. 예: ["Hello, my name is Sejun.","I am seven years old."]`, S.s.photos, {tier:'quick'});
+    const arr = (Array.isArray(data) ? data : (data?.items || data?.sentences || [])).map(x => typeof x==='string' ? x : (x?.text || '')).map(t => t.trim()).filter(Boolean);
+    if(!arr.length) throw {code:'empty_completion'};
+    $('scriptList').value = arr.join('\n'); S.s.confirmed = false; saveScript(); renderScriptOk();
+    status($('sStatus'), `${arr.length}문장으로 정리했어요. 확인하고 ✅ 정답지로 확정을 눌러 주세요.`);
+  }catch(e){ status($('sStatus'), errCopy(e)); if(e?.code!=='cancelled') toast(errCopy(e)) }
+  finally{ refreshButtons() }
+};
+$('sConfirm').onclick = () => { const lines = scriptLines(); if(!lines.length){ toast('대본이 없어요.'); return } S.s.lines = lines; S.s.confirmed = true; S.s.savedAt = Date.now(); S.s.phase = 'idle'; S.s.result = null; S.s.liveText = ''; S.s.wav = null; saveScript(); renderScriptOk(); refreshButtons(); toast(`정답지 ${lines.length}문장을 저장했어요!`, 2500) };
+$('sListen').onclick = async () => { const lines = scriptLines(); if(!lines.length) return; $('sListen').classList.add('speaking'); try{ await speakSeq(lines.map(t => ({text:t, lang:'en-US', rate:0.95}))) } finally{ $('sListen').classList.remove('speaking') } };
+renderScriptOk();
+
+/* 녹음기: 마이크 → 16kHz WAV (Gemini가 바로 들을 수 있는 형식) */
+const Rec = {
+  ctx:null, stream:null, node:null, src:null, chunks:[], rate:48000, t0:0, timer:null, on:false, sr:null,
+  async start(){
+    try{ this.stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true }, video:false }) }
+    catch(e){ throw {code:'mic_denied', message:String(e)} }
+    const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); try{ await this.ctx.resume() }catch{}
+    this.rate = this.ctx.sampleRate; this.chunks = []; this.src = this.ctx.createMediaStreamSource(this.stream);
+    this.node = this.ctx.createScriptProcessor(4096, 1, 1);
+    this.node.onaudioprocess = e => { if(!this.on) return; const d = e.inputBuffer.getChannelData(0); this.chunks.push(new Float32Array(d)); let sum = 0; for(let i=0;i<d.length;i+=8) sum += d[i]*d[i]; const rms = Math.sqrt(sum/(d.length/8)); $('recLevel').style.width = Math.min(100, Math.round(rms*420)) + '%' };
+    this.src.connect(this.node); this.node.connect(this.ctx.destination);
+    this.on = true; this.t0 = Date.now();
+    this.timer = setInterval(() => { const sec = Math.floor((Date.now()-this.t0)/1000); $('recTime').textContent = `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`; if(sec >= 240){ toast('4분이 넘어서 녹음을 멈췄어요.'); $('sStop').click() } }, 250);
+    // 브라우저(PC)에서는 말하는 동안 글자로도 받아 둡니다 (녹음 채점이 안 되는 환경용)
+    S.s.liveText = ''; const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(SR && !nativeTTS()){ try{ this.sr = new SR(); this.sr.lang = 'en-US'; this.sr.continuous = true; this.sr.interimResults = false; this.sr.onresult = ev => { for(let i=ev.resultIndex;i<ev.results.length;i++) if(ev.results[i].isFinal) S.s.liveText += ev.results[i][0].transcript + ' ' }; this.sr.onend = () => { if(this.on) try{ this.sr.start() }catch{} }; this.sr.start() }catch{ this.sr = null } }
+  },
+  stop(){
+    this.on = false; clearInterval(this.timer);
+    try{ this.sr && (this.sr.onend = null, this.sr.stop()) }catch{} this.sr = null;
+    try{ this.node && this.node.disconnect(); this.src && this.src.disconnect() }catch{}
+    try{ this.stream && this.stream.getTracks().forEach(t => t.stop()) }catch{}
+    try{ this.ctx && this.ctx.close() }catch{}
+    const total = this.chunks.reduce((a,c)=>a+c.length, 0); const all = new Float32Array(total); let o = 0; for(const c of this.chunks){ all.set(c, o); o += c.length }
+    this.chunks = []; const dur = total / this.rate;
+    // 16kHz로 줄이기
+    const target = 16000, ratio = this.rate / target, n = Math.floor(all.length / ratio), pcm = new Int16Array(n);
+    for(let i=0;i<n;i++){ const a = Math.floor(i*ratio), b = Math.min(all.length, Math.floor((i+1)*ratio)); let sum = 0; for(let j=a;j<b;j++) sum += all[j]; const v = Math.max(-1, Math.min(1, b>a ? sum/(b-a) : 0)); pcm[i] = v < 0 ? v*0x8000 : v*0x7FFF }
+    const buf = new ArrayBuffer(44 + pcm.length*2), dv = new DataView(buf); const W = (off, str) => { for(let i=0;i<str.length;i++) dv.setUint8(off+i, str.charCodeAt(i)) };
+    W(0,'RIFF'); dv.setUint32(4, 36 + pcm.length*2, true); W(8,'WAVE'); W(12,'fmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true); dv.setUint32(24, target, true); dv.setUint32(28, target*2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true); W(36,'data'); dv.setUint32(40, pcm.length*2, true);
+    new Int16Array(buf, 44).set(pcm);
+    return { blob: new Blob([buf], {type:'audio/wav'}), dur };
+  },
+};
+function blobB64(blob){ return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1]); fr.onerror = rej; fr.readAsDataURL(blob) }) }
+function setRecUI(state){   // 'rec' | 'done' | 'graded' | 'idle'
+  const rb = $('recbox'); rb.classList.toggle('on', state==='rec');
+  $('sStop').hidden = state!=='rec'; $('sPlayRec').hidden = !(state==='done' || state==='graded') || !S.s.wav; $('sRedo').hidden = state==='rec'; $('sGrade').hidden = state!=='done';
+  $('micIcon').textContent = state==='rec' ? '🎙️' : state==='graded' ? '🏆' : '✅';
+  if(state!=='rec') $('recLevel').style.width = '0';
+  $('recStatus').textContent = state==='rec' ? '녹음 중… 대본을 안 보고 외운 대로 말해요!' : state==='done' ? '녹음을 마쳤어요. 채점하기를 눌러 주세요.' : state==='graded' ? '채점이 끝났어요.' : '';
+}
+async function startScriptTest(){
+  if(!S.s.confirmed || !S.s.lines.length){ toast('먼저 대본을 확정해 주세요.'); return }
+  S.s.result = null; S.s.wav = null; S.s.liveText = ''; $('sresult').hidden = true; $('sLines').innerHTML = ''; $('sTranscript').textContent = ''; $('sPeekBox').hidden = true;
+  try{ await Rec.start() }catch(e){ toast(errCopy(e)); status($('sGradeStatus'), errCopy(e)); return }
+  S.s.phase = 'rec'; saveScript(); setRecUI('rec'); $('recTime').textContent = '00:00'; status($('sGradeStatus'), ''); showView('s-test'); refreshButtons();
+}
+$('sStart').onclick = startScriptTest;
+$('sResume').onclick = () => showView('s-test');
+$('sStop').onclick = () => { if(!Rec.on) return; const r = Rec.stop(); S.s.wav = r.blob; S.s.dur = r.dur; S.s.phase = 'done'; saveScript(); setRecUI('done'); refreshButtons(); if(r.dur < 1){ toast('녹음이 너무 짧아요. 다시 녹음해 주세요.') } };
+$('sRedo').onclick = startScriptTest;
+$('sPlayRec').onclick = () => { if(!S.s.wav) return; const a = new Audio(URL.createObjectURL(S.s.wav)); a.play().catch(()=>{}) };
+$('sPeek').onclick = () => { const b = $('sPeekBox'); b.hidden = !b.hidden; if(!b.hidden){ b.innerHTML = S.s.lines.map((t,i) => `<div>${i+1}. ${t.replace(/</g,'&lt;')}</div>`).join(''); clearTimeout(b._t); b._t = setTimeout(() => { b.hidden = true }, 8000) } };
+$('sGrade').onclick = async () => {
+  if(!S.s.wav && !S.s.liveText){ toast(errCopy({code:'no_recording'})); return }
+  $('sGrade').disabled = true; status($('sGradeStatus'), '선생님이 녹음을 듣고 채점하는 중이에요… (20~60초)', true);
+  try{
+    const key = S.s.lines.map((t,i) => ({n:i+1, text:t}));
+    const rules = `당신은 초등학교 1학년 학생의 영어 말하기(대본 외우기) 시험을 채점하는 친절한 원어민 선생님입니다.
+학생은 아래 정답 대본을 외워서 말했습니다. 발음은 어린이답게 서툴러도 괜찮고, 작은 발음 실수나 억양은 감점하지 않습니다.
+정답 대본(JSON): ${JSON.stringify(key)}
+
+채점 방법:
+1) 먼저 들린 말을 영어로 그대로 받아 적어 transcript에 넣습니다. (없으면 "")
+2) 대본의 각 문장(n)에 대해, 학생이 그 문장을 말했는지 찾고 status를 정합니다.
+   - "ok": 핵심 단어가 모두 순서대로 들어 있고, 빠지거나 바뀐 단어가 없거나 아주 사소한(관사·복수형·한 단어 정도) 경우
+   - "part": 문장의 절반쯤은 맞게 말했지만 빠지거나 다른 단어가 여럿인 경우
+   - "miss": 거의 말하지 않았거나 전혀 다른 말을 한 경우
+   - heard에는 그 문장에 해당하는 학생의 말을 짧게 적고(없으면 ""), note에는 틀린 점을 아주 짧게 한국어로 적습니다(맞으면 "").
+3) 문장 순서가 바뀌어도 내용이 맞으면 ok로 봐 줍니다.
+반드시 JSON만 출력하세요. 예: {"transcript":"hello my name is sejun ...","results":[{"n":1,"status":"ok","heard":"hello my name is sejun","note":""},{"n":2,"status":"part","heard":"i am seven","note":"years old 빠짐"}]}`;
+    let data;
+    if(S.s.wav && AI.backend==='gemini'){ const b64 = await blobB64(S.s.wav); data = await AI.json(rules + '\n\n첨부한 오디오가 학생이 말한 녹음입니다.', [], { audio:{ mime:'audio/wav', data:b64 } }) }
+    else if(S.s.liveText){ data = await AI.json(rules + `\n\n학생이 말한 것을 음성 인식기가 받아 적은 글: 《${S.s.liveText.trim()}》\n(이 글을 transcript로 쓰고 채점하세요.)`, []) }
+    else throw {code:'audio_unsupported'};
+    const arr = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
+    const byN = new Map(arr.map(r => [Number(r?.n), r]));
+    const res = key.map(k => { const r = byN.get(k.n); const st = ['ok','part','miss'].includes(r?.status) ? r.status : 'miss'; return { n:k.n, text:k.text, status:st, heard:String(r?.heard||''), note:String(r?.note||'') } });
+    S.s.result = { transcript:String(data?.transcript||''), lines:res, t:Date.now() }; S.s.phase = 'graded'; saveScript();
+    renderScriptResult(); const sum = scoreS(); pushHistory('historyS', sum); status($('sGradeStatus'), ''); scrollTop(true); celebrate(sum, '스크립트 외우기', true);
+  }catch(e){ status($('sGradeStatus'), errCopy(e)); if(e?.code!=='cancelled') toast(errCopy(e)) }
+  finally{ refreshButtons() }
+};
+function scoreS(){ const L = S.s.result?.lines || []; const ok = L.filter(l => l.status==='ok').length, part = L.filter(l => l.status==='part').length; const total = L.length; return { total, ok, part, unsure:0, pct: total ? Math.round((ok + part*0.5)/total*100) : 0 } }
+function renderScriptResult(){
+  const r = S.s.result; if(!r) return; const sum = scoreS();
+  setRecUI('graded'); $('sresult').hidden = false; $('sScoreNum').textContent = sum.ok; $('sScoreDen').textContent = `/${sum.total}문장`;
+  $('sScoreText').textContent = sum.pct===100 ? '완벽하게 외웠어요!' : sum.pct>=70 ? '거의 다 외웠어요!' : sum.pct>=40 ? '절반쯤 외웠어요. 조금만 더!' : '다시 한번 외워 보자!';
+  $('sScoreNote').textContent = (sum.part ? `절반만 맞은 문장 ${sum.part}개 · ` : '') + `점수 ${sum.pct}점`;
+  const host = $('sLines'); host.innerHTML = '';
+  for(const l of r.lines){ const d = document.createElement('div'); d.className = 'sline ' + l.status; d.innerHTML = `<div class="bdg">${l.status==='ok' ? '✅' : l.status==='part' ? '⚠️' : '❌'}</div><div><div class="txt">${l.n}. ${l.text.replace(/</g,'&lt;')}</div><div class="heard">${l.heard ? '들린 말: ' + l.heard.replace(/</g,'&lt;') : '이 문장은 안 들렸어요'}${l.note ? ' · ' + l.note.replace(/</g,'&lt;') : ''}</div></div>`; host.appendChild(d) }
+  $('sTranscript').textContent = r.transcript ? '🗣️ 들린 전체 내용: ' + r.transcript : '';
+}
+$('sAgain').onclick = startScriptTest;
+$('sNewScript').onclick = () => { S.s.phase = 'idle'; S.s.result = null; S.s.wav = null; saveScript(); setRecUI('idle'); showView('s-prep'); refreshButtons(); $('scriptList').focus() };
+if(S.s.result) renderScriptResult(); else setRecUI('idle');
+function pushHistory(id, sum){ const k = id==='historyV' ? 'history' : id==='historyS' ? 'historyS' : 'historyD'; const h = LS.get(k, []); h.unshift({t:Date.now(), ok:sum.ok, total:sum.total, pct:sum.pct}); LS.set(k, h.slice(0,12)); renderHistory(id) }
 function renderHistory(id){
-  const h = LS.get(id==='historyV' ? 'history' : 'historyD', []); const el = $(id); el.innerHTML='';
+  const h = LS.get(id==='historyV' ? 'history' : id==='historyS' ? 'historyS' : 'historyD', []); const el = $(id); el.innerHTML='';
   if(!h.length) return;
   const t = document.createElement('span'); t.textContent='지난 기록:'; el.appendChild(t);
   for(const r of h.slice(0,6)){ const d = new Date(r.t); const s = document.createElement('span'); s.innerHTML = `${d.getMonth()+1}/${d.getDate()} <b>${r.ok}/${r.total}개</b>`; el.appendChild(s) }
@@ -1831,6 +2103,16 @@ async function celebrate(sum, what, english){
   else if(c.level==='near'){ chime(); confettiStop = confetti(70, 2500) }
   else chime(c.level==='good');
   if(en){ await wait(c.level==='perfect' ? 1800 : 600); await speak(en, 'en-US', 1) }   // 한국어 멘트는 화면으로만 보여 주고 읽지 않음
+}
+async function practiceBonus(){
+  Play.addCoins(1);
+  const el = $('celebrate'); el.className = 'celebrate near';
+  $('celEmoji').textContent = '🏅'; $('celScore').innerHTML = `+1<small> 🪙 보너스</small>`;
+  $('celEn').textContent = 'Great effort!'; $('celEn').hidden = false;
+  $('celTitle').textContent = `${nameCall(SET.name)} 틀린 문제 다시 공부 끝!`;
+  $('celSub').textContent = `끝까지 다시 써 본 게 제일 멋져! 다음엔 100점이야! 💯  🪙 코인 +1 (모두 ${Play.data.coins}개)`;
+  el.hidden = false; chime(); confettiStop = confetti(90, 2500);
+  await wait(600); await speak('Great effort!', 'en-US', 1);
 }
 function closeCelebrate(){ $('celebrate').hidden = true; if(confettiStop){ confettiStop(); confettiStop = null } stopSpeech(); $('celTitle').classList.remove('unlock');
   if(Play.pendingLv){ const lv = Play.pendingLv; Play.pendingLv = null; if(POOLS[lv]){ Play.data.lv = lv; Play.save(); Play.render() } } }
