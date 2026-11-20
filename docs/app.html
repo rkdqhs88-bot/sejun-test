@@ -344,6 +344,7 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 .hero .leg{transform-box:fill-box;transform-origin:top center;animation:frog 1.3s ease-in-out infinite}
 .hero.moving .leg{animation-duration:.6s}
 @keyframes frog{0%{transform:rotate(0) scaleY(1)}40%{transform:rotate(-28deg) scaleY(.55)}62%{transform:rotate(10deg) scaleY(1.05)}100%{transform:rotate(0) scaleY(1)}}
+.hero svg text{transform-box:fill-box;transform-origin:center;transform:scaleX(var(--flip,1))}
 .hero .lamp{transition:opacity .25s}
 .hero.lampoff .lamp{opacity:.06}
 @media (prefers-reduced-motion: reduce){.sp .tail,.sp .fin,.sp .pulse,.sp .legs,.hero .leg,.hero .paddle,.rays i,.bubble,.glow,.surface{animation:none}}
@@ -697,7 +698,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 12:53';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 12:55';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1982,7 +1983,7 @@ function heroSVG(lv){
   let body='', over='';
   if(lv===1){
     // 삼성 라이온즈 스타일 야구 유니폼(흰 저지에 파란 줄무늬·파란 모자) + 크로스 잠자리통 + 잠자리채
-    const jersey = `<path d="M-15,-6 C-15,-14 15,-14 15,-6 L16,14 C16,21 -16,21 -16,14 Z" fill="#ffffff" stroke="${line}" stroke-width="1.5"/><g stroke="#1c5ec7" stroke-width="1.2" opacity=".5"><path d="M-10,-11 V20 M-4,-12 V20 M2,-12 V20 M8,-11 V20"/></g><path d="M-1,-12 V4" stroke="#1c5ec7" stroke-width="2"/><circle cx="-1" cy="-8" r="1.3" fill="#1c5ec7"/><circle cx="-1" cy="-2" r="1.3" fill="#1c5ec7"/><text x="7" y="10" font-size="9" font-weight="700" fill="#1c5ec7" font-family="Arial" text-anchor="middle">7</text>`;
+    const jersey = `<path d="M-15,-6 C-15,-14 15,-14 15,-6 L16,14 C16,21 -16,21 -16,14 Z" fill="#ffffff" stroke="${line}" stroke-width="1.5"/><g stroke="#1c5ec7" stroke-width="1.2" opacity=".5"><path d="M-10,-11 V20 M-4,-12 V20 M2,-12 V20 M8,-11 V20"/></g><path d="M-1,-12 V4" stroke="#1c5ec7" stroke-width="2"/><circle cx="-1" cy="-8" r="1.3" fill="#1c5ec7"/><circle cx="-1" cy="-2" r="1.3" fill="#1c5ec7"/><text x="6" y="9" font-size="8" font-weight="700" fill="#1c5ec7" font-family="Arial" text-anchor="middle">30</text>`;
     const sleeves = `<path d="M-13,-4 C-22,2 -26,10 -24,18" stroke="#1c5ec7" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M-19,6 C-22,10 -24,14 -24,18" stroke="${skin}" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="-24" cy="19" r="4.5" fill="${skin}"/><path d="M13,-4 C22,2 26,10 24,18" stroke="#1c5ec7" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M19,6 C22,10 24,14 24,18" stroke="${skin}" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="24" cy="19" r="4.5" fill="${skin}"/>`;
     const pants = `<path d="M-16,12 L16,12 L15,30 L4,30 L0,22 L-4,30 L-15,30 Z" fill="#1c5ec7" stroke="${line}" stroke-width="1.5" stroke-linejoin="round"/>`;
     const bag = `<path d="M-14,-6 L14,16" stroke="#6d4c41" stroke-width="3.5" stroke-linecap="round"/><g transform="translate(18,20)"><rect x="-9" y="-7" width="18" height="14" rx="3" fill="#8bc34a" stroke="#33691e" stroke-width="1.5"/><path d="M-6,-7 V7 M-2,-7 V7 M2,-7 V7 M6,-7 V7 M-9,-2 H9 M-9,2 H9" stroke="#33691e" stroke-width=".8" opacity=".8"/><rect x="-4" y="-10" width="8" height="4" rx="2" fill="#6d4c41"/></g>`;
@@ -2122,7 +2123,7 @@ const Play = {
     if(lvh===1 && h.tx > 58) h.tx = 58;   // 계곡 바위 절벽 안쪽으로는 안 들어가요
     const lvNow = this.data.lv; const walking = lvNow===1 && dist > 0.5;
     const bob = lvNow===1 ? (walking ? -Math.abs(Math.sin(now/120))*0.6 : 0) : Math.sin(now/600)*0.6;
-    const he = $('hero'); he.style.transform = `translate(${h.x/100*W}px, ${(h.y+bob)/100*H}px) translate(-50%,-${Math.round(HERO_ANCHOR[lvNow]*100)}%)`; const hs = he.firstElementChild; if(hs) hs.style.transform = `scaleX(${h.dir})`;
+    const he = $('hero'); he.style.transform = `translate(${h.x/100*W}px, ${(h.y+bob)/100*H}px) translate(-50%,-${Math.round(HERO_ANCHOR[lvNow]*100)}%)`; const hs = he.firstElementChild; if(hs){ hs.style.transform = `scaleX(${h.dir})`; hs.style.setProperty('--flip', h.dir) }
     this.raf = requestAnimationFrame(t => this.tick(t));
   },
   pull(){
