@@ -306,6 +306,22 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 .fx.ink{width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,rgba(30,20,50,.95),rgba(30,20,50,.5) 60%,rgba(30,20,50,0) 72%);animation:fxink 2s ease-out forwards}
 @keyframes fxink{0%{transform:translate(-50%,-50%) scale(.3);opacity:1}30%{transform:translate(-50%,-50%) scale(2.2);opacity:.95}100%{transform:translate(-50%,-50%) scale(3);opacity:0}}
 .fxflash{position:absolute;inset:0;z-index:7;pointer-events:none;animation:fxflash .6s ease-out forwards}
+.fxflash.multi{animation:fxflashes 1.3s ease-out forwards}
+@keyframes fxflashes{0%{opacity:.95}12%{opacity:0}22%{opacity:.85}34%{opacity:0}48%{opacity:.7}62%{opacity:0}78%{opacity:.5}100%{opacity:0}}
+.fx.spin{animation:fxspin 1.4s ease-out forwards}
+@keyframes fxspin{0%{transform:translate(-50%,-50%) scale(.3) rotate(0deg);opacity:1}100%{transform:translate(calc(-50% + var(--dx)*1.8),calc(-50% + var(--dy)*1.8)) scale(1.7) rotate(720deg);opacity:0}}
+.fx.cloudpuff{font-size:18px;filter:none;opacity:.9}
+.sp.thrust svg{animation:thrust 1s ease-out}
+@keyframes thrust{0%{transform:none}30%{transform:translateY(-16%) rotate(-20deg) scale(1.18)}65%{transform:translateY(-12%) rotate(-16deg) scale(1.15)}100%{transform:none}}
+.scene .scenebg,.scene .temple,.scene .floor,.scene .sp.deco svg,.scene .hero .cloud,.scene .rays{transition:filter .6s}
+.scene.gloom .scenebg,.scene.gloom .temple,.scene.gloom .floor,.scene.gloom .rays{filter:brightness(.4) saturate(.4)}
+.scene.gloom .sp.deco svg,.scene.gloom .hero .cloud{filter:brightness(.3) saturate(.2)}
+.rain{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+.rain i{position:absolute;top:-10%;width:2px;background:linear-gradient(rgba(200,220,255,0),rgba(200,220,255,.9));animation:rainfall .7s linear infinite}
+@keyframes rainfall{to{transform:translateY(1000px)}}
+.heartrain{position:absolute;inset:0;pointer-events:none;z-index:6;overflow:hidden}
+.heartrain i{position:absolute;top:-8%;font-style:normal;line-height:1;animation:heartfall linear forwards;filter:drop-shadow(0 2px 3px rgba(0,0,0,.2))}
+@keyframes heartfall{0%{transform:translateY(0) rotate(-10deg);opacity:1}100%{transform:translateY(900px) rotate(50deg);opacity:.9}}
 @keyframes fxflash{0%{opacity:.85}100%{opacity:0}}
 .fxsvg{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:6;overflow:visible}
 .fxsvg .bolt{stroke:#fff;stroke-width:4;fill:none;stroke-linejoin:round;filter:drop-shadow(0 0 6px #fff) drop-shadow(0 0 14px #82b1ff);animation:fxfade .55s ease-out forwards}
@@ -764,7 +780,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 13:59';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 14:02';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -2145,6 +2161,7 @@ const POOLS = {
     A('새우 악사','류트를 연주해요','c',1.1,{head:'shrimp',robe:'#ffab91',trim:'#fff',item:'lyre',hand:'#ff8a65'}),
     SH('신전 기둥','하얀 대리석 기둥','c',1.7,'column','#f5f5f5'), SH('황금 조개','신들의 보물','u',1.1,'shell','#ffd54f'), SH('구름 방석','폭신폭신','c',1.3,'cloud','#fff'),
     SH('황금 삼지창 상','포세이돈의 상징','r',1.6,'tridentStatue','#ffd54f'), SH('별빛 진주','밤하늘처럼 반짝','u',1,'pearlItem','#e1bee7'),
+    G('큐피드','사랑의 화살을 쏘는 아기 신','r',1.3,{robe:'#fff',trim:'#f48fb1',hair:'#ffe082',wings:true,item:'bow'}),
   ]},
 };
 const RARITY = { c:{w:60,label:'보통',stars:'★'}, u:{w:28,label:'조금 희귀',stars:'★★'}, r:{w:10,label:'희귀!',stars:'★★★'}, e:{w:2,label:'전설!!',stars:'★★★★'} };
@@ -2439,7 +2456,7 @@ const Play = {
   say(msg){ const m = $('pMsg'); m.textContent = msg; m.hidden = false; clearTimeout(m._t); m._t = setTimeout(() => { m.hidden = true }, 3500) },
   bubbles(xp, yp, n=6){ const sc = $('scene'); const W = sc.clientWidth, H = sc.clientHeight; for(let i=0;i<n;i++){ const b = document.createElement('div'); b.className='pop'; const sz = 5+Math.random()*9; b.style.cssText = `left:${xp/100*W + (Math.random()-.5)*30}px;top:${yp/100*H + (Math.random()-.5)*20}px;width:${sz}px;height:${sz}px;animation-delay:${Math.random()*.25}s;--dx:${(Math.random()-.5)*30}px`; sc.appendChild(b); setTimeout(() => b.remove(), 1300) } },
   dropFood(xp, yp){
-    if(this.food) return;   // 누가 먹기 전까지는 새 먹이가 생기지 않아요
+    if(this.food || this.data.lv===6) return;   // 누가 먹기 전까지는 새 먹이가 생기지 않아요 / 신들의 바다엔 먹이 없음
     const el = document.createElement('div'); el.className='food';
     el.innerHTML = `<svg viewBox="0 0 26 18"><g fill="#a1887f" stroke="#5d4037" stroke-width=".8"><circle cx="5" cy="9" r="3.2"/><circle cx="12" cy="5" r="3"/><circle cx="19" cy="10" r="3.4"/><circle cx="12" cy="13" r="2.6"/></g></svg>`;
     $('scene').appendChild(el);
@@ -2460,9 +2477,9 @@ const Play = {
   },
   // Lv6 기술: 캐릭터마다 다른 효과 (burst:글자:개수, rise:글자:개수, shoot:글자:개수, ring:색[:지연], flash:색, bolt, wave, rays, slash, ink, dash, puff, glowpulse)
   SKILLS: {
-    '포세이돈': ['wave','burst:💧:14','ring:#42a5f5'],
-    '제우스': ['flash:#fff','bolt','burst:⚡:8'],
-    '하데스': ['flash:#4a148c','burst:🔥:12:dark','ring:#7e57c2'],
+    '포세이돈': ['thrust','flashes:#90caf9','burst:🌀:8:big spin','wave','burst:💧:16','ring:#42a5f5'],
+    '제우스': ['flashes:#fff','bolt','bolt','bolt','burst:⚡:12:spin','ring:#fff176'],
+    '하데스': ['gloom','burst:🔥:10:dark','ring:#7e57c2'],
     '헤라': ['burst:🪶:12','burst:👑:1:big'],
     '아테나': ['ring:#cfd8dc','burst:🦉:1:big','burst:✨:10'],
     '아폴론': ['rays','burst:☀️:1:big','burst:✨:10'],
@@ -2491,6 +2508,7 @@ const Play = {
     '조개 요정': ['burst:🤍:8','burst:✨:10'],
     '해파리 등불지기': ['glowpulse','burst:✨:10','flash:#fff59d'],
     '새우 악사': ['rise:🎶:12'],
+    '큐피드': ['heartrain','shoot:💘:3','burst:💗:8'],
   },
   fxGlyph(px, py, dir, kind, g, n, extra, life){ const sc = $('scene'); for(let i=0;i<n;i++){ const e = document.createElement('div'); e.className = 'fx ' + kind + (extra ? ' ' + extra : ''); e.textContent = g;
       const a = Math.random()*Math.PI*2, r = 40 + Math.random()*90;
@@ -2501,6 +2519,7 @@ const Play = {
     const sc = $('scene'), W = sc.clientWidth, H = sc.clientHeight, px = sp.x/100*W, py = sp.y/100*H, dir = sp.dir || 1;
     sp.el.classList.remove('cast'); void sp.el.offsetWidth; sp.el.classList.add('cast'); setTimeout(() => sp.el.classList.remove('cast'), 800);
     const add = (el, life) => { sc.appendChild(el); setTimeout(() => el.remove(), life) };
+    this.fxGlyph(px, py + 10, dir, 'burst', '☁️', 6, 'cloudpuff', 1200);   // 구름 뽕뽕뽕 (거품 대신)
     const glyphs = (kind, g, n, extra, life) => this.fxGlyph(px, py, dir, kind, g, n, extra, life);
     for(const spec of specs){
       const [k, a1, a2, a3] = spec.split(':');
@@ -2509,6 +2528,10 @@ const Play = {
       else if(k==='shoot') glyphs('shoot', a1, +a2||3, a3, 1200);
       else if(k==='ring'){ const e = document.createElement('div'); e.className='fx ring'; e.style.cssText = `left:${px}px;top:${py}px;--c:${a1};animation-delay:${(+a2||0)}ms`; add(e, 1600) }
       else if(k==='flash'){ const e = document.createElement('div'); e.className='fxflash'; e.style.background = a1; add(e, 700) }
+      else if(k==='flashes'){ const e = document.createElement('div'); e.className='fxflash multi'; e.style.background = a1; add(e, 1400) }
+      else if(k==='thrust'){ sp.el.classList.remove('cast'); sp.el.classList.add('thrust'); setTimeout(() => sp.el.classList.remove('thrust'), 1000) }
+      else if(k==='gloom'){ sc.classList.add('gloom'); const r = document.createElement('div'); r.className='rain'; r.innerHTML = Array.from({length:70},()=>`<i style="left:${Math.random()*100}%;animation-delay:${-Math.random()*0.8}s;animation-duration:${0.55+Math.random()*0.4}s;height:${16+Math.random()*16}px"></i>`).join(''); add(r, 3600); setTimeout(() => sc.classList.remove('gloom'), 3400) }   // 먹구름·비·어둑어둑 → 끝나면 원래대로
+      else if(k==='heartrain'){ const r = document.createElement('div'); r.className='heartrain'; const hs = ['❤️','💖','💗','💕','💓']; r.innerHTML = Array.from({length:60},()=>`<i style="left:${Math.random()*100}%;animation-delay:${Math.random()*1.8}s;animation-duration:${1.6+Math.random()*1.2}s;font-size:${16+Math.random()*18}px">${hs[Math.floor(Math.random()*hs.length)]}</i>`).join(''); add(r, 5000) }
       else if(k==='ink'){ const e = document.createElement('div'); e.className='fx ink'; e.style.cssText = `left:${px}px;top:${py}px`; add(e, 2100) }
       else if(k==='bolt'){ const sv = document.createElementNS('http://www.w3.org/2000/svg','svg'); sv.setAttribute('class','fxsvg'); let d = `M${px+(Math.random()-.5)*80},0`; let y = 0, x = px; while(y < py - 10){ y += 25 + Math.random()*30; x += (Math.random()-.5)*50; d += ` L${x},${Math.min(y, py)}` } d += ` L${px},${py}`; sv.innerHTML = `<path class="bolt bolt2" d="${d}"/><path class="bolt" d="${d}"/>`; add(sv, 700) }
       else if(k==='wave'){ const sv = document.createElementNS('http://www.w3.org/2000/svg','svg'); sv.setAttribute('class','fxsvg'); sv.innerHTML = `<path class="wave" style="--dx:${dir*180}px" d="M${px-70},${py+10} Q${px-35},${py-50} ${px},${py-25} T${px+70},${py+10} L${px+70},${py+30} L${px-70},${py+30} Z"/>`; add(sv, 1100) }
