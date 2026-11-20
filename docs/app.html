@@ -319,7 +319,18 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 .rain{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden}
 .rain i{position:absolute;top:-10%;width:2px;background:linear-gradient(rgba(200,220,255,0),rgba(200,220,255,.9));animation:rainfall .7s linear infinite}
 @keyframes rainfall{to{transform:translateY(1000px)}}
+.scene.frozen .scenebg,.scene.frozen .temple,.scene.frozen .floor{filter:grayscale(.75) brightness(1.05)}
+.scene.night .scenebg,.scene.night .temple,.scene.night .floor,.scene.night .rays{filter:brightness(.45) saturate(1.3) hue-rotate(-20deg)}
+.scene.shake{animation:shake .8s ease-in-out}
+@keyframes shake{0%,100%{transform:translate(0,0)}10%{transform:translate(-7px,3px)}25%{transform:translate(7px,-3px)}40%{transform:translate(-6px,2px)}55%{transform:translate(6px,-2px)}70%{transform:translate(-4px,1px)}85%{transform:translate(4px,-1px)}}
+.fxsvg .rainbow{animation:fxrainbow 2.5s ease-in-out forwards;filter:drop-shadow(0 0 8px rgba(255,255,255,.5))}
+@keyframes fxrainbow{0%{opacity:0}25%{opacity:.85}75%{opacity:.85}100%{opacity:0}}
+.hero .armsOpen{display:none}
+.hero.ascend .armsOpen{display:block}.hero.ascend .sleeves{display:none}
+.hero.ascend .mouth{d:path("M-8,-19 q8,10 16,0");stroke-width:2.2}
+.hero.ascend{filter:drop-shadow(0 0 14px rgba(255,241,118,.95)) drop-shadow(0 6px 8px rgba(0,0,0,.25))}
 .heartrain{position:absolute;inset:0;pointer-events:none;z-index:6;overflow:hidden}
+.starrain i{filter:drop-shadow(0 0 6px rgba(255,241,118,.9))}
 .heartrain i{position:absolute;top:-8%;font-style:normal;line-height:1;animation:heartfall linear forwards;filter:drop-shadow(0 2px 3px rgba(0,0,0,.2))}
 @keyframes heartfall{0%{transform:translateY(0) rotate(-10deg);opacity:1}100%{transform:translateY(900px) rotate(50deg);opacity:.9}}
 @keyframes fxflash{0%{opacity:.85}100%{opacity:0}}
@@ -780,7 +791,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 14:05';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 14:12';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -2004,6 +2015,17 @@ function charSVG(o){
     lantern: `<path d="M0,-30 V-40" stroke="#5d4037" stroke-width="3"/><rect x="-10" y="-30" width="20" height="26" rx="4" fill="#fff59d" stroke="#f9a825" stroke-width="2"/><rect x="-12" y="-32" width="24" height="4" rx="1" fill="#5d4037"/><rect x="-12" y="-6" width="24" height="4" rx="1" fill="#5d4037"/><circle cx="0" cy="-17" r="5" fill="#ff9800"/>`,
     staff: `<path d="M0,22 V-36" stroke="#8d6e63" stroke-width="4" stroke-linecap="round"/><path d="M0,-36 C-8,-44 -6,-52 2,-50 C8,-48 6,-40 0,-36" stroke="#8d6e63" stroke-width="4" fill="none"/>`,
     moon: `<path d="M4,-40 A14,14 0 1 0 4,-8 A11,11 0 1 1 4,-40 Z" fill="#fff59d" stroke="#ffd54f"/>`,
+    scythe: `<path d="M0,24 V-40" stroke="#5d4037" stroke-width="4" stroke-linecap="round"/><path d="M0,-40 C-10,-52 -28,-52 -38,-40 C-26,-46 -12,-44 -4,-34 Z" fill="#cfd8dc" stroke="#78909c" stroke-width="1.2"/>`,
+    club: `<path d="M0,16 L-2,-36" stroke="#8d6e63" stroke-width="5" stroke-linecap="round"/><path d="M-10,-30 C-14,-52 10,-56 10,-34 C10,-26 -6,-24 -10,-30 Z" fill="#a1887f" stroke="#5d4037" stroke-width="1.2"/><circle cx="-4" cy="-44" r="1.6" fill="#5d4037"/><circle cx="4" cy="-38" r="1.6" fill="#5d4037"/>`,
+    torch: `<path d="M0,16 V-24" stroke="#8d6e63" stroke-width="4" stroke-linecap="round"/><path d="M-7,-24 h14 l-2,-8 h-10 Z" fill="#5d4037"/><path d="M0,-58 C10,-48 12,-36 2,-30 C-2,-34 -4,-38 -2,-42 C-10,-36 -10,-26 0,-24 C-12,-28 -14,-44 0,-58 Z" fill="#ff9800"/><path d="M0,-46 C4,-40 4,-34 0,-30 C-4,-34 -4,-40 0,-46 Z" fill="#ffeb3b"/>`,
+    earth: `<circle cx="0" cy="-24" r="14" fill="#4fc3f7" stroke="#0277bd" stroke-width="1.5"/><path d="M-10,-30 C-6,-34 0,-32 2,-28 C4,-24 -2,-20 -8,-22 Z M4,-18 C8,-20 12,-16 10,-12 C6,-12 2,-14 4,-18 Z M6,-34 C10,-36 12,-32 8,-30 Z" fill="#66bb6a"/><path d="M-8,-6 C-4,-14 4,-14 8,-6" stroke="#66bb6a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M0,-10 V6" stroke="#66bb6a" stroke-width="3" stroke-linecap="round"/>`,
+    sun: `<path d="M0,14 V-8" stroke="#ffd54f" stroke-width="3.5" stroke-linecap="round"/><g stroke="#ffb300" stroke-width="3" stroke-linecap="round">${[0,45,90,135,180,225,270,315].map(a=>`<path d="M${Math.cos(a*Math.PI/180)*14},${-26+Math.sin(a*Math.PI/180)*14} L${Math.cos(a*Math.PI/180)*20},${-26+Math.sin(a*Math.PI/180)*20}"/>`).join('')}</g><circle cx="0" cy="-26" r="10" fill="#ffeb3b" stroke="#ffb300" stroke-width="1.5"/>`,
+    rainbow: `<path d="M0,14 V-10" stroke="#ffd54f" stroke-width="3.5" stroke-linecap="round"/><g fill="none" stroke-width="3.5"><path d="M-22,-10 A22,22 0 0 1 22,-10" stroke="#ef5350"/><path d="M-18,-10 A18,18 0 0 1 18,-10" stroke="#ffb300"/><path d="M-14,-10 A14,14 0 0 1 14,-10" stroke="#ffee58"/><path d="M-10,-10 A10,10 0 0 1 10,-10" stroke="#66bb6a"/><path d="M-6,-10 A6,6 0 0 1 6,-10" stroke="#42a5f5"/></g>`,
+    panpipe: `<g fill="#d7a86e" stroke="#8d6e63" stroke-width="1"><rect x="-12" y="-30" width="5" height="22" rx="1.5"/><rect x="-6" y="-30" width="5" height="26" rx="1.5"/><rect x="0" y="-30" width="5" height="30" rx="1.5"/><rect x="6" y="-30" width="5" height="34" rx="1.5"/><rect x="12" y="-30" width="5" height="38" rx="1.5"/></g><path d="M-12,-24 H17" stroke="#5d4037" stroke-width="2"/>`,
+    snakestaff: `<path d="M0,20 V-40" stroke="#8d6e63" stroke-width="4" stroke-linecap="round"/><path d="M-8,-36 C8,-30 -8,-22 8,-16 C-8,-10 8,-4 -6,2" stroke="#66bb6a" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="-9" cy="-37" r="3.5" fill="#66bb6a"/><circle cx="-10" cy="-38" r="1" fill="#1b2238"/>`,
+    cornucopia: `<path d="M-6,8 C-26,0 -26,-20 -10,-26 C-2,-30 8,-28 12,-22 L-2,-6 Z" fill="#c69c6d" stroke="#8d6e63" stroke-width="1.2"/><g><circle cx="8" cy="-26" r="4.5" fill="#e53935"/><circle cx="16" cy="-22" r="4.5" fill="#7b1fa2"/><circle cx="2" cy="-32" r="4" fill="#ff9800"/><circle cx="12" cy="-32" r="3.8" fill="#8bc34a"/><ellipse cx="20" cy="-30" rx="3" ry="5" fill="#ffd54f"/></g>`,
+    poppy: `<path d="M0,14 V-16" stroke="#66bb6a" stroke-width="2.5"/><g fill="#e53935"><circle cx="0" cy="-30" r="7"/><circle cx="-9" cy="-22" r="7"/><circle cx="9" cy="-22" r="7"/><circle cx="-5" cy="-14" r="6"/><circle cx="5" cy="-14" r="6"/></g><circle cx="0" cy="-22" r="4" fill="#212121"/>`,
+    globe: `<g transform="translate(-28,-62)"><circle cx="0" cy="0" r="22" fill="#4fc3f7" stroke="#0277bd" stroke-width="2"/><path d="M-14,-10 C-8,-16 2,-14 4,-8 C6,-2 -2,4 -10,0 Z M6,4 C12,0 18,6 14,12 C8,12 2,8 6,4 Z M8,-16 C14,-18 16,-12 10,-10 Z M-16,8 C-10,6 -8,12 -14,14 Z" fill="#66bb6a"/><path d="M-22,0 H22 M0,-22 V22" stroke="rgba(255,255,255,.35)" stroke-width="1.2"/></g><path d="M-10,-40 L-24,-40" stroke="${skin}" stroke-width="7" stroke-linecap="round"/>`,
     heartarrow: `<path d="M0,14 V-34" stroke="#ffd54f" stroke-width="3.5" stroke-linecap="round"/><path d="M-7,10 L0,2 L7,10 M-6,16 L0,8 L6,16" stroke="#f48fb1" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M-8,-40 a4.5,4.5 0 0 1 8,-3 a4.5,4.5 0 0 1 8,3 q0,6 -8,12 q-8,-6 -8,-12 Z" fill="#ec407a" stroke="#ad1457" stroke-width="1"/>`,
   };
   const CROWNS = {
@@ -2025,6 +2047,9 @@ function charSVG(o){
     chef: `<path d="M-14,-44 L-14,-56 C-26,-58 -22,-74 -10,-68 C-8,-78 8,-78 10,-68 C22,-74 26,-58 14,-56 L14,-44 Z" fill="#fff" stroke="#e0e0e0" stroke-width="1.5"/>`,
     wizard: `<path d="M-22,-44 L0,-82 L22,-44 Z" fill="#303f9f" stroke="#1a237e" stroke-width="1.5" stroke-linejoin="round"/><path d="M-26,-44 H26" stroke="#303f9f" stroke-width="6" stroke-linecap="round"/><g fill="#ffeb3b"><circle cx="-4" cy="-60" r="2.2"/><circle cx="6" cy="-52" r="1.8"/><circle cx="2" cy="-70" r="1.6"/></g>`,
     shell: `<path d="M-14,-46 C-14,-62 14,-62 14,-46 Z" fill="#f8bbd0" stroke="#ec407a" stroke-width="1.2"/><path d="M-8,-47 L-3,-58 M0,-47 V-59 M8,-47 L3,-58" stroke="#fff" stroke-width="1.5"/>`,
+    horns: `<path d="M-14,-46 C-22,-56 -24,-66 -16,-70 C-16,-62 -12,-54 -8,-48 Z M14,-46 C22,-56 24,-66 16,-70 C16,-62 12,-54 8,-48 Z" fill="#a1887f" stroke="#6d4c41" stroke-width="1"/>`,
+    sunrays: `<g stroke="#ffd54f" stroke-width="3" stroke-linecap="round">${[200,225,250,270,290,315,340].map(a=>`<path d="M${Math.cos(a*Math.PI/180)*24},${-30+Math.sin(a*Math.PI/180)*24} L${Math.cos(a*Math.PI/180)*34},${-30+Math.sin(a*Math.PI/180)*34}"/>`).join('')}</g><circle cx="0" cy="-52" r="3" fill="#ffeb3b"/>`,
+    lion: `<path d="M-22,-32 C-24,-60 24,-60 22,-32 L24,-20 L16,-26 C10,-34 -10,-34 -16,-26 L-24,-20 Z" fill="#d4a056" stroke="#a1700a" stroke-width="1.2"/><circle cx="-14" cy="-54" r="4.5" fill="#d4a056" stroke="#a1700a"/><circle cx="14" cy="-54" r="4.5" fill="#d4a056" stroke="#a1700a"/><path d="M-6,-50 l2,3 l2,-3 M2,-50 l2,3 l2,-3" stroke="#fff" stroke-width="1.5" fill="none"/>`,
     none: ``,
   };
   const hairCol = o.hair || '#4e342e';
@@ -2147,6 +2172,18 @@ const POOLS = {
     G('디오니소스','포도와 축제의 신','u',1.5,{robe:'#8e24aa',trim:'#ce93d8',hair:'#3e2723',crown:'grape',item:'grapes'}),
     G('페르세포네','봄의 여신','u',1.4,{robe:'#f8bbd0',trim:'#66bb6a',hair:'#5d4037',long:true,crown:'flower',item:'flower'}),
     G('헤스티아','화로와 집의 여신','u',1.4,{robe:'#ffab91',trim:'#fff3e0',hair:'#6d4c41',long:true,crown:'veil',item:'flame'}),
+    G('크로노스','시간을 다스리는 티탄의 왕','e',1.9,{robe:'#37474f',trim:'#b0bec5',hair:'#cfd8dc',beard:'#cfd8dc',crown:'gold',item:'scythe'}),
+    G('헤라클레스','사자 가죽을 쓴 힘센 영웅','r',1.8,{robe:'#d4a056',trim:'#8d6e63',hair:'#5d4037',beard:'#5d4037',crown:'lion',item:'club'}),
+    G('프로메테우스','인간에게 불을 가져다준 티탄','r',1.6,{robe:'#ff8a65',trim:'#ffd54f',hair:'#4e342e',beard:'#4e342e',item:'torch'}),
+    G('가이아','모든 것을 낳은 대지의 어머니','r',1.7,{robe:'#8d6e63',trim:'#66bb6a',hair:'#2e7d32',long:true,crown:'flower',item:'earth'}),
+    G('헬리오스','태양 마차를 모는 신','r',1.6,{robe:'#ffca28',trim:'#fff',hair:'#ff8f00',crown:'sunrays',item:'sun'}),
+    G('아틀라스','하늘을 어깨에 짊어진 거인','r',1.8,{robe:'#8d6e63',trim:'#5d4037',hair:'#3e2723',beard:'#3e2723',item:'globe'}),
+    G('셀레네','은빛 달의 여신','u',1.5,{robe:'#e3f2fd',trim:'#90caf9',hair:'#b0bec5',long:true,crown:'moon',item:'moon'}),
+    G('이리스','무지개를 타고 오는 전령','u',1.4,{robe:'#ce93d8',trim:'#ffd54f',hair:'#ff8a65',long:true,wings:true,item:'rainbow'}),
+    G('판','염소 뿔에 피리를 부는 들판의 신','u',1.4,{robe:'#795548',trim:'#a5d6a7',hair:'#4e342e',beard:'#4e342e',crown:'horns',item:'panpipe'}),
+    G('아스클레피오스','뱀 지팡이를 든 의술의 신','u',1.5,{robe:'#fff',trim:'#66bb6a',hair:'#6d4c41',beard:'#6d4c41',crown:'laurel',item:'snakestaff'}),
+    G('튀케','행운과 풍요의 여신','u',1.4,{robe:'#c5e1a5',trim:'#ffd54f',hair:'#ffcc80',long:true,crown:'gold',item:'cornucopia'}),
+    G('힙노스','잠의 신, 양귀비를 들고 있어요','u',1.3,{robe:'#b0bec5',trim:'#90a4ae',hair:'#eceff1',wings:true,item:'poppy'}),
     A('용왕','바다 궁궐의 임금님','e',2.0,{head:'dragon',robe:'#c62828',trim:'#ffd54f',crown:'kingcrown',item:'orb',hand:'#66bb6a'}),
     A('거북 장군','천 년을 산 수문장','r',1.7,{head:'turtle',robe:'#2e7d32',trim:'#ffd54f',crown:'general',item:'spear',hand:'#8bc34a'}),
     A('고래 현자','가장 지혜로운 어르신','r',1.8,{head:'whale',robe:'#5c6bc0',trim:'#c5cae9',item:'staff',hand:'#7986cb'}),
@@ -2195,7 +2232,7 @@ function heroSVG(lv){
     <path d="M-22,-32 C-24,-58 24,-58 22,-32 C18,-40 10,-46 2,-46 C-2,-42 -12,-40 -22,-32 Z" fill="#4e342e"/><path d="M-10,-50 C-4,-56 6,-56 12,-50" stroke="rgba(255,255,255,.18)" stroke-width="3" fill="none" stroke-linecap="round"/>
     <circle cx="-22" cy="-28" r="4" fill="${skin2}"/><circle cx="22" cy="-28" r="4" fill="${skin2}"/>
     <ellipse cx="-7" cy="-28" rx="2.8" ry="3.4" fill="#2d2420"/><ellipse cx="8" cy="-28" rx="2.8" ry="3.4" fill="#2d2420"/><circle cx="-6" cy="-29.5" r="1" fill="#fff"/><circle cx="9" cy="-29.5" r="1" fill="#fff"/>
-    <circle cx="-14" cy="-21" r="4" fill="#ff8a80" opacity=".5"/><circle cx="15" cy="-21" r="4" fill="#ff8a80" opacity=".5"/><path d="M-5,-18 q5,5 10,0" stroke="#7a4a3a" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+    <circle cx="-14" cy="-21" r="4" fill="#ff8a80" opacity=".5"/><circle cx="15" cy="-21" r="4" fill="#ff8a80" opacity=".5"/><path class="mouth" d="M-5,-18 q5,5 10,0" stroke="#7a4a3a" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
   const torso = c => `<path d="M-15,-6 C-15,-14 15,-14 15,-6 L16,14 C16,21 -16,21 -16,14 Z" fill="${c}" stroke="${line}" stroke-width="1.5"/>`;
   const arms = c => `<path d="M-13,-4 C-22,2 -26,10 -24,18" stroke="${c}" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="-24" cy="19" r="4.5" fill="${skin}"/><path d="M13,-4 C22,2 26,10 24,18" stroke="${c}" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="24" cy="19" r="4.5" fill="${skin}"/>`;
   const shorts = c => `<path d="M-16,12 L16,12 L15,28 L4,28 L0,20 L-4,28 L-15,28 Z" fill="${c}" stroke="${line}" stroke-width="1.5" stroke-linejoin="round"/>`;
@@ -2225,7 +2262,8 @@ function heroSVG(lv){
     const cloud = `<g class="cloud"><ellipse cx="0" cy="44" rx="44" ry="12" fill="#fff" opacity=".96"/><circle cx="-24" cy="38" r="13" fill="#fff"/><circle cx="-2" cy="33" r="17" fill="#fff"/><circle cx="22" cy="38" r="13" fill="#fff"/><ellipse cx="0" cy="50" rx="36" ry="6" fill="#e8e0f5" opacity=".6"/></g>`;
     const robe = `<path d="M-18,-8 C-18,-14 18,-14 18,-8 L27,36 L-27,36 Z" fill="${red}" stroke="${line}" stroke-width="1.5"/><path d="M-26,33 H26" stroke="${gold}" stroke-width="3.5"/><path d="M-19,13 H19" stroke="#1565c0" stroke-width="4"/><path d="M-19,13 H19" stroke="${gold}" stroke-width="1.2" stroke-dasharray="3 3"/><circle cx="0" cy="2" r="8.5" fill="${gold}" stroke="#f9a825" stroke-width="1.5"/><path d="M-5,2 q2,-5 5,0 t5,0" stroke="${red}" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="-1" cy="-1" r="1.2" fill="${red}"/>`;
     const sleeves = `<path d="M-14,-6 C-30,-2 -38,12 -34,24 L-20,22 C-20,12 -16,4 -10,-1 Z" fill="${red}" stroke="${line}" stroke-width="1.5"/><path d="M-34,24 L-20,22" stroke="${gold}" stroke-width="3"/><circle cx="-28" cy="26" r="4.5" fill="${skin}"/><path d="M14,-6 C30,-2 38,12 34,24 L20,22 C20,12 16,4 10,-1 Z" fill="${red}" stroke="${line}" stroke-width="1.5"/><path d="M34,24 L20,22" stroke="${gold}" stroke-width="3"/><circle cx="28" cy="26" r="4.5" fill="${skin}"/>`;
-    body = cloud + robe + sleeves;
+    const armsOpen = `<g class="armsOpen"><path d="M-14,-6 C-30,-14 -40,-26 -44,-38 L-32,-42 C-30,-30 -24,-20 -12,-11 Z" fill="${red}" stroke="${line}" stroke-width="1.5"/><path d="M-44,-38 L-32,-42" stroke="${gold}" stroke-width="3"/><circle cx="-40" cy="-44" r="4.5" fill="${skin}"/><path d="M14,-6 C30,-14 40,-26 44,-38 L32,-42 C30,-30 24,-20 12,-11 Z" fill="${red}" stroke="${line}" stroke-width="1.5"/><path d="M44,-38 L32,-42" stroke="${gold}" stroke-width="3"/><circle cx="40" cy="-44" r="4.5" fill="${skin}"/></g>`;
+    body = cloud + robe + `<g class="sleeves">${sleeves}</g>` + armsOpen;
     over = `<path d="M-20,-34 C-20,-56 20,-56 20,-34 L22,-30 L-22,-30 Z" fill="#212121"/><path d="M-11,-50 C-11,-66 11,-66 11,-50 Z" fill="#212121"/><ellipse cx="-9" cy="-64" rx="5" ry="8" fill="#212121" transform="rotate(-25 -9 -64)"/><ellipse cx="9" cy="-64" rx="5" ry="8" fill="#212121" transform="rotate(25 9 -64)"/><path d="M-22,-31 H22" stroke="#424242" stroke-width="2"/>` }
   const swim = (lv===4 || lv===5) ? ' transform="rotate(70)"' : '';
   return `<svg viewBox="-64 -72 128 128"><g${swim}>${body}${head}${over}</g></svg><span class="nm"></span>`;
@@ -2330,6 +2368,12 @@ const Play = {
     if(food){ food.y = Math.min(WATER_BOT[this.data.lv], food.y + 1.2*dt); food.el.style.transform = `translate(${food.x/100*W}px, ${food.y/100*H}px) translate(-50%,-50%)`; if(now - food.t > 12000){ food.el.remove(); this.food = null } }
     const SEEK = ['swim','dash','drift','crawl'];
     for(const sp of this.sprites){
+      if(this.freezeUntil > now && sp !== this.freezeCaster) continue;   // 크로노스·힙노스: 모두 멈춰요
+      if(sp.sink){   // 세준이 승천: 모두 바닥으로 내려갔다가 다시 제자리로
+        const tgt = now < sp.sink.until ? WATER_BOT[this.data.lv] - 4 - Math.random()*0 : sp.sink.y0;
+        const ny = sp.baseY + (tgt - sp.baseY) * Math.min(1, dt * (now < sp.sink.until ? 3.2 : 2.2)); sp.baseY = ny;
+        if(now >= sp.sink.until && Math.abs(ny - sp.sink.y0) < 0.4){ sp.baseY = sp.sink.y0; sp.sink = null }
+      }
       let {x, y} = sp; sp.phase += dt;
       if(sp.jump){                       // 개구리·두꺼비: 제자리 점프
         const pr = (now - sp.jump.t0) / sp.jump.dur;
@@ -2395,7 +2439,7 @@ const Play = {
     if(dist > 0.5){
       // 카약은 슝슝 빠르게, 바다·심해는 다리를 오므렸다 펴며 밀려 나가듯이(맥박처럼) 나아가요
       const pulse = (lvh===4 || lvh===5) ? (0.35 + 0.65*Math.max(0, Math.sin(now/600*Math.PI*2))) : 1;
-      const base = lvh===2 ? 34 : lvh===1 ? 14 : lvh===6 ? 15 : 20;
+      const base = lvh===2 ? 34 : lvh===1 ? 14 : lvh===6 ? (this.ascending ? 38 : 15) : 20;
       const sp = Math.min(dist, base*pulse*dt); h.x += dx/dist*sp; h.y += dy/dist*sp; if(Math.abs(dx) > 0.3) h.dir = dx > 0 ? 1 : -1;
       he0.classList.add('moving');
       if(lvh>=4 && Math.random() < 0.006){ const hb = HERO_BAND[lvh]; h.tx = 10+Math.random()*80; h.ty = hb[0] + Math.random()*(hb[1]-hb[0]) }   // 헤엄치다 방향을 휙 바꾸기도 해요
@@ -2508,11 +2552,32 @@ const Play = {
     '해파리 등불지기': ['glowpulse','burst:✨:10','flash:#fff59d'],
     '새우 악사': ['rise:🎶:12'],
     '아기 에로스': ['heartrain','shoot:💘:3','burst:💗:8'],
+    '크로노스': ['freeze','burst:⏳:1:big','ring:#b0bec5','burst:🕰️:4'],
+    '헤라클레스': ['burst:🦁:1:big','slash','burst:💪:4','ring:#ffb300'],
+    '프로메테우스': ['flash:#ff9800','burst:🔥:1:big','rise:🔥:12'],
+    '가이아': ['rise:🌱:10','rise:🌳:3','burst:🌍:1:big','ring:#66bb6a'],
+    '헬리오스': ['rays','flash:#ffd54f','burst:☀️:1:big','shoot:🐎:3'],
+    '아틀라스': ['shake','rise:🌍:1:big','ring:#8d6e63','burst:🪨:6'],
+    '셀레네': ['night','rise:🌙:1:big','burst:⭐:10'],
+    '이리스': ['rainbow','burst:🌈:1:big','burst:✨:8'],
+    '판': ['rise:🎶:12','burst:🐐:1:big','burst:🍃:8'],
+    '아스클레피오스': ['burst:⚕️:1:big','burst:🐍:3','ring:#66bb6a','rise:✨:10'],
+    '튀케': ['rise:🍀:10','burst:🪙:12:spin','burst:🍎:4'],
+    '힙노스': ['sleepall','rise:💤:1:big'],
   },
   fxGlyph(px, py, dir, kind, g, n, extra, life){ const sc = $('scene'); for(let i=0;i<n;i++){ const e = document.createElement('div'); e.className = 'fx ' + kind + (extra ? ' ' + extra : ''); e.textContent = g;
       const a = Math.random()*Math.PI*2, r = 40 + Math.random()*90;
       e.style.cssText = `left:${px + (Math.random()-.5)*20}px;top:${py + (Math.random()-.5)*20}px;--dx:${kind==='shoot' ? dir*(120+Math.random()*120) : Math.cos(a)*r}px;--dy:${kind==='shoot' ? (Math.random()-.5)*60 : Math.sin(a)*r}px;--rot:${(Math.random()-.5)*180}deg;--f:${dir};animation-delay:${Math.random()*.25}s`;
       sc.appendChild(e); setTimeout(() => e.remove(), life) } },
+  heroAscend(){
+    if(this.data.lv !== 6 || this.ascending) return; this.ascending = true;
+    const he = $('hero'); he.classList.add('ascend'); const h = this.hero; const hb = HERO_BAND[6];
+    h.tx = h.x; h.ty = 7;   // 하늘로!
+    for(const sp of this.sprites){ if(sp.alive && !sp.sink) sp.sink = { until: performance.now() + 2600, y0: sp.baseY } }
+    const sc = $('scene'), W = sc.clientWidth, H = sc.clientHeight; this.fxGlyph(h.x/100*W, h.y/100*H, 1, 'burst', '☁️', 10, 'cloudpuff', 1200); this.fxGlyph(h.x/100*W, h.y/100*H, 1, 'rise', '✨', 10, '', 2000);
+    const r = document.createElement('div'); r.className='heartrain starrain'; const st = ['⭐','✨','🌟','💫']; r.innerHTML = Array.from({length:80},()=>`<i style="left:${Math.random()*100}%;animation-delay:${Math.random()*2}s;animation-duration:${1.4+Math.random()*1.2}s;font-size:${14+Math.random()*20}px">${st[Math.floor(Math.random()*st.length)]}</i>`).join(''); sc.appendChild(r); setTimeout(() => r.remove(), 5200);   // 하늘에서 별빛이 쏟아져요
+    setTimeout(() => { he.classList.remove('ascend'); h.ty = (hb[0]+hb[1])/2; this.ascending = false }, 3000);   // 끝나면 원래대로
+  },
   skill(sp){
     const specs = this.SKILLS[sp.name]; if(!specs) return false;
     const sc = $('scene'), W = sc.clientWidth, H = sc.clientHeight, px = sp.x/100*W, py = sp.y/100*H, dir = sp.dir || 1;
@@ -2530,6 +2595,11 @@ const Play = {
       else if(k==='flashes'){ const e = document.createElement('div'); e.className='fxflash multi'; e.style.background = a1; add(e, 1400) }
       else if(k==='thrust'){ sp.el.classList.remove('cast'); sp.el.classList.add('thrust'); setTimeout(() => sp.el.classList.remove('thrust'), 1000) }
       else if(k==='gloom'){ sc.classList.add('gloom'); const r = document.createElement('div'); r.className='rain'; r.innerHTML = Array.from({length:70},()=>`<i style="left:${Math.random()*100}%;animation-delay:${-Math.random()*0.8}s;animation-duration:${0.55+Math.random()*0.4}s;height:${16+Math.random()*16}px"></i>`).join(''); add(r, 3600); setTimeout(() => sc.classList.remove('gloom'), 3400) }   // 먹구름·비·어둑어둑 → 끝나면 원래대로
+      else if(k==='freeze'){ this.freezeUntil = performance.now() + 1800; this.freezeCaster = sp; sc.classList.add('frozen'); setTimeout(() => sc.classList.remove('frozen'), 1800) }   // 시간 정지 → 1.8초 뒤 다시 흐름
+      else if(k==='sleepall'){ this.freezeUntil = performance.now() + 2600; this.freezeCaster = sp; for(const o of this.sprites){ if(o.alive && o !== sp) this.fxGlyph(o.x/100*W, o.y/100*H - 20, 1, 'rise', '💤', 2, '', 2400) } }
+      else if(k==='night'){ sc.classList.add('night'); setTimeout(() => sc.classList.remove('night'), 2800) }
+      else if(k==='shake'){ sc.classList.remove('shake'); void sc.offsetWidth; sc.classList.add('shake'); setTimeout(() => sc.classList.remove('shake'), 900) }
+      else if(k==='rainbow'){ const sv = document.createElementNS('http://www.w3.org/2000/svg','svg'); sv.setAttribute('class','fxsvg'); const cols = ['#ef5350','#ffb300','#ffee58','#66bb6a','#42a5f5','#7e57c2']; const r0 = W*0.46; sv.innerHTML = `<g class="rainbow" fill="none" stroke-width="${Math.max(6, W*0.012)}" stroke-linecap="round">${cols.map((c,i)=>`<path d="M${W*0.5 - (r0 - i*W*0.013)},${H*0.95} A${r0 - i*W*0.013},${r0 - i*W*0.013} 0 0 1 ${W*0.5 + (r0 - i*W*0.013)},${H*0.95}" stroke="${c}"/>`).join('')}</g>`; add(sv, 2600) }
       else if(k==='heartrain'){ const r = document.createElement('div'); r.className='heartrain'; const hs = ['❤️','💖','💗','💕','💓']; r.innerHTML = Array.from({length:60},()=>`<i style="left:${Math.random()*100}%;animation-delay:${Math.random()*1.8}s;animation-duration:${1.6+Math.random()*1.2}s;font-size:${16+Math.random()*18}px">${hs[Math.floor(Math.random()*hs.length)]}</i>`).join(''); add(r, 5000) }
       else if(k==='ink'){ const e = document.createElement('div'); e.className='fx ink'; e.style.cssText = `left:${px}px;top:${py}px`; add(e, 2100) }
       else if(k==='bolt'){ const sv = document.createElementNS('http://www.w3.org/2000/svg','svg'); sv.setAttribute('class','fxsvg'); let d = `M${px+(Math.random()-.5)*80},0`; let y = 0, x = px; while(y < py - 10){ y += 25 + Math.random()*30; x += (Math.random()-.5)*50; d += ` L${x},${Math.min(y, py)}` } d += ` L${px},${py}`; sv.innerHTML = `<path class="bolt bolt2" d="${d}"/><path class="bolt" d="${d}"/>`; add(sv, 700) }
@@ -2559,6 +2629,7 @@ $('pPrev').onclick = () => Play.go(-1); $('pNext').onclick = () => Play.go(1);
       const r = sc.getBoundingClientRect(); const xp = (e.clientX-r.left)/r.width*100, yp = (e.clientY-r.top)/r.height*100;
       const hit = e.target && e.target.closest ? e.target.closest('.sp:not(.deco)') : null;
       const sp = hit && Play.sprites.find(o => o.el === hit);
+      if(Play.data.lv===6){ const hr = $('hero').getBoundingClientRect(); if(e.clientX >= hr.left && e.clientX <= hr.right && e.clientY >= hr.top && e.clientY <= hr.bottom){ Play.heroAscend(); return } }   // 세준이를 톡: 승천!
       if(sp && sp.alive){ if(Play.data.lv===6){ if(!Play.skill(sp)) Play.dart(sp) } else Play.dart(sp); return }           // 생물을 톡: 슝! (Lv6: 각자 기술!)
       const wt = WATER_TOP[Play.data.lv];
       if(Play.data.lv !== 6 && yp > wt + 2 && yp < WATER_BOT[Play.data.lv] + 2){ Play.dropFood(xp, Math.min(WATER_BOT[Play.data.lv]-2, yp)); return }   // 신들의 바다에는 먹이가 없어요   // 먹이는 생물만 가요 (세준이는 안 감)   // 물을 톡: 먹이
