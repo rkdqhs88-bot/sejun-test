@@ -706,7 +706,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 13:05';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 13:15';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1962,6 +1962,8 @@ const POOLS = {
 };
 const RARITY = { c:{w:60,label:'보통',stars:'★'}, u:{w:28,label:'조금 희귀',stars:'★★'}, r:{w:10,label:'희귀!',stars:'★★★'}, e:{w:2,label:'전설!!',stars:'★★★★'} };
 const UNLOCK_AT = 30;   // 이 개수를 넘기면 다음 레벨이 열려요
+const CREATURE_SHAPES = ['frog','crab','turtle','octo','jelly','tadpole','snake','salamander','beetle','dragonfly','strider','star','sub'];
+const isAlive = def => !!(def.f || def.e || (def.sh && CREATURE_SHAPES.includes(def.sh)));
 const WATER_TOP = { 1:40, 2:31, 3:22, 4:18, 5:0 };   // 화면 위에서 물이 시작되는 높이(%)
 // 기본 풍경(뽑기와 무관하게 항상 있는 것): 냇가의 꽃·자갈·풀, 강가의 나무, 해변의 파라솔·구름
 const DECOR = {
@@ -2094,7 +2096,7 @@ const Play = {
     if(def.f) el.innerHTML = fishSVG(def.f); else if(def.sh) el.innerHTML = SHAPES[def.sh](def.c); else el.textContent = def.e;
     if(def.spin) el.innerHTML = `<span class="rot">${el.innerHTML}</span>`;
     if(def.hue) el.style.filter = `hue-rotate(${def.hue}deg)`;
-    const sp = { el, name: def.n, move: def.m, scale: def.s, x: rec.x, y: rec.y, dir: rec.dir||(Math.random()<.5?-1:1), speed: def.n==='연잎' ? 0 : (rec.speed || (0.5+Math.random()*0.9)), phase: Math.random()*6.28, baseY: rec.y, faces: (def.f || def.sh==='snake' || def.sh==='salamander') ? 1 : (def.e ? -1 : 0), slow: !!def.slow };
+    const sp = { el, name: def.n, move: def.m, scale: def.s, x: rec.x, y: rec.y, dir: rec.dir||(Math.random()<.5?-1:1), speed: (def.sh==='lily') ? 0 : (rec.speed || (0.5+Math.random()*0.9)), phase: Math.random()*6.28, baseY: rec.y, faces: (def.f || def.sh==='snake' || def.sh==='salamander') ? 1 : (def.e ? -1 : 0), slow: !!def.slow, bank: !!def.bank, eager: 0.5 + Math.random()*1.2, alive: isAlive(def), air: def.m==='fly' || def.m==='hop' || !!def.bank };
     if(fresh){ el.style.transition = 'opacity .6s'; el.style.opacity = '0'; requestAnimationFrame(() => el.style.opacity = '1') }
     $('sprites').appendChild(el); this.sprites.push(sp); return sp;
   },
@@ -2113,10 +2115,18 @@ const Play = {
           sp.el.style.transform = `translate(${sp.x/100*W}px, ${sp.y/100*H}px) translate(-50%,-50%) scaleX(${flipD})`; continue }
         sp.dart = null;
       }
-      if(this.food && SEEK.includes(sp.move) && sp.speed > 0){   // 먹이 쪽으로 일제히!
-        const f = this.food, ddx = f.x - x, ddy = f.y - y, d = Math.hypot(ddx, ddy);
-        if(d < 2.8){ this.eat(sp) }
-        else { const spd = (6 + sp.speed*10) * dt; x += ddx/d*spd; y += ddy/d*spd; if(Math.abs(ddx) > 0.3) sp.dir = ddx > 0 ? 1 : -1; sp.baseY = y; y = sp.baseY; }
+      if(sp.scatter){                     // 누가 먹으면 제각각 흩어져요 (대각선 위·아래로도)
+        if(now < sp.scatter.until){ x += sp.scatter.vx * 2.2 * dt; y += sp.scatter.vy * 2.2 * dt; const wt0 = WATER_TOP[this.data.lv] + 6; if(y < wt0) y = wt0; if(y > 90) y = 90; sp.baseY = y }
+        else sp.scatter = null;
+      }
+      if(this.food && SEEK.includes(sp.move) && !sp.bank && sp.speed > 0 && !sp.scatter){   // 물속 생물만 먹이 쪽으로, 각자 속도로
+        const f = this.food, off = sp.foodOff || {dx:0, dy:0};
+        const dReal = Math.hypot(f.x - x, f.y - y);
+        if(dReal < 2.8){ this.eat(sp) }
+        else { const tx = f.x + off.dx, ty = sp.move==='crawl' ? y : f.y + off.dy; const ddx = tx - x, ddy = ty - y, d = Math.hypot(ddx, ddy);
+          if(d > 0.8){ const spd = (3 + sp.speed*6) * sp.eager * dt; x += ddx/d*spd; y += ddy/d*spd; if(Math.abs(ddx) > 0.3) sp.dir = ddx > 0 ? 1 : -1 }
+          else { y = ty + Math.sin(sp.phase*1.5)*0.8 }   // 자기 자리에 도착하면 그 근처에서 서성여요
+          const wt0 = WATER_TOP[this.data.lv] + 6; if(y < wt0) y = wt0; if(y > 90) y = 90; sp.baseY = y; }
         if(x < 5) x = 5; if(x > 95) x = 95;
         sp.x = x; sp.y = y;
         const flipF = sp.faces===1 ? (sp.dir<0 ? -1 : 1) : sp.faces===-1 ? (sp.dir>0 ? -1 : 1) : 1;
@@ -2127,7 +2137,7 @@ const Play = {
         case 'crawl': x += sp.dir * sp.speed * 1.2 * dt; break;
         case 'fly': x += sp.dir * sp.speed * 5 * dt; y = sp.baseY + Math.sin(sp.phase*2)*2; break;
         case 'drift': y = sp.baseY + Math.sin(sp.phase*0.8)*6; x += Math.sin(sp.phase*0.5)*0.02; break;
-        case 'float': y = sp.baseY + Math.sin(sp.phase*0.9)*0.8; x += sp.dir * sp.speed * 0.6 * dt; break;
+        case 'float': y = sp.baseY + Math.sin(sp.phase*0.9)*(sp.speed ? 0.8 : 0.25); x += sp.dir * sp.speed * 0.6 * dt; break;
         case 'bounce': y = sp.baseY - Math.abs(Math.sin(sp.phase*3))*6; x += sp.dir * sp.speed * 1.5 * dt; break;
         case 'hop': y = sp.baseY - Math.abs(Math.sin(sp.phase*2.2))*5; break;
         case 'dash': x += sp.dir * sp.speed * (sp.slow ? 4 : 10) * dt; y = sp.baseY + Math.sin(sp.phase*5)*0.6; break;
@@ -2194,10 +2204,16 @@ const Play = {
     el.innerHTML = `<svg viewBox="0 0 26 18"><g fill="#a1887f" stroke="#5d4037" stroke-width=".8"><circle cx="5" cy="9" r="3.2"/><circle cx="12" cy="5" r="3"/><circle cx="19" cy="10" r="3.4"/><circle cx="12" cy="13" r="2.6"/></g></svg>`;
     $('scene').appendChild(el);
     this.food = { el, x: xp, y: Math.max(WATER_TOP[this.data.lv]+4, yp), t: performance.now() };
+    for(const sp of this.sprites){ const a = Math.random()*Math.PI*2, rr = 3 + Math.random()*7; sp.foodOff = { dx: Math.cos(a)*rr, dy: Math.sin(a)*rr*0.6 }; sp.scatter = null }
     this.bubbles(xp, this.food.y, 3);
   },
-  eat(sp){ if(!this.food) return; this.bubbles(this.food.x, this.food.y, 5); this.food.el.remove(); this.food = null; sp.baseY = sp.y; },
-  dart(sp){ sp.dart = { until: performance.now() + 750, dir: sp.dir || 1 }; this.bubbles(sp.x, sp.y, 7); },
+  eat(sp){ if(!this.food) return; this.bubbles(this.food.x, this.food.y, 5); this.food.el.remove(); this.food = null;
+    const SEEK = ['swim','dash','drift','crawl'];
+    for(const o of this.sprites){ if(!SEEK.includes(o.move) || o.bank || o.speed <= 0) continue;
+      const vx = (Math.random()<.5?-1:1) * (3 + Math.random()*7), vy = o.move==='crawl' ? 0 : (Math.random()<.5?-1:1) * (1.5 + Math.random()*5);
+      o.scatter = { until: performance.now() + 700 + Math.random()*700, vx, vy }; o.dir = vx > 0 ? 1 : -1; o.baseY = o.y }
+  },
+  dart(sp){ if(!sp.alive) return; sp.dart = { until: performance.now() + 750, dir: sp.dir || 1 }; if(!sp.air && sp.y > WATER_TOP[this.data.lv] + 1) this.bubbles(sp.x, sp.y, 7); },
   go(d){ const lv = this.data.lv + d; if(!POOLS[lv]) return; this.data.lv = lv; this.save(); this.render(); },
 };
 $('pGacha').onclick = () => Play.pull();
@@ -2211,7 +2227,7 @@ $('pPrev').onclick = () => Play.go(-1); $('pNext').onclick = () => Play.go(1);
       const r = sc.getBoundingClientRect(); const xp = (e.clientX-r.left)/r.width*100, yp = (e.clientY-r.top)/r.height*100;
       const hit = e.target && e.target.closest ? e.target.closest('.sp:not(.deco)') : null;
       const sp = hit && Play.sprites.find(o => o.el === hit);
-      if(sp && sp.move !== 'none' && sp.move !== 'sway'){ Play.dart(sp); return }           // 생물을 톡: 슝!
+      if(sp && sp.alive){ Play.dart(sp); return }           // 생물을 톡: 슝! (물속 생물만 거품)
       const wt = WATER_TOP[Play.data.lv];
       if(yp > wt + 2){ Play.dropFood(xp, Math.min(88, yp)); if(Play.data.lv >= 4){ Play.hero.tx = xp; Play.hero.ty = Math.max(HERO_BAND[Play.data.lv][0], Math.min(HERO_BAND[Play.data.lv][1], yp)) } return }   // 물을 톡: 먹이
       Play.hero.tx = Math.max(6, Math.min(94, xp)); const hb = HERO_BAND[Play.data.lv]; Play.hero.ty = Math.max(hb[0], Math.min(hb[1], yp)); if(Play.data.lv===1) Play.hero.tx = Math.min(58, Play.hero.tx);   // 둑·하늘을 톡: 세준이가 그쪽으로
