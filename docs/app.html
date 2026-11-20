@@ -713,7 +713,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 13:36';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.20 13:37';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -2186,9 +2186,10 @@ const Play = {
       const base = lvh===2 ? 34 : lvh===1 ? 14 : 20;
       const sp = Math.min(dist, base*pulse*dt); h.x += dx/dist*sp; h.y += dy/dist*sp; if(Math.abs(dx) > 0.3) h.dir = dx > 0 ? 1 : -1;
       he0.classList.add('moving');
+      if(lvh>=4 && Math.random() < 0.006){ const hb = HERO_BAND[lvh]; h.tx = 10+Math.random()*80; h.ty = hb[0] + Math.random()*(hb[1]-hb[0]) }   // 헤엄치다 방향을 휙 바꾸기도 해요
     } else {
       he0.classList.remove('moving');
-      if(Math.random() < 0.004){ const hb = HERO_BAND[lvh]; h.tx = 10+Math.random()*(lvh===1 ? 48 : 80); h.ty = hb[0] + Math.random()*(hb[1]-hb[0]) }
+      if(Math.random() < (lvh>=4 ? 0.02 : 0.012)){ const hb = HERO_BAND[lvh]; h.tx = 10+Math.random()*(lvh===1 ? 48 : 80); h.ty = hb[0] + Math.random()*(hb[1]-hb[0]) }   // 가만히 있다가 금방 또 다른 곳으로
       // 가끔 하는 동작: 잠자리채 휘두르기 / 튜브 던지기
       if(lvh===1 && Math.random() < 0.005 && !he0.classList.contains('swing')){ he0.classList.add('swing'); setTimeout(() => he0.classList.remove('swing'), 900) }
       if(lvh===3 && Math.random() < 0.004 && !he0.classList.contains('throw')){ he0.classList.add('throw'); setTimeout(() => he0.classList.remove('throw'), 1500) }
