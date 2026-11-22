@@ -162,7 +162,17 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 .dhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px}
 .dhead .prog{font-family:var(--display);font-size:30px;color:var(--accent);line-height:1}
 .dhead .prog small{font-size:16px;font-family:var(--font);color:var(--muted)}
-.dpaper{padding:22px 20px 26px}
+.dpaper{padding:16px 10px 22px}
+body.mode-d main{padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+.ans.cells{background-image:none}
+.ans.cells.r1{height:118px}.ans.cells.r2{height:236px}
+.ans.cells .grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(18,1fr);pointer-events:none;z-index:0}
+.ans.cells.r2 .grid{grid-template-rows:repeat(2,1fr)}
+.ans.cells .grid i{border-right:1px solid var(--paper-line)}.ans.cells .grid i:nth-child(18n){border-right:none}
+.ans.cells.r2 .grid i:nth-child(-n+18){border-bottom:1px solid var(--paper-line)}
+.ans.cells canvas{position:relative;z-index:1}
+.cellhint{font-size:13px;color:var(--muted);margin:4px 2px 0}
+.recbox .row .btn{min-width:150px}
 .dres{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;padding:14px 0;border-bottom:1px dashed var(--paper-line);align-items:start}
 .dres .qn{font-weight:700;font-size:18px;padding-top:4px}
 .dres .ans{grid-column:2;margin:0}
@@ -681,10 +691,12 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
         <div class="level"><i id="recLevel"></i></div>
         <div class="status" id="recStatus" style="margin:0"></div>
         <div class="row" style="justify-content:center">
+          <button class="btn" id="sPause">⏸ 일시 중지</button>
+          <button class="btn" id="sResumeRec" hidden>▶ 녹음 재개</button>
           <button class="btn primary big" id="sStop">⏹ 다 말했어요</button>
           <button class="btn" id="sPlayRec" hidden>▶ 녹음 들어보기</button>
-          <button class="btn" id="sRedo" hidden>🔁 다시 녹음</button>
-          <button class="btn primary big" id="sGrade" hidden>✅ 채점하기</button>
+          <button class="btn" id="sRedo">🔄 처음부터 다시</button>
+          <button class="btn primary big" id="sGrade">✅ 채점하기</button>
           <button class="btn" id="sPeek" title="대본을 잠깐 보여 줍니다">👀 대본 보기</button>
         </div>
         <div class="status" id="sGradeStatus" style="margin:0"></div>
@@ -898,7 +910,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.20 18:33';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.22 20:11';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -957,7 +969,7 @@ function errCopy(e){
 function setMode(m){
   S.mode = m;
   for(const k of ['h','v','d','s','p']){ $('mode-'+k).setAttribute('aria-selected', m===k); $('mode-'+k+'-root').hidden = m!==k }
-  document.body.classList.toggle('mode-p', m==='p');
+  document.body.classList.toggle('mode-p', m==='p'); document.body.classList.toggle('mode-d', m==='d');
   updateBrand();
   if(m==='v' || m==='d' || m==='s') showView(S.view.startsWith(m+'-') ? S.view : m+'-prep');
   else { S.view = m; updateTools(); scrollTop(); }
@@ -1331,6 +1343,7 @@ function setPenOnly(on, auto){ S.penOnly = on; $('tPenOnly').setAttribute('aria-
 $('tPenOnly').onclick = () => setPenOnly(!S.penOnly);
 
 /* ---------- composite handwriting into one image for grading ---------- */
+function cellGrid(rows){ return `<div class="grid">${'<i></i>'.repeat(18*rows)}</div>` }
 function compositeRows(rows, rowH, drawLabel){
   const W = 1000, c = document.createElement('canvas'); c.width = W; c.height = rowH*rows.length;
   const ctx = c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,c.height);
@@ -1340,6 +1353,7 @@ function compositeRows(rows, rowH, drawLabel){
     const box = drawLabel(ctx, r, y, rowH);
     const src = canvases.get(r.key);
     ctx.strokeStyle='#8a94ad'; ctx.lineWidth=2; ctx.strokeRect(box.x, box.y, box.w, box.h);
+    if(box.cells){ ctx.strokeStyle='#cfd5e3'; ctx.lineWidth=1; for(let k=1;k<box.cells;k++){ const x = box.x + box.w*k/box.cells; ctx.beginPath(); ctx.moveTo(x, box.y); ctx.lineTo(x, box.y+box.h); ctx.stroke() } if(box.rows===2){ ctx.beginPath(); ctx.moveTo(box.x, box.y+box.h/2); ctx.lineTo(box.x+box.w, box.y+box.h/2); ctx.stroke() } }
     if(src && src.width) ctx.drawImage(src, 0,0,src.width,src.height, box.x+2, box.y+2, box.w-4, box.h-4);
     ctx.strokeStyle='#e3e6ee'; ctx.beginPath(); ctx.moveTo(0,y+rowH-0.5); ctx.lineTo(W,y+rowH-0.5); ctx.stroke();
   });
@@ -1405,7 +1419,7 @@ function refreshButtons(){
   const nS = scriptLines().length; $('sConfirm').disabled = !nS; $('sListen').disabled = !nS;
   $('sStart').disabled = !(S.s.confirmed && S.s.lines.length);
   $('sResume').hidden = !(S.s.phase && S.s.phase!=='idle'); $('stab-test').disabled = !(S.s.phase && S.s.phase!=='idle');
-  $('sGrade').disabled = !(ai && (S.s.wav || S.s.liveText));
+  $('sGrade').disabled = !(ai && (S.s.wav || S.s.liveText || Rec.on));
   $('openTest').hidden = !S.v.test;
   $('vtab-test').disabled = !S.v.test;
   $('gradeBtn').disabled = !ai;
@@ -1833,9 +1847,10 @@ function renderDictCurrent(){
   $('dSpeak').hidden = !!S.d.manual; $('dPeek').hidden = !S.d.manual; $('dPeekText').hidden = true; $('dPeekText').textContent = '';
   $('dNext').textContent = S.d.pos === S.d.order.length-1 ? '다 썼어요 ✓ 마지막!' : '다 썼어요 ✓ 다음';
   const p = $('dpaper'); p.className='paper dpaper'; p.innerHTML='';
-  const ans = document.createElement('div'); ans.className='ans tall'; ans.dataset.key = 'd:'+S.d.pos;
-  ans.innerHTML = `<canvas aria-label="${S.d.pos+1}번 받아쓰기 칸"></canvas><button class="clr" title="이 칸 지우기">✕</button>`;
-  p.appendChild(ans); setupCanvas(ans); requestAnimationFrame(fitAll);
+  const curText = S.d.items[S.d.order[S.d.pos]] || '';
+  const ans = document.createElement('div'); ans.className='ans tall cells ' + (curText.length > 18 ? 'r2' : 'r1'); ans.dataset.key = 'd:'+S.d.pos;
+  ans.innerHTML = cellGrid(curText.length > 18 ? 2 : 1) + `<canvas aria-label="${S.d.pos+1}번 받아쓰기 칸"></canvas><button class="clr" title="이 칸 지우기">✕</button>`;
+  p.appendChild(ans); const hint = document.createElement('div'); hint.className='cellhint'; hint.textContent = '한 칸에 한 글자씩! 띄어 쓸 곳은 한 칸 비워요.'; p.appendChild(hint); setupCanvas(ans); requestAnimationFrame(fitAll);
 }
 $('dNext').onclick = async () => {
   if(!hasInk('d:'+S.d.pos)){ toast('아직 아무것도 안 썼어요. 들은 대로 써 보세요!'); return }
@@ -1852,7 +1867,7 @@ function renderDictDone(){
   S.d.order.forEach((idx, pos) => {
     const row = document.createElement('div'); row.className='dres';
     const qn = document.createElement('div'); qn.className='qn'; qn.textContent = (pos+1)+'.';
-    const ans = document.createElement('div'); ans.className='ans tall'; ans.dataset.key='d:'+pos; ans.innerHTML='<canvas></canvas>';
+    const ans = document.createElement('div'); ans.className='ans tall cells ' + ((S.d.items[idx]||'').length > 18 ? 'r2' : 'r1'); ans.dataset.key='d:'+pos; ans.innerHTML=cellGrid((S.d.items[idx]||'').length > 18 ? 2 : 1) + '<canvas></canvas>';
     row.append(qn, ans); p.appendChild(row); setupCanvas(ans);
   });
   const tail = document.createElement('div'); tail.className='acts'; tail.style.cssText='justify-content:center;margin-top:26px';
@@ -1871,7 +1886,7 @@ $('dGrade').onclick = async () => {
       const per = Math.max(4, Math.ceil(toCheck.length / maxCount));
       const images = [];
       for(let i=0;i<toCheck.length;i+=per){
-        images.push(await compositeRows(toCheck.slice(i,i+per), 260, (ctx, r, y, rh) => { ctx.font='bold 26px "Noto Sans KR", sans-serif'; ctx.fillText(`${r.pos+1}.`, 14, y+rh/2); return {x:70, y:y+14, w:916, h:rh-28} }));
+        images.push(await compositeRows(toCheck.slice(i,i+per), 260, (ctx, r, y, rh) => { ctx.font='bold 26px "Noto Sans KR", sans-serif'; ctx.fillText(`${r.pos+1}.`, 14, y+rh/2); return {x:70, y:y+14, w:916, h:rh-28, cells:18, rows:(r.text||'').length > 18 ? 2 : 1} }));
       }
       const key = toCheck.map(r => ({n:r.pos+1, answer:r.text}));
       const data = await AI.json(
@@ -1881,6 +1896,7 @@ $('dGrade').onclick = async () => {
 ${JSON.stringify(key)}
 
 채점 기준:
+- 답 상자는 가로 18칸 원고지입니다(세로 선으로 칸이 나뉘어 있음). 학생은 한 칸에 한 글자씩 쓰고, 띄어쓰기는 칸을 하나 비우는 것으로 표시합니다. 비운 칸이 있으면 그 자리에 띄어쓰기를 넣어 read에 적고, 칸을 비우지 않고 이어 썼으면 붙여 쓴 것으로 읽습니다.
 - 먼저 학생이 쓴 글씨를 있는 그대로 읽어 read에 적습니다. 상자가 비어 있으면 read는 "" 입니다.
 - 글자 모양은 초등 1학년 손글씨 기준으로 너그럽게 읽습니다: ㅇ이 완전히 닫히지 않았거나, 획이 살짝 떨어져 있거나, 글자 크기가 들쭉날쭉하거나, 줄에서 벗어나도 전체 모양이 그 글자면 그 글자로 읽습니다. 정답 문장을 참고해 애매한 모양을 해석하되, 분명히 다른 글자나 받침(예: "갑니다"를 "감니다")을 정답으로 바꿔 읽지는 않습니다. (모양 읽기는 관대하게, 맞춤법 판정은 정확하게)
 - 맞춤법: 글자가 하나라도 다르거나 빠지거나 더 있으면 오답입니다(예: "갑니다"를 "감니다"로 쓰면 오답).
@@ -1910,7 +1926,7 @@ function renderDictResults(){
     const text = S.d.items[idx]; const g = S.d.grades?.[pos] || {read:'', correct:false, sure:true};
     const row = document.createElement('div'); row.className='dres '+(g.correct?'ok':'bad');
     const qn = document.createElement('div'); qn.className='qn'; qn.textContent = (pos+1)+'.';
-    const ans = document.createElement('div'); ans.className='ans tall'; ans.dataset.key='d:'+pos; ans.innerHTML='<canvas></canvas>';
+    const ans = document.createElement('div'); ans.className='ans tall cells ' + ((S.d.items[idx]||'').length > 18 ? 'r2' : 'r1'); ans.dataset.key='d:'+pos; ans.innerHTML=cellGrid((S.d.items[idx]||'').length > 18 ? 2 : 1) + '<canvas></canvas>';
     const m = document.createElement('div'); m.className='mark';
     const stamp = document.createElement('button'); stamp.className='stamp'; stamp.textContent = g.correct?'○':'✗'; stamp.title='잘못 채점됐으면 눌러서 바꾸기';
     stamp.onclick = e => { e.stopPropagation(); g.correct = !g.correct; g.sure = true; S.d.grades[pos] = g; saveDict(); renderDictResults() };
@@ -1967,23 +1983,29 @@ renderScriptOk();
 
 /* 녹음기: 마이크 → 16kHz WAV (Gemini가 바로 들을 수 있는 형식) */
 const Rec = {
-  ctx:null, stream:null, node:null, src:null, chunks:[], rate:48000, t0:0, timer:null, on:false, sr:null,
+  ctx:null, stream:null, node:null, src:null, chunks:[], rate:48000, t0:0, acc:0, timer:null, on:false, paused:false, peak:0, sr:null,
+  elapsed(){ return this.acc + (this.on && !this.paused ? (Date.now() - this.t0) : 0) },
+  pause(){ if(!this.on || this.paused) return; this.acc += Date.now() - this.t0; this.paused = true; try{ this.sr && this.sr.stop() }catch{} },
+  resume(){ if(!this.on || !this.paused) return; this.t0 = Date.now(); this.paused = false; try{ this.sr && this.sr.start() }catch{} },
   async start(){
+    if(this.on) this.stop();   // 다시 시작: 이전 녹음은 버려요 (타이머도 정리)
+    clearInterval(this.timer); this.acc = 0; this.paused = false; this.peak = 0;
     try{ this.stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true }, video:false }) }
     catch(e){ throw {code:'mic_denied', message:String(e)} }
     const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC(); try{ await this.ctx.resume() }catch{}
     this.rate = this.ctx.sampleRate; this.chunks = []; this.src = this.ctx.createMediaStreamSource(this.stream);
     this.node = this.ctx.createScriptProcessor(4096, 1, 1);
-    this.node.onaudioprocess = e => { if(!this.on) return; const d = e.inputBuffer.getChannelData(0); this.chunks.push(new Float32Array(d)); let sum = 0; for(let i=0;i<d.length;i+=8) sum += d[i]*d[i]; const rms = Math.sqrt(sum/(d.length/8)); $('recLevel').style.width = Math.min(100, Math.round(rms*420)) + '%' };
+    this.node.onaudioprocess = e => { if(!this.on || this.paused) return; const d = e.inputBuffer.getChannelData(0); this.chunks.push(new Float32Array(d)); let sum = 0; for(let i=0;i<d.length;i+=8) sum += d[i]*d[i]; const rms = Math.sqrt(sum/(d.length/8)); if(rms > this.peak) this.peak = rms; $('recLevel').style.width = Math.min(100, Math.round(rms*420)) + '%' };
     this.src.connect(this.node); this.node.connect(this.ctx.destination);
     this.on = true; this.t0 = Date.now();
-    this.timer = setInterval(() => { const sec = Math.floor((Date.now()-this.t0)/1000); $('recTime').textContent = `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`; if(sec >= 240){ toast('4분이 넘어서 녹음을 멈췄어요.'); $('sStop').click() } }, 250);
+    this.timer = setInterval(() => { if(!this.on){ clearInterval(this.timer); return } const sec = Math.floor(this.elapsed()/1000); $('recTime').textContent = `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`; if(sec >= 300){ toast('5분이 넘어서 녹음을 멈췄어요.'); $('sStop').click() } }, 250);
     // 브라우저(PC)에서는 말하는 동안 글자로도 받아 둡니다 (녹음 채점이 안 되는 환경용)
     S.s.liveText = ''; const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if(SR && !nativeTTS()){ try{ this.sr = new SR(); this.sr.lang = 'en-US'; this.sr.continuous = true; this.sr.interimResults = false; this.sr.onresult = ev => { for(let i=ev.resultIndex;i<ev.results.length;i++) if(ev.results[i].isFinal) S.s.liveText += ev.results[i][0].transcript + ' ' }; this.sr.onend = () => { if(this.on) try{ this.sr.start() }catch{} }; this.sr.start() }catch{ this.sr = null } }
   },
   stop(){
-    this.on = false; clearInterval(this.timer);
+    if(this.on && !this.paused) this.acc += Date.now() - this.t0;
+    this.on = false; this.paused = false; clearInterval(this.timer); this.timer = null;
     try{ this.sr && (this.sr.onend = null, this.sr.stop()) }catch{} this.sr = null;
     try{ this.node && this.node.disconnect(); this.src && this.src.disconnect() }catch{}
     try{ this.stream && this.stream.getTracks().forEach(t => t.stop()) }catch{}
@@ -1996,17 +2018,23 @@ const Rec = {
     const buf = new ArrayBuffer(44 + pcm.length*2), dv = new DataView(buf); const W = (off, str) => { for(let i=0;i<str.length;i++) dv.setUint8(off+i, str.charCodeAt(i)) };
     W(0,'RIFF'); dv.setUint32(4, 36 + pcm.length*2, true); W(8,'WAVE'); W(12,'fmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true); dv.setUint32(24, target, true); dv.setUint32(28, target*2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true); W(36,'data'); dv.setUint32(40, pcm.length*2, true);
     new Int16Array(buf, 44).set(pcm);
-    return { blob: new Blob([buf], {type:'audio/wav'}), dur };
+    return { blob: new Blob([buf], {type:'audio/wav'}), dur, peak: this.peak };
   },
 };
 function blobB64(blob){ return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1]); fr.onerror = rej; fr.readAsDataURL(blob) }) }
-function setRecUI(state){   // 'rec' | 'done' | 'graded' | 'idle'
+function setRecUI(state){   // 'rec' | 'paused' | 'done' | 'graded' | 'idle'
   const rb = $('recbox'); rb.classList.toggle('on', state==='rec');
-  $('sStop').hidden = state!=='rec'; $('sPlayRec').hidden = !(state==='done' || state==='graded') || !S.s.wav; $('sRedo').hidden = state==='rec'; $('sGrade').hidden = state!=='done';
-  $('micIcon').textContent = state==='rec' ? '🎙️' : state==='graded' ? '🏆' : '✅';
-  if(state!=='rec') $('recLevel').style.width = '0';
-  $('recStatus').textContent = state==='rec' ? '녹음 중… 대본을 안 보고 외운 대로 말해요!' : state==='done' ? '녹음을 마쳤어요. 채점하기를 눌러 주세요.' : state==='graded' ? '채점이 끝났어요.' : '';
+  const recording = state==='rec' || state==='paused';
+  $('sPause').hidden = state!=='rec'; $('sResumeRec').hidden = state!=='paused'; $('sStop').hidden = !recording;
+  $('sPlayRec').hidden = !(state==='done' || state==='graded') || !S.s.wav;
+  $('sRedo').hidden = state==='idle'; $('sGrade').hidden = !(recording || state==='done');
+  $('micIcon').textContent = state==='rec' ? '🎙️' : state==='paused' ? '⏸️' : state==='graded' ? '🏆' : '✅';
+  if(!recording) $('recLevel').style.width = '0';
+  $('recStatus').textContent = state==='rec' ? '녹음 중… 대본을 안 보고 외운 대로 말해요!' : state==='paused' ? '잠깐 멈췄어요. ▶ 녹음 재개를 누르면 이어서 녹음돼요.' : state==='done' ? `녹음을 마쳤어요 (${Math.round(S.s.dur||0)}초${S.s.peak !== undefined && S.s.peak < 0.02 ? ' · ⚠️ 소리가 거의 안 들어갔어요. 마이크를 확인해 주세요' : ''}). 채점하기를 눌러 주세요.` : state==='graded' ? '채점이 끝났어요.' : '';
 }
+function finishRecording(){ if(!Rec.on) return false; const r = Rec.stop(); S.s.wav = r.blob; S.s.dur = r.dur; S.s.peak = r.peak; S.s.phase = 'done'; saveScript(); setRecUI('done'); refreshButtons(); return true }
+$('sPause').onclick = () => { Rec.pause(); setRecUI('paused') };
+$('sResumeRec').onclick = () => { Rec.resume(); setRecUI('rec') };
 async function startScriptTest(){
   if(!S.s.confirmed || !S.s.lines.length){ toast('먼저 대본을 확정해 주세요.'); return }
   S.s.result = null; S.s.wav = null; S.s.liveText = ''; $('sresult').hidden = true; $('sLines').innerHTML = ''; $('sTranscript').textContent = ''; $('sPeekBox').hidden = true;
@@ -2015,40 +2043,50 @@ async function startScriptTest(){
 }
 $('sStart').onclick = startScriptTest;
 $('sResume').onclick = () => showView('s-test');
-$('sStop').onclick = () => { if(!Rec.on) return; const r = Rec.stop(); S.s.wav = r.blob; S.s.dur = r.dur; S.s.phase = 'done'; saveScript(); setRecUI('done'); refreshButtons(); if(r.dur < 1){ toast('녹음이 너무 짧아요. 다시 녹음해 주세요.') } };
-$('sRedo').onclick = startScriptTest;
+$('sStop').onclick = () => { if(finishRecording() && (S.s.dur||0) < 1) toast('녹음이 너무 짧아요. 다시 녹음해 주세요.') };
+$('sRedo').onclick = () => { if(Rec.on || S.s.wav){ if(!confirm('지금 녹음을 버리고 처음부터 다시 할까요?')) return } startScriptTest() };
 $('sPlayRec').onclick = () => { if(!S.s.wav) return; const a = new Audio(URL.createObjectURL(S.s.wav)); a.play().catch(()=>{}) };
 $('sPeek').onclick = () => { const b = $('sPeekBox'); b.hidden = !b.hidden; if(!b.hidden){ b.innerHTML = S.s.lines.map((t,i) => `<div>${i+1}. ${t.replace(/</g,'&lt;')}</div>`).join(''); clearTimeout(b._t); b._t = setTimeout(() => { b.hidden = true }, 8000) } };
 $('sGrade').onclick = async () => {
+  finishRecording();   // 채점을 누르면 녹음은 자동으로 멈춰요
   if(!S.s.wav && !S.s.liveText){ toast(errCopy({code:'no_recording'})); return }
   $('sGrade').disabled = true; status($('sGradeStatus'), '선생님이 녹음을 듣고 채점하는 중이에요… (20~60초)', true);
   try{
     const key = S.s.lines.map((t,i) => ({n:i+1, text:t}));
-    const rules = `당신은 초등학교 1학년 학생의 영어 말하기(대본 외우기) 시험을 채점하는 친절한 원어민 선생님입니다.
-학생은 아래 정답 대본을 외워서 말했습니다. 발음은 어린이답게 서툴러도 괜찮고, 작은 발음 실수나 억양은 감점하지 않습니다.
-정답 대본(JSON): ${JSON.stringify(key)}
-
-채점 방법:
-1) 먼저 들린 말을 영어로 그대로 받아 적어 transcript에 넣습니다. (없으면 "")
-2) 대본의 각 문장(n)에 대해, 학생이 그 문장을 말했는지 찾고 status를 정합니다.
-   - "ok": 핵심 단어가 모두 순서대로 들어 있고, 빠지거나 바뀐 단어가 없거나 아주 사소한(관사·복수형·한 단어 정도) 경우
-   - "part": 문장의 절반쯤은 맞게 말했지만 빠지거나 다른 단어가 여럿인 경우
-   - "miss": 거의 말하지 않았거나 전혀 다른 말을 한 경우
-   - heard에는 그 문장에 해당하는 학생의 말을 짧게 적고(없으면 ""), note에는 틀린 점을 아주 짧게 한국어로 적습니다(맞으면 "").
-3) 문장 순서가 바뀌어도 내용이 맞으면 ok로 봐 줍니다.
-반드시 JSON만 출력하세요. 예: {"transcript":"hello my name is sejun ...","results":[{"n":1,"status":"ok","heard":"hello my name is sejun","note":""},{"n":2,"status":"part","heard":"i am seven","note":"years old 빠짐"}]}`;
-    let data;
-    if(S.s.wav && AI.backend==='gemini'){ const b64 = await blobB64(S.s.wav); data = await AI.json(rules + '\n\n첨부한 오디오가 학생이 말한 녹음입니다.', [], { audio:{ mime:'audio/wav', data:b64 } }) }
-    else if(S.s.liveText){ data = await AI.json(rules + `\n\n학생이 말한 것을 음성 인식기가 받아 적은 글: 《${S.s.liveText.trim()}》\n(이 글을 transcript로 쓰고 채점하세요.)`, []) }
+    // 1단계: 녹음을 "있는 그대로" 받아 적기만 (대본은 보여 주지 않아요 → 짐작으로 다 맞았다고 할 수 없게)
+    let transcript = '';
+    if(S.s.wav && AI.backend==='gemini'){
+      const b64 = await blobB64(S.s.wav);
+      const tr = await AI.json(`첨부한 오디오는 어린이(초등 1학년)가 영어를 말한 녹음입니다. 들리는 영어를 "있는 그대로" 받아 적어 주세요.
+- 들리는 단어만 적고, 안 들리는 부분을 짐작해서 채우지 않습니다. 문장을 다듬거나 문법을 고치지 않습니다.
+- 발음이 서툴러도 가장 가깝게 들리는 영어 단어로 적습니다. 한국어 말은 한국어로 적습니다.
+- 말소리가 전혀 없거나 잡음뿐이면 transcript는 "" 로 둡니다.
+반드시 JSON만 출력하세요. 예: {"transcript":"hello my name is sejun i am seven years old","quality":"good"} (quality: good | low | silent)`, [], { audio:{ mime:'audio/wav', data:b64 }, tier:'quick' });
+      transcript = String(tr?.transcript || '').trim();
+    } else if(S.s.liveText){ transcript = S.s.liveText.trim() }
     else throw {code:'audio_unsupported'};
-    const arr = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
-    const byN = new Map(arr.map(r => [Number(r?.n), r]));
-    const res = key.map(k => { const r = byN.get(k.n); const st = ['ok','part','miss'].includes(r?.status) ? r.status : 'miss'; return { n:k.n, text:k.text, status:st, heard:String(r?.heard||''), note:String(r?.note||'') } });
-    S.s.result = { transcript:String(data?.transcript||''), lines:res, t:Date.now() }; S.s.phase = 'graded'; saveScript();
+    // 2단계: 대본 문장마다 들린 말과 단어 단위로 맞춰 보기 (기계적으로 → 공정하게)
+    const res = key.map(k => Object.assign({ n:k.n, text:k.text }, matchSentence(k.text, transcript)));
+    S.s.result = { transcript, lines:res, t:Date.now() }; S.s.phase = 'graded'; saveScript();
     renderScriptResult(); const sum = scoreS(); pushHistory('historyS', sum); status($('sGradeStatus'), ''); scrollTop(true); celebrate(sum, '스크립트 외우기', true);
   }catch(e){ status($('sGradeStatus'), errCopy(e)); if(e?.code!=='cancelled') toast(errCopy(e)) }
   finally{ refreshButtons() }
 };
+const _tok = t => String(t||'').toLowerCase().replace(/[’']/g, "'").replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter(Boolean).map(w => w.replace(/^'+|'+$/g, ''));
+const _lcs = (a, b) => { const m = a.length, n = b.length, dp = Array.from({length:m+1}, () => new Array(n+1).fill(0)); for(let i=1;i<=m;i++) for(let j=1;j<=n;j++) dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j], dp[i][j-1]); return dp[m][n] };
+function matchSentence(sentence, transcript){   // 대본 한 문장이 들린 말 속에 얼마나 들어 있나 (단어 순서 기준)
+  const S0 = _tok(sentence).filter(w => w.length > 1 || /^[ai]$/.test(w)), T = _tok(transcript);
+  if(!S0.length) return { status:'miss', heard:'', note:'' };
+  if(!T.length) return { status:'miss', heard:'', note:'말소리를 못 찾았어요' };
+  const win = S0.length + 3; let best = 0, bi = 0;
+  for(let i=0;i<=Math.max(0, T.length - 1);i++){ const w = T.slice(i, i + win); const l = _lcs(S0, w); if(l > best){ best = l; bi = i } if(best === S0.length) break }
+  const ratio = best / S0.length;
+  const heard = T.slice(bi, bi + win).join(' ');
+  const seg = T.slice(bi, bi + win); const missing = S0.filter(w => !seg.includes(w));
+  const status = ratio >= 0.8 ? 'ok' : ratio >= 0.45 ? 'part' : 'miss';
+  const note = status==='ok' ? '' : missing.length ? `빠진 말: ${missing.slice(0,4).join(', ')}` : '';
+  return { status, heard: ratio > 0.2 ? heard : '', note, ratio: Math.round(ratio*100) };
+}
 function scoreS(){ const L = S.s.result?.lines || []; const ok = L.filter(l => l.status==='ok').length, part = L.filter(l => l.status==='part').length; const total = L.length; return { total, ok, part, unsure:0, pct: total ? Math.round((ok + part*0.5)/total*100) : 0 } }
 function renderScriptResult(){
   const r = S.s.result; if(!r) return; const sum = scoreS();
