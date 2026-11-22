@@ -910,7 +910,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.22 22:08';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.22 22:09';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -2819,8 +2819,8 @@ ${nameCall(SET.name)}, 시험 한 번 보고 올까?`, `🪙 코인이 없어요
 영단어·받아쓰기 시험을 보면 생겨요`])); return }
     this.data.coins -= 1; this.data.pulls += 1;
     const since = this.data.since ||= {}; since[lv] = (since[lv]||0) + 1;
-    // 전설: 기본 5%, 20번 넘게 안 나오면 한 번마다 2%씩 올라가고(30번째 25%, 40번째 45%), 50번째엔 반드시
-    const pE = since[lv] >= 50 ? 1 : Math.min(0.9, 0.05 + Math.max(0, since[lv] - 20) * 0.02);
+    // 전설: 매번 10%로 언제든 나올 수 있고(여러 번도 가능), 50번 안에 한 번도 안 나왔으면 50번째엔 반드시
+    const pE = since[lv] >= 50 ? 1 : 0.10;
     let rar = 'c';
     if(Math.random() < pE) rar = 'e';
     else { const rest = Object.entries(RARITY).filter(([k]) => k !== 'e'); const total = rest.reduce((a,[,r])=>a+r.w,0); let roll = Math.random()*total; for(const [k,r] of rest){ roll -= r.w; if(roll <= 0){ rar = k; break } } }
