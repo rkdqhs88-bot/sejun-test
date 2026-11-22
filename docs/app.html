@@ -910,7 +910,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.22 21:18';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.22 21:19';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -2057,9 +2057,10 @@ $('sGrade').onclick = async () => {
     let transcript = '';
     if(S.s.wav && AI.backend==='gemini'){
       const b64 = await blobB64(S.s.wav);
-      const tr = await AI.json(`첨부한 오디오는 어린이(초등 1학년)가 영어를 말한 녹음입니다. 들리는 영어를 "있는 그대로" 받아 적어 주세요.
+      const tr = await AI.json(`첨부한 오디오는 어린이(초등 1학년)가 외운 영어 대본을 말한 녹음입니다. 이 나이 아이는 단어를 하나씩 띄엄띄엄, 느리게, 가끔 더듬거나 같은 말을 되풀이하며 말합니다. 들리는 영어를 "있는 그대로" 받아 적어 주세요.
+- 천천히 끊어 말한 음절은 한 단어로 이어 적습니다(예: "fa… vo… rite" → "favorite"). 더듬거나 되풀이한 말("I I am", "um")은 한 번만 적거나 뺍니다.
 - 들리는 단어만 적고, 안 들리는 부분을 짐작해서 채우지 않습니다. 문장을 다듬거나 문법을 고치지 않습니다.
-- 발음이 서툴러도 가장 가깝게 들리는 영어 단어로 적습니다. 한국어 말은 한국어로 적습니다.
+- 발음이 서툴러도 가장 가깝게 들리는 흔한 영어 단어로 적습니다. 한국어 말은 한국어로 적습니다.
 - 말소리가 전혀 없거나 잡음뿐이면 transcript는 "" 로 둡니다.
 반드시 JSON만 출력하세요. 예: {"transcript":"hello my name is sejun i am seven years old","quality":"good"} (quality: good | low | silent)`, [], { audio:{ mime:'audio/wav', data:b64 }, tier:'quick' });
       transcript = String(tr?.transcript || '').trim();
@@ -2073,17 +2074,22 @@ $('sGrade').onclick = async () => {
   finally{ refreshButtons() }
 };
 const _tok = t => String(t||'').toLowerCase().replace(/[’']/g, "'").replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter(Boolean).map(w => w.replace(/^'+|'+$/g, ''));
-const _lcs = (a, b) => { const m = a.length, n = b.length, dp = Array.from({length:m+1}, () => new Array(n+1).fill(0)); for(let i=1;i<=m;i++) for(let j=1;j<=n;j++) dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j], dp[i][j-1]); return dp[m][n] };
-function matchSentence(sentence, transcript){   // 대본 한 문장이 들린 말 속에 얼마나 들어 있나 (단어 순서 기준)
-  const S0 = _tok(sentence).filter(w => w.length > 1 || /^[ai]$/.test(w)), T = _tok(transcript);
+const _lev = (a, b) => { const m = a.length, n = b.length; if(Math.abs(m-n) > 2) return 9; let prev = Array.from({length:n+1}, (_,j) => j); for(let i=1;i<=m;i++){ const cur = [i]; for(let j=1;j<=n;j++) cur[j] = Math.min(prev[j]+1, cur[j-1]+1, prev[j-1] + (a[i-1]===b[j-1] ? 0 : 1)); prev = cur } return prev[n] };
+const _same = (a, b) => a === b || (a.length >= 4 && b.length >= 4 && (_lev(a, b) <= 1 || (a.length >= 5 && b.length >= 5 && (a.startsWith(b) || b.startsWith(a))))) || (a.length >= 7 && b.length >= 7 && _lev(a, b) <= 2);   // 초1 발음: 한두 글자 다르게 들려도 같은 말로
+const _lcs = (a, b) => { const m = a.length, n = b.length, dp = Array.from({length:m+1}, () => new Array(n+1).fill(0)); for(let i=1;i<=m;i++) for(let j=1;j<=n;j++) dp[i][j] = _same(a[i-1], b[j-1]) ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j], dp[i][j-1]); return dp[m][n] };
+const _STOP = new Set(['a','an','the','to','is','am','are','was','were','of','and','in','on','at','it','so','very','that','this','be','do','does','did','for','with','its',"it's",'i','my','me','we','you','he','she','they','his','her','our','your']);
+function matchSentence(sentence, transcript){   // 대본 한 문장이 들린 말 속에 얼마나 들어 있나 (뜻이 있는 단어 위주, 순서 기준)
+  const all = _tok(sentence); let T = _tok(transcript);
+  let S0 = all.filter(w => !_STOP.has(w)); if(S0.length < 2) S0 = all;   // 짧은 문장은 전부 봐요
+  for(let i=0;i<T.length-1;i++){ const j = T[i] + T[i+1]; if(j.length >= 4 && S0.some(w => _same(w, j))){ T.splice(i, 2, j) } }   // "se joon"처럼 끊어 말한 한 단어는 붙여서 봐요
   if(!S0.length) return { status:'miss', heard:'', note:'' };
   if(!T.length) return { status:'miss', heard:'', note:'말소리를 못 찾았어요' };
-  const win = S0.length + 3; let best = 0, bi = 0;
+  const win = S0.length * 2 + 4; let best = 0, bi = 0;   // 띄엄띄엄 말해서 사이에 군말이 끼어도 찾아요
   for(let i=0;i<=Math.max(0, T.length - 1);i++){ const w = T.slice(i, i + win); const l = _lcs(S0, w); if(l > best){ best = l; bi = i } if(best === S0.length) break }
   const ratio = best / S0.length;
-  const heard = T.slice(bi, bi + win).join(' ');
-  const seg = T.slice(bi, bi + win); const missing = S0.filter(w => !seg.includes(w));
-  const status = ratio >= 0.8 ? 'ok' : ratio >= 0.45 ? 'part' : 'miss';
+  const seg = T.slice(bi, bi + win); const missing = S0.filter(w => !seg.some(t => _same(t, w)));
+  const heard = seg.join(' ');
+  const status = ratio >= 0.7 ? 'ok' : ratio >= 0.4 ? 'part' : 'miss';   // 초1: 열에 일곱만 맞아도 통과
   const note = status==='ok' ? '' : missing.length ? `빠진 말: ${missing.slice(0,4).join(', ')}` : '';
   return { status, heard: ratio > 0.2 ? heard : '', note, ratio: Math.round(ratio*100) };
 }
