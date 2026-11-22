@@ -163,7 +163,7 @@ code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:14px}
 .dhead .prog{font-family:var(--display);font-size:30px;color:var(--accent);line-height:1}
 .dhead .prog small{font-size:16px;font-family:var(--font);color:var(--muted)}
 .dpaper{padding:16px 10px 22px}
-body.mode-d main{padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+body.mode-d main{padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(48px,env(safe-area-inset-right,0px))}   /* 오른쪽은 손가락으로 스크롤할 여백 */
 .ans.cells{background-image:none}
 .ans.cells.r1{height:118px}.ans.cells.r2{height:236px}
 .ans.cells .grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(13,1fr);pointer-events:none;z-index:0}
@@ -293,7 +293,7 @@ body.mode-d main{padding-left:max(8px,env(safe-area-inset-left,0px));padding-rig
 .sp.sway{animation:sway 3.2s ease-in-out infinite alternate;transform-origin:50% 100%}
 .sp svg{display:block;width:1em;height:1em;overflow:visible}
 @keyframes sway{from{rotate:-6deg}to{rotate:6deg}}
-.pmsg{position:absolute;left:50%;top:14%;transform:translateX(-50%);background:rgba(255,255,255,.95);color:#1b2238;border-radius:16px;padding:14px 22px;font-family:var(--display);font-size:26px;box-shadow:0 8px 24px rgba(0,0,0,.25);text-align:center;max-width:90%}
+.pmsg{position:absolute;left:50%;top:14%;transform:translateX(-50%);background:rgba(255,255,255,.95);color:#1b2238;border-radius:16px;padding:14px 22px;font-family:var(--display);font-size:26px;white-space:pre-line;text-align:center;line-height:1.35;max-width:min(90%,560px);box-shadow:0 8px 24px rgba(0,0,0,.25);text-align:center;max-width:90%}
 .lock{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,20,40,.55);color:#fff;font-family:var(--display);font-size:30px;text-align:center;padding:20px}
 /* ===== 나의 바다: 5 levels ===== */
 .scene{background:#0b5fb5}
@@ -910,7 +910,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.22 21:20';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.22 21:37';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1910,13 +1910,27 @@ read에는 띄어쓰기와 문장부호까지 학생이 쓴 그대로 적습니�
 반드시 JSON 배열만 출력하세요. 예: [{"n":1,"read":"나는 학교에 갑니다.","correct":true,"sure":true,"note":""},{"n":2,"read":"토끼가 깡충깡충 뛰어요","correct":false,"sure":true,"note":"마침표 빠짐"}]`, images);
       const arr = Array.isArray(data) ? data : (data?.results || []);
       const byN = new Map(arr.map(r => [Number(r?.n), r]));
-      for(const r of toCheck){ const g = byN.get(r.pos+1); grades[r.pos] = g ? {read:String(g.read??''), correct:!!g.correct, sure:g.sure!==false, note:String(g.note||'')} : {read:'', correct:false, sure:false, note:''} }
+      for(const r of toCheck){ const g = byN.get(r.pos+1); if(!g){ grades[r.pos] = {read:'', correct:false, sure:false, note:''}; continue } const read = String(g.read??''); const j = judgeDict(read, r.text); grades[r.pos] = {read, correct:j.correct, sure:g.sure!==false, note:j.note} }   // 맞고 틀림은 앱이 글자 단위로 직접 비교해요
     }
     S.d.grades = grades; S.d.phase = 'graded'; saveDict();
     status($('dGradeStatus'), ''); renderDictResults(); pushHistory('historyD', scoreD()); scrollTop(true); celebrate(scoreD(), '받아쓰기');
   }catch(e){ status($('dGradeStatus'), errCopy(e)); if(e?.code!=='cancelled') toast(errCopy(e)) }
   finally{ refreshButtons() }
 };
+function judgeDict(read, answer){   // 글자·띄어쓰기·문장부호를 그대로 비교 (AI는 읽기만, 판정은 여기서)
+  const norm = t => String(t||'').replace(/\s+/g, ' ').trim();
+  let r = norm(read); const a = norm(answer);
+  if(!r) return { correct:false, note:'답을 쓰지 않았어요' };
+  const endP = /[.?!,]$/; const aP = endP.test(a), rP = endP.test(r);
+  if(!aP && rP) r = r.replace(/[.?!,\s]+$/, '');   // 정답에 없는 마침표는 봐줘요
+  const sp = t => SET.spacing ? t : t.replace(/ /g, '');
+  if(sp(r) === sp(a)) return { correct:true, note:'' };
+  const noSp = t => t.replace(/ /g, ''), noP = t => t.replace(/[.?!,]/g, '');
+  if(noSp(r) === noSp(a)) return { correct:false, note:'띄어쓰기' };
+  if(noP(sp(r)) === noP(sp(a))) return { correct:false, note: aP && !rP ? '마침표(문장부호) 빠짐' : '문장부호 다름' };
+  if(noP(noSp(r)) === noP(noSp(a))) return { correct:false, note:'띄어쓰기·문장부호' };
+  return { correct:false, note:'글자 다름' };
+}
 function scoreD(){ const total = S.d.order.length; let ok=0, unsure=0; for(let p=0;p<total;p++){ const g=S.d.grades?.[p]; if(g?.correct) ok++; if(g&&g.sure===false) unsure++ } return {total, ok, unsure, pct: total?Math.round(ok/total*100):0} }
 function renderDictResults(){
   S.d.phase = 'graded'; updateTools();
@@ -2799,7 +2813,10 @@ const Play = {
   pull(){
     const lv = this.data.lv, pool = POOLS[lv];
     if(!this.unlocked(lv)) return;
-    if(this.data.coins <= 0){ this.say(pick([`${nameCall(SET.name)}! 테스트 보고 코인 모아 보자~ 🪙`, `코인이 없어요! 시험 한 번 보면 코인이 생겨요 😊`, `${nameCall(SET.name)}, 영단어나 받아쓰기 시험 보고 다시 오자! 💪`])); return }
+    if(this.data.coins <= 0){ this.say(pick([`🪙 코인이 없어요!
+시험 보고 코인을 모아 오자`, `🪙 코인이 다 떨어졌어요
+${nameCall(SET.name)}, 시험 한 번 보고 올까?`, `🪙 코인이 없어요
+영단어·받아쓰기 시험을 보면 생겨요`])); return }
     this.data.coins -= 1; this.data.pulls += 1;
     const total = Object.values(RARITY).reduce((a,r)=>a+r.w,0); let roll = Math.random()*total, rar = 'c';
     for(const [k,r] of Object.entries(RARITY)){ roll -= r.w; if(roll <= 0){ rar = k; break } }
