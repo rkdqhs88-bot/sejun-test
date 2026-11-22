@@ -910,7 +910,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.22 21:19';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.22 21:20';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -2075,13 +2075,13 @@ $('sGrade').onclick = async () => {
 };
 const _tok = t => String(t||'').toLowerCase().replace(/[’']/g, "'").replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter(Boolean).map(w => w.replace(/^'+|'+$/g, ''));
 const _lev = (a, b) => { const m = a.length, n = b.length; if(Math.abs(m-n) > 2) return 9; let prev = Array.from({length:n+1}, (_,j) => j); for(let i=1;i<=m;i++){ const cur = [i]; for(let j=1;j<=n;j++) cur[j] = Math.min(prev[j]+1, cur[j-1]+1, prev[j-1] + (a[i-1]===b[j-1] ? 0 : 1)); prev = cur } return prev[n] };
-const _same = (a, b) => a === b || (a.length >= 4 && b.length >= 4 && (_lev(a, b) <= 1 || (a.length >= 5 && b.length >= 5 && (a.startsWith(b) || b.startsWith(a))))) || (a.length >= 7 && b.length >= 7 && _lev(a, b) <= 2);   // 초1 발음: 한두 글자 다르게 들려도 같은 말로
+const _same = (a, b) => { if(a === b) return true; const mn = Math.min(a.length, b.length), df = Math.abs(a.length - b.length); if(mn >= 4 && _lev(a, b) <= 1) return true; if(mn >= 5 && df <= 2 && (a.startsWith(b) || b.startsWith(a))) return true; return mn >= 7 && _lev(a, b) <= 2 };   // 초1 발음: 한두 글자 다르게 들려도 같은 말로
 const _lcs = (a, b) => { const m = a.length, n = b.length, dp = Array.from({length:m+1}, () => new Array(n+1).fill(0)); for(let i=1;i<=m;i++) for(let j=1;j<=n;j++) dp[i][j] = _same(a[i-1], b[j-1]) ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j], dp[i][j-1]); return dp[m][n] };
 const _STOP = new Set(['a','an','the','to','is','am','are','was','were','of','and','in','on','at','it','so','very','that','this','be','do','does','did','for','with','its',"it's",'i','my','me','we','you','he','she','they','his','her','our','your']);
 function matchSentence(sentence, transcript){   // 대본 한 문장이 들린 말 속에 얼마나 들어 있나 (뜻이 있는 단어 위주, 순서 기준)
   const all = _tok(sentence); let T = _tok(transcript);
   let S0 = all.filter(w => !_STOP.has(w)); if(S0.length < 2) S0 = all;   // 짧은 문장은 전부 봐요
-  for(let i=0;i<T.length-1;i++){ const j = T[i] + T[i+1]; if(j.length >= 4 && S0.some(w => _same(w, j))){ T.splice(i, 2, j) } }   // "se joon"처럼 끊어 말한 한 단어는 붙여서 봐요
+  for(let i=0;i<T.length-1;i++){ for(const k of [3,2]){ if(i + k > T.length) continue; const j = T.slice(i, i+k).join(''); if(j.length >= 4 && S0.some(w => w === j || _lev(w, j) <= 1)){ T.splice(i, k, j); break } } }   // "se joon", "fa vo rite"처럼 끊어 말한 한 단어는 붙여서 봐요
   if(!S0.length) return { status:'miss', heard:'', note:'' };
   if(!T.length) return { status:'miss', heard:'', note:'말소리를 못 찾았어요' };
   const win = S0.length * 2 + 4; let best = 0, bi = 0;   // 띄엄띄엄 말해서 사이에 군말이 끼어도 찾아요
