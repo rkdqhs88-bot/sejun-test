@@ -910,9 +910,9 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.22 22:09';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.24 21:14';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
-const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
+const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest'];   // 2.5는 새 키에서 안 되므로 뺐어요
 const GEMINI_QUICK  = GEMINI_MODELS;
 const DEF_SETTINGS = { name:'', reads:2, rate:1, spacing:true, provider:'gemini', key:'', model:'', voiceMode:'auto', voiceKo:'', voiceEn:'' };
 const SET = Object.assign({}, DEF_SETTINGS, LS.get('settings', {}));
@@ -1010,7 +1010,7 @@ function loadSettingsUi(){
   $('sName').value = SET.name; $('sReads').value = String(SET.reads); $('sRate').value = String(SET.rate); $('sSpacing').checked = !!SET.spacing;
   $('sProvider').value = SET.provider; $('sKey').value = SET.key; $('sModel').value = SET.model; modelHelp();
 }
-function modelHelp(){ $('sModelHelp').textContent = $('sProvider').value==='gemini' ? '기본 모델: gemini-3.5-flash-lite (빠름. 안 되면 자동으로 다른 flash 모델로 넘어가요). 무료 등급은 하루 요청 수 제한이 있어요(시험 1회 = 보통 2~3번 요청). 키는 aistudio.google.com → Get API key 에서 만듭니다.' : '기본 모델: claude-opus-5-5 (console.anthropic.com에서 키 발급, 유료)' }
+function modelHelp(){ $('sModelHelp').textContent = $('sProvider').value==='gemini' ? '기본 모델: gemini-3.5-flash-lite (빠름. 안 되면 자동으로 다른 3.5 flash 모델로 넘어가요. gemini-2.5는 새 키에서 안 되니 비워 두세요). 무료 등급은 하루 요청 수 제한이 있어요(시험 1회 = 보통 2~3번 요청). 키는 aistudio.google.com → Get API key 에서 만듭니다.' : '기본 모델: claude-opus-5-5 (console.anthropic.com에서 키 발급, 유료)' }
 $('sProvider').onchange = modelHelp;
 $('gearBtn').onclick = () => { const s = $('settings'); s.hidden = !s.hidden; if(!s.hidden){ loadSettingsUi(); s.scrollIntoView({behavior:'smooth'}) } };
 $('sClose').onclick = () => { $('settings').hidden = true };
@@ -1074,7 +1074,8 @@ const AI = {
   async gemini(prompt, parts, signal, c, tier, audio){
     // quick(사진 읽기): 가벼운 모델 먼저. default(출제·채점): 일반 모델 먼저. 한 모델이 45초 안에 답이 없거나 바쁘면 다음 모델로.
     const order = tier==='quick' ? GEMINI_QUICK : GEMINI_MODELS;
-    const chain = [...new Set([...(c.model ? [c.model] : []), ...order])];
+    const userModel = c.model && !/gemini-2\.5/.test(c.model) ? [c.model] : [];   // 설정에 2.5가 적혀 있어도 무시 (새 키에선 안 됨)
+    const chain = [...new Set([...userModel, ...order])];
     const contents = [{ role:'user', parts:[ ...parts.map(p => ({inline_data:{mime_type:'image/jpeg', data:p}})), ...(audio ? [{inline_data:{mime_type:audio.mime, data:audio.data}}] : []), {text: prompt} ] }];
     let r, lastMsg = '';
     for(let i=0;i<chain.length;i++){
@@ -1099,6 +1100,7 @@ const AI = {
       const retryable = !r || r.status===404 || r.status===503 || r.status===429 || r.status>=500;
       if(retryable && i < chain.length-1){ console.warn('Gemini', model, r ? r.status : 'timeout', '→ 다음 모델로', chain[i+1]); continue }
       if(r && r.status===429) throw {code:'rate_limited'};
+      if(!r || r.status===503 || r.status>=500) throw {code:'upstream_error', message:'AI 서버가 지금 바빠요(' + (lastMsg||'응답 없음').slice(0,80) + '). 잠시 후 다시 눌러 주세요.'};
       throw {code:'upstream_error', message:lastMsg};
     }
     const j = await r.json();
