@@ -771,6 +771,9 @@ body.mode-d main{padding-left:max(8px,env(safe-area-inset-left,0px));padding-rig
           <label class="f">순서
             <select id="qOrder"><option value="shuffle">랜덤으로 섞기</option><option value="keep">단어장 순서대로</option></select>
           </label>
+          <label class="f">빈칸 문제 비율
+            <select id="qBlank"><option value="0">없음</option><option value="20">약 20%</option><option value="30" selected>약 30%</option><option value="50">약 50%</option></select>
+          </label>
         </div>
       </div>
 
@@ -910,7 +913,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.24 21:14';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.25 17:40';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest'];   // 2.5는 새 키에서 안 되므로 뺐어요
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1386,6 +1389,7 @@ function updateCount(){
   LS.set('words', wordsText()); LS.set('wordsOk', !!S.v.wordsOk); refreshButtons();
 }
 $('wordList').value = LS.get('words', '');
+$('qBlank').value = LS.get('qBlank', '30'); $('qBlank').onchange = () => LS.set('qBlank', $('qBlank').value);
 $('wordList').addEventListener('input', () => { S.v.wordsOk = false; updateCount(); });
 /* 단어 칸 편집기: 칸을 누르면 그 자리에서 바로 고쳐요 (텍스트 상자는 숨겨 두고 서로 맞춰 둡니다) */
 function rowsToText(){ return [...$('wordRows').querySelectorAll('.wrow')].map(r => { const en = r.querySelector('.en').value.trim(), ko = r.querySelector('.ko').value.trim(), ex = r.querySelector('.ex').value.trim(); if(!en && !ko && !ex) return ''; return en + (ko ? ' = ' + ko : '') + (ex ? ' | ' + ex : '') }).filter(Boolean).join('\n') }
@@ -1464,7 +1468,7 @@ const TYPE_TEXT = {
   bank:'섹션 맨 위에 <보기> 단어 묶음(그 섹션 문항들의 정답 영어 단어 전부를 순서를 섞어서 choices 배열에)을 한 번만 두고, 각 문항은 그 단어가 들어갈 자리를 빈칸(______)으로 비운 쉬운 영어 문장(괄호 안에 한국어 뜻 힌트)으로 만들어 보기에서 골라 쓰게 하는 문제로',
 };
 async function makeTest(words, label){
-  const type = $('qType').value, order = $('qOrder').value;
+  const type = $('qType').value, order = $('qOrder').value, blankPct = parseInt($('qBlank').value, 10) || 0;
   let list = words.slice(); if(order==='shuffle') shuffle(list);
   const want = parseInt($('qCount').value,10); if(want>0 && want<list.length) list = list.slice(0,want);
   const samples = effectiveSamples();
@@ -1481,6 +1485,7 @@ ${styleText}
 
 규칙:
 - 아래 목록의 단어를 ${list.length}개 모두, 각각 정확히 한 번씩 출제합니다(총 ${list.length}문항). 목록에 없는 단어를 출제하지 않습니다. 문항 순서는 아래 목록 순서를 따릅니다.
+${(type==='blank' || type==='bank') ? '' : (blankPct <= 0 ? '- 빈칸 채우기(문장 완성·보기 고르기) 문항은 만들지 않습니다. 영어→뜻 쓰기와 뜻→영어 쓰기만 냅니다.' : `- 빈칸 채우기(문장 완성·보기 고르기) 문항은 전체의 약 ${blankPct}%(최대 ${Math.max(1, Math.ceil(list.length*blankPct/100))}문항)까지만 만들고, 나머지는 영어→뜻 쓰기와 뜻→영어 쓰기로 냅니다. 예시 시험지에 빈칸 문항이 더 많더라도 이 비율을 지킵니다.`)}
 - 각 문항의 answer는 학생이 써야 할 정답 한 개입니다. accept에는 정답으로 인정할 다른 표현(동의어, 다른 한국어 표현, 띄어쓰기 차이 등)을 넣습니다.
 - answer_lang은 학생이 써야 하는 언어입니다: 한국어 뜻을 쓰면 "ko", 영어를 쓰면 "en".
 - 보기(선택지)가 필요한 유형이면 보기는 각 문항 안에 적지 않습니다. 대신 섹션의 choices 배열에 한 번만 넣습니다(그 섹션 문항들의 정답을 모두 모아 순서를 섞은 것). 문항의 prompt에는 빈칸이 있는 문장이나 뜻만 적고 보기를 반복하지 않습니다. answer에는 번호나 기호 대신 정답 단어 자체를 적습니다.
