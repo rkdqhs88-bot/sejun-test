@@ -81,6 +81,17 @@ main::-webkit-scrollbar{width:8px}main::-webkit-scrollbar-thumb{background:var(-
 .thumb{position:relative;width:110px;height:110px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--soft)}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .thumb button{position:absolute;top:4px;right:4px;width:30px;height:30px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;font-size:16px;line-height:1}
+.thumb img{cursor:pointer}
+.thumb .cut{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.55);color:#fff;border-radius:8px;font-size:12px;padding:2px 7px;pointer-events:none}
+.cropper{position:fixed;inset:0;z-index:40;background:rgba(10,14,24,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px}
+.cropper .ctip{color:#fff;font-size:15px;text-align:center}
+.cropper canvas{max-width:100%;touch-action:none;border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.5);cursor:crosshair}
+.cropper .acts{justify-content:center}
+.busy{position:fixed;inset:0;z-index:35;background:rgba(20,25,40,.45);display:grid;place-items:center;padding:16px}
+.busycard{background:var(--panel);border-radius:18px;padding:22px 26px;min-width:min(92vw,380px);text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;align-items:center;gap:10px}
+.busycard .spin{width:34px;height:34px;border-width:4px}
+.busycard b{font-size:19px}
+.busycard .sec{color:var(--muted);font-variant-numeric:tabular-nums}
 textarea,select,input[type=number],input[type=text],input[type=password]{font:inherit;color:var(--fg);background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:46px}
 textarea{width:100%;min-height:170px;resize:vertical;line-height:1.7;font-size:16px}
 label.f{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--muted);font-weight:500}
@@ -888,6 +899,17 @@ body.mode-d main{padding-left:max(8px,env(safe-area-inset-left,0px));padding-rig
     <div class="acts" style="justify-content:center"><button class="btn primary big" id="rvOk">넣기 ✨</button></div>
   </div>
 </div>
+<div class="busy" id="busy" hidden role="dialog" aria-modal="true"><div class="busycard"><span class="spin"></span><b id="busyMsg">선생님이 채점하고 있어요…</b><span class="sec" id="busySec">0초</span><span class="help" style="margin:0">끝나면 결과가 바로 떠요. 잠시만 기다려 주세요.</span><button class="btn" id="busyStop">중지</button></div></div>
+<div class="cropper" id="cropper" hidden role="dialog" aria-modal="true">
+  <div class="ctip">손가락이나 펜으로 <b>드래그</b>해서 쓸 부분을 네모로 고르세요. 네모 안을 끌면 옮겨지고, 모서리를 당기면 크기가 바뀌어요.</div>
+  <canvas id="cropCv"></canvas>
+  <div class="acts">
+    <button class="btn primary big" id="cropApply">✂️ 이 부분만 쓰기</button>
+    <button class="btn" id="cropAll">사진 전체 쓰기</button>
+    <button class="btn" id="cropOrig" hidden>원본으로 되돌리기</button>
+    <button class="btn" id="cropCancel">취소</button>
+  </div>
+</div>
 <div class="celebrate" id="celebrate" hidden role="dialog" aria-modal="true" aria-labelledby="celTitle">
   <canvas id="confetti"></canvas>
   <div class="celcard">
@@ -913,7 +935,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.25 17:40';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.25 17:54';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest'];   // 2.5는 새 키에서 안 되므로 뺐어요
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -938,6 +960,9 @@ const scrolls = new Map();  // pointerId -> lastY
 /* ---------- ui helpers ---------- */
 let toastT;
 function toast(msg, ms=3600){ let t = $('toast'); if(!t){ t = document.createElement('div'); t.id='toast'; t.className='toast'; t.setAttribute('role','status'); document.body.appendChild(t) } t.textContent = msg; t.hidden=false; clearTimeout(toastT); toastT = setTimeout(()=>{ t.hidden = true }, ms) }
+let busyT = null;
+function busyOn(msg){ $('busyMsg').textContent = msg; $('busySec').textContent = '0초'; $('busy').hidden = false; const t0 = Date.now(); clearInterval(busyT); busyT = setInterval(() => { $('busySec').textContent = Math.round((Date.now()-t0)/1000) + '초' }, 1000) }
+function busyOff(){ clearInterval(busyT); $('busy').hidden = true }
 function status(el, msg, busy){
   clearInterval(el._tick); el.innerHTML='';
   if(busy){ const s=document.createElement('span'); s.className='spin'; el.appendChild(s) }
@@ -1236,6 +1261,49 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 async function speakTimes(text, n, lang='ko-KR'){ for(let i=0;i<n;i++){ await speak(text, lang); if(i<n-1) await wait(1300) } }
 
 /* ---------- photos ---------- */
+/* 사진 자르기: 드래그로 네모를 그리고(옮기기·모서리 조절 가능) 그 부분만 새 사진으로 바꿔요 */
+function cropPhoto(list, i, render){
+  const f = list[i]; if(!f) return;
+  const ov = $('cropper'), cv = $('cropCv'), ctx = cv.getContext('2d');
+  const img = new Image(); const url = URL.createObjectURL(f);
+  let sc = 1, rect = null, drag = null;
+  const H = 14;   // 모서리 손잡이 크기(px)
+  const draw = () => {
+    ctx.clearRect(0,0,cv.width,cv.height); ctx.drawImage(img, 0, 0, cv.width, cv.height);
+    if(!rect) return;
+    ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.drawImage(img, rect.x/sc, rect.y/sc, rect.w/sc, rect.h/sc, rect.x, rect.y, rect.w, rect.h);
+    ctx.strokeStyle = '#4f8cff'; ctx.lineWidth = 3; ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#2b4f9e'; ctx.lineWidth = 2;
+    for(const [cx, cy] of corners()){ ctx.beginPath(); ctx.arc(cx, cy, H, 0, Math.PI*2); ctx.fill(); ctx.stroke() }
+  };
+  const corners = () => rect ? [[rect.x, rect.y], [rect.x+rect.w, rect.y], [rect.x, rect.y+rect.h], [rect.x+rect.w, rect.y+rect.h]] : [];
+  const fit = () => { const maxW = Math.min(window.innerWidth - 24, 1200), maxH = window.innerHeight - 190; sc = Math.min(maxW/img.width, maxH/img.height, 1); cv.width = Math.max(1, Math.round(img.width*sc)); cv.height = Math.max(1, Math.round(img.height*sc)); cv.style.width = cv.width + 'px'; cv.style.height = cv.height + 'px'; draw() };
+  const pos = e => { const r = cv.getBoundingClientRect(); return { x: Math.max(0, Math.min(cv.width, (e.clientX - r.left) * cv.width / r.width)), y: Math.max(0, Math.min(cv.height, (e.clientY - r.top) * cv.height / r.height)) } };
+  const norm = () => { if(!rect) return; if(rect.w < 0){ rect.x += rect.w; rect.w = -rect.w } if(rect.h < 0){ rect.y += rect.h; rect.h = -rect.h } rect.x = Math.max(0, rect.x); rect.y = Math.max(0, rect.y); rect.w = Math.min(cv.width - rect.x, rect.w); rect.h = Math.min(cv.height - rect.y, rect.h) };
+  cv.onpointerdown = e => { e.preventDefault(); try{ cv.setPointerCapture(e.pointerId) }catch{} const p = pos(e);
+    if(rect){ const cs = corners(); for(let k=0;k<4;k++){ if(Math.hypot(p.x-cs[k][0], p.y-cs[k][1]) <= H*1.6){ drag = { type:'corner', k }; return } }
+      if(p.x > rect.x && p.x < rect.x+rect.w && p.y > rect.y && p.y < rect.y+rect.h){ drag = { type:'move', dx: p.x-rect.x, dy: p.y-rect.y }; return } }
+    rect = { x:p.x, y:p.y, w:0, h:0 }; drag = { type:'new' }; draw() };
+  cv.onpointermove = e => { if(!drag) return; e.preventDefault(); const p = pos(e);
+    if(drag.type==='new'){ rect.w = p.x - rect.x; rect.h = p.y - rect.y }
+    else if(drag.type==='move'){ rect.x = Math.max(0, Math.min(cv.width - rect.w, p.x - drag.dx)); rect.y = Math.max(0, Math.min(cv.height - rect.h, p.y - drag.dy)) }
+    else { const r2 = rect.x + rect.w, b2 = rect.y + rect.h; if(drag.k===0){ rect.w = r2 - p.x; rect.h = b2 - p.y; rect.x = p.x; rect.y = p.y } else if(drag.k===1){ rect.w = p.x - rect.x; rect.h = b2 - p.y; rect.y = p.y } else if(drag.k===2){ rect.w = r2 - p.x; rect.x = p.x; rect.h = p.y - rect.y } else { rect.w = p.x - rect.x; rect.h = p.y - rect.y } }
+    draw() };
+  cv.onpointerup = cv.onpointercancel = e => { if(!drag) return; drag = null; norm(); if(rect && (rect.w < 16 || rect.h < 16)) rect = null; draw() };
+  const close = () => { ov.hidden = true; cv.onpointerdown = cv.onpointermove = cv.onpointerup = cv.onpointercancel = null; URL.revokeObjectURL(url); window.removeEventListener('resize', fit) };
+  const replace = nf => { list[i] = nf; render(); refreshButtons(); close() };
+  $('cropApply').onclick = () => { if(!rect){ toast('먼저 드래그해서 네모를 그려 주세요.'); return }
+    const c = document.createElement('canvas'); const sx = Math.round(rect.x/sc), sy = Math.round(rect.y/sc), sw = Math.max(1, Math.round(rect.w/sc)), sh = Math.max(1, Math.round(rect.h/sc)); c.width = sw; c.height = sh;
+    c.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+    c.toBlob(b => { if(!b){ toast('자르기에 실패했어요.'); return } const nf = new File([b], (f.name||'photo').replace(/\.\w+$/, '') + '-crop.jpg', {type:'image/jpeg'}); nf._orig = f._orig || f; replace(nf); toast('사진을 잘라서 바꿨어요. 썸네일을 다시 누르면 또 조절할 수 있어요.', 2600) }, 'image/jpeg', 0.92) };
+  $('cropAll').onclick = () => { rect = null; draw(); if(f._orig){ replace(f._orig) } else close() };
+  $('cropOrig').hidden = !f._orig; $('cropOrig').onclick = () => { if(f._orig) replace(f._orig) };
+  $('cropCancel').onclick = close;
+  img.onload = () => { ov.hidden = false; fit(); window.addEventListener('resize', fit) };
+  img.onerror = () => { URL.revokeObjectURL(url); toast('이 사진은 열 수 없어요.') };
+  img.src = url;
+}
 function bindPhotos(list, camBtn, pickBtn, camIn, pickIn, thumbsEl){
   const add = files => { for(const f of files){ if(f.type.startsWith('image/')) list.push(f) } render(); refreshButtons() };
   const render = () => {
@@ -1243,8 +1311,10 @@ function bindPhotos(list, camBtn, pickBtn, camIn, pickIn, thumbsEl){
     list.forEach((f,i) => {
       const d = document.createElement('div'); d.className='thumb';
       const img = document.createElement('img'); img.alt = f.name; img.src = URL.createObjectURL(f); img.onload = () => URL.revokeObjectURL(img.src);
+      img.title = '눌러서 쓸 부분만 자르기'; img.onclick = () => cropPhoto(list, i, render);
+      const cut = document.createElement('span'); cut.className='cut'; cut.textContent = f._orig ? '✂️ 잘린 사진' : '✂️ 자르기';
       const x = document.createElement('button'); x.textContent='×'; x.title='사진 빼기'; x.onclick = () => { list.splice(i,1); render(); refreshButtons() };
-      d.append(img, x); thumbsEl.appendChild(d);
+      d.append(img, cut, x); thumbsEl.appendChild(d);
     });
   };
   $(camBtn).onclick = () => $(camIn).click(); $(pickBtn).onclick = () => $(pickIn).click();
@@ -1464,9 +1534,10 @@ const TYPE_TEXT = {
   en2ko:'영어 단어를 보고 한국어 뜻을 쓰는 문제만',
   ko2en:'한국어 뜻을 보고 영어 단어(스펠링)를 쓰는 문제만',
   mix:'영어→뜻 쓰기와 뜻→영어 쓰기를 반반 섞어서',
-  blank:'단어가 들어갈 자리를 빈칸(______)으로 비운 쉬운 영어 문장을 주고, 괄호 안에 한국어 뜻을 힌트로 적어 빈칸에 들어갈 영어 단어를 쓰게 하는 문제로(보기 없음)',
-  bank:'섹션 맨 위에 <보기> 단어 묶음(그 섹션 문항들의 정답 영어 단어 전부를 순서를 섞어서 choices 배열에)을 한 번만 두고, 각 문항은 그 단어가 들어갈 자리를 빈칸(______)으로 비운 쉬운 영어 문장(괄호 안에 한국어 뜻 힌트)으로 만들어 보기에서 골라 쓰게 하는 문제로',
+  blank:'단어가 들어갈 자리를 빈칸(______)으로 비운 쉬운 영어 문장을 주고 빈칸에 들어갈 영어 단어를 쓰게 하는 문제로(보기 없음, 한국어 뜻 힌트 없음)',
+  bank:'섹션 맨 위에 <보기> 단어 묶음(그 섹션 문항들의 정답 영어 단어 전부를 순서를 섞어서 choices 배열에)을 한 번만 두고, 각 문항은 그 단어가 들어갈 자리를 빈칸(______)으로 비운 쉬운 영어 문장(한국어 뜻 힌트 없음)으로 만들어 보기에서 골라 쓰게 하는 문제로',
 };
+function stripBlankHint(t){ t = String(t||''); if(!/_{3,}/.test(t)) return t; return t.replace(/\s*[(（\[]\s*[^()（）\[\]]*[가-힣][^()（）\[\]]*[)）\]]\s*/g, ' ').replace(/\s{2,}/g, ' ').trim() }   // 빈칸 문장 속 한국어 괄호 힌트는 지워요
 async function makeTest(words, label){
   const type = $('qType').value, order = $('qOrder').value, blankPct = parseInt($('qBlank').value, 10) || 0;
   let list = words.slice(); if(order==='shuffle') shuffle(list);
@@ -1494,7 +1565,7 @@ ${(type==='blank' || type==='bank') ? '' : (blankPct <= 0 ? '- 빈칸 채우기(
 - 지시문(instruction)은 시험지에 인쇄되는 문구로, 학생이 읽기 쉽게 한국어로 씁니다.
 - prompt, answer, word에는 문항 번호("1.", "(3)" 등)를 절대 넣지 않습니다. 번호는 앱이 따로 붙입니다.
 - 빈칸 문장(blank/보기 유형)을 만들 때, 단어 목록에 "예문:"이 붙어 있는 단어는 반드시 그 예문을 그대로 쓰고 그 단어 자리만 빈칸(______)으로 바꿉니다(단어가 문장 안에서 apples처럼 다른 형태면 그 형태 그대로가 정답이고 answer도 그 형태로 적습니다). 예문이 없는 단어만 아래 규칙으로 새 문장을 만듭니다.
-- 새 문장을 만드는 규칙: 학생은 초등학교 1학년입니다. (1) 문장은 3~7단어의 아주 쉬운 영어로, 빈칸 단어 외에는 I, you, like, have, is, a, the, my, big, red 같은 기초 단어만 씁니다. (2) 빈칸에 들어갈 수 있는 단어가 목록의 그 단어 하나뿐이도록 문장을 만듭니다(예: "I eat an ______." 처럼 여러 단어가 가능하면 안 되고 "A red ______ grows on a tree. (사과)"처럼 뜻이 정해지게). (3) 빈칸은 밑줄 6개(______)로 표시하고, 문장 뒤 괄호 안에 빈칸 단어의 한국어 뜻을 적습니다. (4) 빈칸 단어는 문장에 다른 형태로라도 다시 나오면 안 됩니다. (5) 같은 시험 안에서 문장 패턴을 다양하게 합니다.
+- 새 문장을 만드는 규칙: 학생은 초등학교 1학년입니다. (1) 문장은 3~7단어의 아주 쉬운 영어로, 빈칸 단어 외에는 I, you, like, have, is, a, the, my, big, red 같은 기초 단어만 씁니다. (2) 빈칸에 들어갈 수 있는 단어가 목록의 그 단어 하나뿐이도록 문장을 만듭니다(예: "I eat an ______." 처럼 여러 단어가 가능하면 안 되고 "A red ______ grows on a tree. (사과)"처럼 뜻이 정해지게). (3) 빈칸은 밑줄 6개(______)로 표시합니다. 문장 뒤나 안에 빈칸 단어의 한국어 뜻·힌트를 괄호로 적지 않습니다(정답이 그대로 드러나므로). 예시 시험지에 그런 괄호가 있어도 넣지 않습니다. (4) 빈칸 단어는 문장에 다른 형태로라도 다시 나오면 안 됩니다. (5) 같은 시험 안에서 문장 패턴을 다양하게 합니다.
 - phonics는 word의 철자를 파닉스 단위로 왼쪽부터 빠짐없이 나눈 배열입니다. 한 글자, 또는 sh, ch, th, ee, oo, ai, igh, ck 같은 소리 묶음이 한 칸입니다. 모든 letters를 이어 붙이면 word와 같아야 합니다(공백은 letters " "로 한 칸). say는 영어 음성합성기가 그 "소리"를 내도록 적은 발음용 철자입니다. 글자 이름이 아니라 소리입니다: p→"puh", b→"buh", t→"tuh", a(apple)→"ah", e(egg)→"eh", i(ink)→"ih", o(ox)→"aw", u(up)→"uh", s→"sss", m→"mmm", sh→"shh", ee→"ee", 묵음(magic e 등)→"". tip은 그 묶음에 대한 아주 짧은 한국어 설명(없으면 "")입니다.
 
 단어 목록:
@@ -1510,7 +1581,7 @@ ${list.map((w,i)=>`${i+1}. ${w.word}${w.meaning?' = '+w.meaning:''}${w.example?'
   for(const s of secs){
     const qs = (Array.isArray(s?.questions)?s.questions:[]).filter(q=>q && q.prompt!=null && q.answer!=null).map(q => {
       const word = stripNum(q.word||q.prompt); const fromList = list.find(w => w.word.toLowerCase()===word.toLowerCase());
-      return { n: ++n, word, meaning: stripNum(q.meaning || fromList?.meaning || (q.answer_lang==='ko' ? q.answer : '')), prompt: stripNum(q.prompt), answer: stripNum(q.answer),
+      return { n: ++n, word, meaning: stripNum(q.meaning || fromList?.meaning || (q.answer_lang==='ko' ? q.answer : '')), prompt: stripBlankHint(stripNum(q.prompt)), answer: stripNum(q.answer),
         accept: Array.isArray(q.accept)?q.accept.map(String):[], answer_lang: q.answer_lang==='en'?'en':'ko', hint: q.hint?String(q.hint):'',
         phonics: Array.isArray(q.phonics) ? q.phonics.filter(g=>g && g.letters!=null).map(g => ({letters:String(g.letters), say:String(g.say??''), tip:String(g.tip||'')})) : [] } });
     const choices = Array.isArray(s?.choices) ? s.choices.map(String).map(x=>x.trim()).filter(Boolean) : [];
@@ -1607,7 +1678,7 @@ $('gradeBtn').onclick = async () => {
   for(const q of qs){ if(hasInk(String(q.n))) toCheck.push(q); else grades[q.n] = {read:'', correct:false, sure:true, empty:true} }
   if(!toCheck.length){ toast('아직 쓴 답이 없어요. 답을 쓴 다음 채점해 주세요.'); return }
   $('gradeBtn').disabled = true;
-  status($('gradeStatus'), '선생님이 답안을 읽고 채점하고 있어요… (20~60초)', true);
+  status($('gradeStatus'), '선생님이 답안을 읽고 채점하고 있어요… (20~60초)', true); busyOn('선생님이 답안을 읽고 채점하고 있어요…');
   try{
     const maxCount = await imageLimit();
     const per = Math.max(8, Math.ceil(toCheck.length / maxCount));
@@ -1644,7 +1715,7 @@ ${JSON.stringify(key)}
     applyGrades(); status($('gradeStatus'), '');
     pushHistory('historyV', scoreV()); scrollTop(true); celebrate(scoreV(), '영단어 시험', true);
   }catch(e){ status($('gradeStatus'), errCopy(e)); if(e?.code!=='cancelled') toast(errCopy(e)) }
-  finally{ refreshButtons() }
+  finally{ busyOff(); refreshButtons() }
 };
 function scoreV(){ const qs = allQ(); let ok=0, unsure=0; for(const q of qs){ const g = S.v.grades?.[q.n]; if(g?.correct) ok++; if(g && g.sure===false) unsure++ } return { total:qs.length, ok, unsure, pct: qs.length ? Math.round(ok/qs.length*100) : 0 } }
 function applyGrades(){
@@ -1884,7 +1955,7 @@ function renderDictDone(){
 }
 $('dGrade').onclick = async () => {
   $('dGrade').disabled = true;
-  status($('dGradeStatus'), '선생님이 받아쓰기를 채점하고 있어요… (20~60초)', true);
+  status($('dGradeStatus'), '선생님이 받아쓰기를 채점하고 있어요… (20~60초)', true); busyOn('선생님이 받아쓰기를 채점하고 있어요…');
   try{
     const rows = S.d.order.map((idx,pos) => ({key:'d:'+pos, pos, text:S.d.items[idx]}));
     const grades = {}; const toCheck = rows.filter(r => { if(hasInk(r.key)) return true; grades[r.pos] = {read:'', correct:false, sure:true, empty:true}; return false });
@@ -1922,7 +1993,7 @@ read에는 띄어쓰기와 문장부호까지 학생이 쓴 그대로 적습니�
     S.d.grades = grades; S.d.phase = 'graded'; saveDict();
     status($('dGradeStatus'), ''); renderDictResults(); pushHistory('historyD', scoreD()); scrollTop(true); celebrate(scoreD(), '받아쓰기');
   }catch(e){ status($('dGradeStatus'), errCopy(e)); if(e?.code!=='cancelled') toast(errCopy(e)) }
-  finally{ refreshButtons() }
+  finally{ busyOff(); refreshButtons() }
 };
 function judgeDict(read, answer){   // 글자·띄어쓰기·문장부호를 그대로 비교 (AI는 읽기만, 판정은 여기서)
   const norm = t => String(t||'').replace(/\s+/g, ' ').trim();
@@ -2071,7 +2142,7 @@ $('sPeek').onclick = () => { const b = $('sPeekBox'); b.hidden = !b.hidden; if(!
 $('sGrade').onclick = async () => {
   finishRecording();   // 채점을 누르면 녹음은 자동으로 멈춰요
   if(!S.s.wav && !S.s.liveText){ toast(errCopy({code:'no_recording'})); return }
-  $('sGrade').disabled = true; status($('sGradeStatus'), '선생님이 녹음을 듣고 채점하는 중이에요… (20~60초)', true);
+  $('sGrade').disabled = true; status($('sGradeStatus'), '선생님이 녹음을 듣고 채점하는 중이에요… (20~60초)', true); busyOn('선생님이 녹음을 듣고 채점하는 중이에요…');
   try{
     const key = S.s.lines.map((t,i) => ({n:i+1, text:t}));
     // 1단계: 녹음을 "있는 그대로" 받아 적기만 (대본은 보여 주지 않아요 → 짐작으로 다 맞았다고 할 수 없게)
@@ -2092,7 +2163,7 @@ $('sGrade').onclick = async () => {
     S.s.result = { transcript, lines:res, t:Date.now() }; S.s.phase = 'graded'; saveScript();
     renderScriptResult(); const sum = scoreS(); pushHistory('historyS', sum); status($('sGradeStatus'), ''); scrollTop(true); celebrate(sum, '스크립트 외우기', true);
   }catch(e){ status($('sGradeStatus'), errCopy(e)); if(e?.code!=='cancelled') toast(errCopy(e)) }
-  finally{ refreshButtons() }
+  finally{ busyOff(); refreshButtons() }
 };
 const _tok = t => String(t||'').toLowerCase().replace(/[’']/g, "'").replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter(Boolean).map(w => w.replace(/^'+|'+$/g, ''));
 const _lev = (a, b) => { const m = a.length, n = b.length; if(Math.abs(m-n) > 2) return 9; let prev = Array.from({length:n+1}, (_,j) => j); for(let i=1;i<=m;i++){ const cur = [i]; for(let j=1;j<=n;j++) cur[j] = Math.min(prev[j]+1, cur[j-1]+1, prev[j-1] + (a[i-1]===b[j-1] ? 0 : 1)); prev = cur } return prev[n] };
@@ -2182,6 +2253,7 @@ async function practiceBonus(){
 function closeCelebrate(){ $('celebrate').hidden = true; if(confettiStop){ confettiStop(); confettiStop = null } stopSpeech(); $('celTitle').classList.remove('unlock');
   if(Play.pendingLv){ const lv = Play.pendingLv; Play.pendingLv = null; if(POOLS[lv]){ Play.data.lv = lv; Play.save(); Play.render() } } }
 $('celOk').onclick = closeCelebrate;
+$('busyStop').onclick = () => { try{ S.ctl && S.ctl.abort() }catch{} busyOff() };
 $('celebrate').addEventListener('click', e => { if(e.target===$('celebrate')) closeCelebrate() });
 
 let actx = null;
