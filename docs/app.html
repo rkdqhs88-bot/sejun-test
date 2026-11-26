@@ -44,7 +44,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-
 .bar,.tools,main{padding-left:max(16px,env(safe-area-inset-left,0px),calc((100% - 980px)/2));padding-right:max(16px,env(safe-area-inset-right,0px),calc((100% - 980px)/2))}
 .wrap{height:100%;display:flex;flex-direction:column;min-height:0}
 main{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:48px}
-body.mode-p main{padding-bottom:10px;overflow:hidden;display:flex;flex-direction:column}
+body.mode-p main{padding-bottom:10px;padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px));overflow:hidden;display:flex;flex-direction:column}
 body.mode-p main > section[hidden]{display:none}
 button{font:inherit;color:inherit}
 h1,h2,h3{margin:0;text-wrap:balance}
@@ -935,7 +935,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.25 18:40';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.26 21:44';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest'];   // 2.5는 새 키에서 안 되므로 뺐어요
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1258,7 +1258,8 @@ function deviceSpeak(text, lang, rate){
   });
 }
 const wait = ms => new Promise(r => setTimeout(r, ms));
-async function speakTimes(text, n, lang='ko-KR'){ for(let i=0;i<n;i++){ await speak(text, lang); if(i<n-1) await wait(1300) } }
+async function speakTimes(text, n, lang='ko-KR'){ const slow = Math.max(0.5, (SET.rate||1) * 0.8); for(let i=0;i<n;i++){ const t = i===0 ? text : text.replace(/ +/g, ', ');   // 두 번째부터는 띄어쓰기마다 살짝 쉬어 읽어요
+    await speak(t, lang, slow); if(i<n-1) await wait(1500) } }
 
 /* ---------- photos ---------- */
 /* 사진 자르기: 드래그로 네모를 그리고(옮기기·모서리 조절 가능) 그 부분만 새 사진으로 바꿔요 */
@@ -1304,8 +1305,10 @@ function cropPhoto(list, i, render){
   img.onerror = () => { URL.revokeObjectURL(url); toast('이 사진은 열 수 없어요.') };
   img.src = url;
 }
-function bindPhotos(list, camBtn, pickBtn, camIn, pickIn, thumbsEl){
-  const add = files => { for(const f of files){ if(f.type.startsWith('image/')) list.push(f) } render(); refreshButtons() };
+function bindPhotos(list, camBtn, pickBtn, camIn, pickIn, thumbsEl, onReplace){
+  const add = files => { const fresh = [...files].filter(f => f.type.startsWith('image/')); if(!fresh.length) return;
+    list.length = 0; for(const f of fresh) list.push(f);   // 새로 찍으면 전에 올린 사진은 지워지고 새 사진만 남아요
+    if(onReplace) onReplace(); render(); refreshButtons() };
   const render = () => {
     thumbsEl.innerHTML='';
     list.forEach((f,i) => {
@@ -1322,7 +1325,7 @@ function bindPhotos(list, camBtn, pickBtn, camIn, pickIn, thumbsEl){
   $(pickIn).onchange = e => { add(e.target.files); e.target.value='' };
   return render;
 }
-bindPhotos(S.v.wordPhotos, 'wordCam','wordPick','wordCamIn','wordPickIn', $('wordThumbs'));
+bindPhotos(S.v.wordPhotos, 'wordCam','wordPick','wordCamIn','wordPickIn', $('wordThumbs'), () => { $('wordList').value = ''; S.v.wordsOk = false; LS.set('wordsOk', false); updateCount(); renderWordRows(); status($('wordStatus'), '새 사진이에요. ✨ 사진에서 단어 읽기를 눌러 주세요.') });
 const renderSampThumbs = bindPhotos(S.v.samplePhotos, 'sampCam','sampPick','sampCamIn','sampPickIn', $('sampThumbs'));
 
 /* saved test style: the last sample photos, kept as small JPEGs until new ones are used */
@@ -1344,7 +1347,7 @@ async function rememberStyle(files){
     LS.set('sampleStyle', {images, t:Date.now()}); S.v.samplePhotos.length = 0; renderSampThumbs(); renderSavedStyle() }catch{}
 }
 renderSavedStyle();
-bindPhotos(S.d.photos, 'dCam','dPick','dCamIn','dPickIn', $('dThumbs'));
+bindPhotos(S.d.photos, 'dCam','dPick','dCamIn','dPickIn', $('dThumbs'), () => { $('dictList').value = ''; $('dictList').dispatchEvent(new Event('input')); status($('dStatus'), '새 사진이에요. ✨ 사진에서 문장 읽기를 눌러 주세요.') });
 
 /* ---------- drawing engine (shared) ---------- */
 function setupCanvas(ans){
@@ -1518,7 +1521,7 @@ async function readWordsFromPhotos(){
   const lines = arr.filter(w => w && w.word).map(w => `${String(w.word).trim()} = ${String(w.meaning||'').trim()}${w.example && String(w.example).trim() ? ' | ' + String(w.example).trim() : ''}`);
   if(!lines.length) throw {code:'empty_completion'};
   const cur = wordsText().trim();
-  $('wordList').value = (cur ? cur + '\n' : '') + lines.join('\n');
+  $('wordList').value = lines.join('\n');   // 새로 읽은 것만 남겨요
   S.v.wordsOk = false; LS.set('wordsOk', false); updateCount(); renderWordRows();
   status($('wordStatus'), `단어 ${lines.length}개를 읽었어요. 칸을 눌러 고친 뒤 ✅ 단어 목록 확정을 눌러 주세요.`);
   return lines.length;
@@ -1890,7 +1893,7 @@ $('readDict').onclick = async () => {
     const arr = (Array.isArray(data) ? data : (data?.items || [])).map(x => typeof x==='string' ? x : (x?.text || '')).map(s => s.trim()).filter(Boolean);
     if(!arr.length) throw {code:'empty_completion'};
     const cur = $('dictList').value.trim();
-    $('dictList').value = (cur ? cur + '\n' : '') + arr.join('\n'); $('dictList').dispatchEvent(new Event('input'));
+    $('dictList').value = arr.join('\n'); $('dictList').dispatchEvent(new Event('input'));   // 새로 읽은 것만 남겨요
     status($('dStatus'), `${arr.length}개를 읽었어요. 틀린 글자가 있으면 아래에서 고쳐 주세요.`);
   }catch(e){ status($('dStatus'), errCopy(e)); if(e?.code!=='cancelled') toast(errCopy(e)) }
   finally{ refreshButtons() }
@@ -1975,13 +1978,16 @@ $('dGrade').onclick = async () => {
 - 글자 모양은 초등 1학년 손글씨 기준으로 너그럽게 읽습니다: ㅇ이 완전히 닫히지 않았거나, 획이 살짝 떨어져 있거나, 글자 크기가 들쭉날쭉하거나, 줄에서 벗어나도 전체 모양이 그 글자면 그 글자로 읽습니다.
 - 하지만 실제로 쓴 글자와 다른 글자로 고쳐 읽지 않습니다. 받침이 다르게 보이면 다르게 보이는 대로, 글자가 빠졌으면 빠진 대로, 더 썼으면 더 쓴 대로 적습니다. 자연스러운 문장으로 다듬지 않습니다.
 - 마침표(.), 물음표(?), 느낌표(!), 쉼표(,)는 학생이 쓴 것만 적습니다. 안 썼으면 넣지 않습니다.
-- 상자가 비어 있으면 read는 "" 입니다.
+- 상자가 비어 있으면 cells는 모두 "" 이고 read는 "" 입니다.
 - 글씨가 흐리거나 두 가지로 읽힐 수 있으면 sure를 false로 하고 가장 가능성이 높은 쪽으로 적습니다.
+- cells: 왼쪽 칸부터 차례로, 칸마다 그 칸에 쓰인 글자 하나(한글 한 글자, 또는 마침표 같은 부호)를 넣고, 빈 칸은 "" 로 넣습니다. 13칸이면 13개, 두 줄(26칸)이면 26개입니다. 한 칸에 두 글자가 몰려 있으면 그 두 글자를 그 칸에 함께 넣습니다. 칸을 하나씩 따로 보고 적으세요(앞뒤 글자로 짐작해서 자연스러운 낱말로 바꾸지 않습니다).
+- read: cells를 이어 붙인 것(빈 칸은 띄어쓰기 한 칸).
 
-반드시 JSON 배열만 출력하세요. 예: [{"n":1,"read":"나는 학교에 갑니다.","sure":true},{"n":2,"read":"토끼가 깡충깡충 뛰어요","sure":false}]`, images);
+반드시 JSON 배열만 출력하세요. 예: [{"n":1,"cells":["나","는","","학","교","에","","갑","니","다",".","",""],"read":"나는 학교에 갑니다.","sure":true}]`, images);
       const arr = Array.isArray(data) ? data : (data?.results || []);
       const byN = new Map(arr.map(r => [Number(r?.n), r]));
-      for(const r of toCheck){ const g = byN.get(r.pos+1); if(!g){ grades[r.pos] = {read:'', correct:false, sure:false, note:''}; continue } const read = String(g.read??''); const j = judgeDict(read, r.text); grades[r.pos] = {read, correct:j.correct, sure:g.sure!==false, note:j.note} }   // 맞고 틀림은 앱이 글자 단위로 직접 비교해요
+      for(const r of toCheck){ const g = byN.get(r.pos+1); if(!g){ grades[r.pos] = {read:'', correct:false, sure:false, note:''}; continue } let read = String(g.read??''); if(Array.isArray(g.cells) && g.cells.length){ read = g.cells.map(c => { c = String(c??'').trim(); return c === '' ? ' ' : c }).join('').replace(/\s+/g, ' ').trim() }   // 칸별로 읽은 걸 우선 (띄어쓰기 정확)
+        const j = judgeDict(read, r.text); grades[r.pos] = {read, correct:j.correct, sure:g.sure!==false, note:j.note} }   // 맞고 틀림은 앱이 글자 단위로 직접 비교해요
     }
     S.d.grades = grades; S.d.phase = 'graded'; saveDict();
     status($('dGradeStatus'), ''); renderDictResults(); pushHistory('historyD', scoreD()); scrollTop(true); celebrate(scoreD(), '받아쓰기');
@@ -1990,7 +1996,7 @@ $('dGrade').onclick = async () => {
 };
 function judgeDict(read, answer){   // 글자·띄어쓰기·문장부호를 그대로 비교 (AI는 읽기만, 판정은 여기서)
   const norm = t => String(t||'').replace(/\s+/g, ' ').trim();
-  let r = norm(read); const a = norm(answer);
+  let r = norm(read).replace(/^\d+\s*[.)]\s*/, ''); const a = norm(answer);
   if(!r) return { correct:false, note:'답을 쓰지 않았어요' };
   const endP = /[.?!,]$/; const aP = endP.test(a), rP = endP.test(r);
   if(!aP && rP) r = r.replace(/[.?!,\s]+$/, '');   // 정답에 없는 마침표는 봐줘요
@@ -2040,7 +2046,7 @@ $('dRedo').onclick = () => { $('dCountIn').value=''; startDict(S.d.items.slice()
 /* ---------- 스크립트 외우기 (대본 사진 → 정답지 → 마이크 녹음 → 음성 채점) ---------- */
 function scriptLines(){ return $('scriptList').value.split('\n').map(t => t.trim().replace(/^\d+[.)]\s*/, '')).filter(Boolean) }
 function saveScript(){ LS.set('script', { lines:S.s.lines, confirmed:S.s.confirmed, savedAt:S.s.savedAt, phase:S.s.phase, result:S.s.result, liveText:S.s.liveText, text:$('scriptList').value }) }
-bindPhotos(S.s.photos, 'sCam','sPick','sCamIn','sPickIn', $('sThumbs'));
+bindPhotos(S.s.photos, 'sCam','sPick','sCamIn','sPickIn', $('sThumbs'), () => { $('scriptList').value = ''; $('scriptList').dispatchEvent(new Event('input')) });
 { const saved = LS.get('script', {}); if(saved.text) $('scriptList').value = saved.text; else if(saved.lines?.length) $('scriptList').value = saved.lines.join('\n'); }
 function renderScriptOk(){ const n = S.s.lines.length; $('sOk').hidden = !(S.s.confirmed && n); if(S.s.confirmed && n){ const d = S.s.savedAt ? new Date(S.s.savedAt) : null; $('sOk').textContent = `✔ 정답지 ${n}문장 저장됨` + (d ? ` (${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')})` : '') } const m = scriptLines().length; $('sCount').textContent = m ? `${m}문장` + (S.s.confirmed && m !== n ? ' · 고친 내용이 있어요 → 다시 확정해 주세요' : '') : '' }
 $('scriptList').addEventListener('input', () => { S.s.confirmed = false; saveScript(); renderScriptOk(); refreshButtons() });
@@ -2300,6 +2306,8 @@ if(window.Capacitor) document.documentElement.classList.add('in-app');   // 앱 
   const srcText = src==='remote' ? '인터넷에서 최신 버전을 받았어요' : src==='cache' ? '인터넷 연결이 안 되어 마지막으로 받아 둔 버전이에요' : src==='bundled' ? '앱에 내장된 버전이에요 (인터넷에서 받기 실패)' : (window.Capacitor ? '앱 내장 버전 (구버전 로더)' : 'claude.ai / 브라우저에서 실행 중');
   $('sBuildInfo').textContent = `앱 버전: ${built || '(개발용)'} · ${srcText}` + (err ? ` · 실패 이유: ${err}` : '') + (window.__shell ? ` · 설치된 APK: v${window.__shell}` : (window.Capacitor ? ' · 설치된 APK: v1.4 이하(음성 플러그인 없음 → 새 APK 설치 필요)' : ''));
   if(window.Capacitor && !window.__shell) $('buildTag').textContent += ' · APK 구버전';
+  if(window.Capacitor && src && src !== 'remote'){ const b = document.createElement('div'); b.className = 'banner'; b.innerHTML = `⚠️ 지금 화면은 <b>최신 버전이 아니에요</b> (${srcText}). 인터넷을 켜고 ⚙️ 설정 → 🔄 지금 업데이트 확인을 눌러 주세요.`; $('main').prepend(b) }
+  const hs = document.querySelector('.homesub'); if(hs && built) hs.textContent = `오늘은 뭐 할까? · 버전 ${built}`;
   $('sUpdate').onclick = () => { toast('최신 버전을 확인하는 중…', 2000); setTimeout(() => location.reload(), 300) };
   $('sSetCoins').onclick = () => {   // 부모용: 비밀번호 뒤 코인 개수 직접 맞추기
     const pw = prompt('비밀번호를 입력하세요'); if(pw === null) return; if(pw.trim() !== '1111'){ toast('비밀번호가 달라요.', 2500); return }
@@ -2999,6 +3007,12 @@ ${nameCall(SET.name)}, 시험 한 번 보고 올까?`, `🪙 코인이 없어요
       const a = Math.random()*Math.PI*2, r = 40 + Math.random()*90;
       e.style.cssText = `left:${px + (Math.random()-.5)*20}px;top:${py + (Math.random()-.5)*20}px;--dx:${kind==='shoot' ? dir*(120+Math.random()*120) : Math.cos(a)*r}px;--dy:${kind==='shoot' ? (Math.random()-.5)*60 : Math.sin(a)*r}px;--rot:${(Math.random()-.5)*180}deg;--f:${dir};animation-delay:${Math.random()*.25}s`;
       sc.appendChild(e); setTimeout(() => e.remove(), life) } },
+  heroTalk(){
+    const now = Date.now(); if(now - (this.lastTalk||0) < 2500) return; this.lastTalk = now;
+    const nm = (SET.name||'나').trim();
+    const L = [`안녕! 나는 ${nm}이야!`, `오늘도 신나게 놀자!`, `물고기들아, 안녕~`, `시험 보고 코인 모아서 뽑기 하자!`, `나는 할 수 있어!`, `우와, 여기 정말 멋지다!`, `엄마 아빠 사랑해요!`, `다음엔 100점 맞을 거야!`, `헤엄치는 거 너무 재밌어!`, `배고프다~ 간식 먹고 싶다!`, `친구들아, 같이 놀자!`, `나는 바다 탐험가 ${nm}!`, `전설 생물 나와라, 얍!`, `오늘 공부 열심히 했지롱!`];
+    const line = pick(L); this.say(line); try{ speak(line, 'ko-KR', 1) }catch{}
+  },
   heroAscend(){
     if(this.data.lv !== 6) return; this.ascending = true; clearTimeout(this.ascendTimer);   // 다시 눌러도 처음부터 다시
     const he = $('hero'); he.classList.add('ascend'); const h = this.hero; const hb = HERO_BAND[6];
@@ -3059,7 +3073,7 @@ $('pPrev').onclick = () => Play.go(-1); $('pNext').onclick = () => Play.go(1);
       const r = sc.getBoundingClientRect(); const xp = (e.clientX-r.left)/r.width*100, yp = (e.clientY-r.top)/r.height*100;
       const hit = e.target && e.target.closest ? e.target.closest('.sp:not(.deco)') : null;
       const sp = hit && Play.sprites.find(o => o.el === hit);
-      if(Play.data.lv===6){ const hr = $('hero').getBoundingClientRect(); if(e.clientX >= hr.left && e.clientX <= hr.right && e.clientY >= hr.top && e.clientY <= hr.bottom){ Play.heroAscend(); return } }   // 세준이를 톡: 승천!
+      { const hr = $('hero').getBoundingClientRect(); if(e.clientX >= hr.left && e.clientX <= hr.right && e.clientY >= hr.top && e.clientY <= hr.bottom){ Play.heroTalk(); if(Play.data.lv===6) Play.heroAscend(); return } }   // 세준이를 톡: 한마디! (Lv6은 승천도)
       if(sp && sp.alive){ if(Play.data.lv===6){ if(!Play.skill(sp)) Play.dart(sp) } else Play.dart(sp); return }           // 생물을 톡: 슝! (Lv6: 각자 기술!)
       const wt = WATER_TOP[Play.data.lv];
       if(Play.data.lv !== 6 && yp > wt + 2 && yp < WATER_BOT[Play.data.lv] + 2){ Play.dropFood(xp, Math.min(WATER_BOT[Play.data.lv]-2, yp)); return }   // 신들의 바다에는 먹이가 없어요   // 먹이는 생물만 가요 (세준이는 안 감)   // 물을 톡: 먹이
