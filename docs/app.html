@@ -935,7 +935,7 @@ const LS = {
 };
 // APK 빌드 때 여기에 키를 넣습니다. 비어 있으면 ⚙️ 설정에 입력한 키를 씁니다.
 const BUILTIN = { provider:'gemini', key:'', model:'' };
-const APP_BUILD = '2026.11.26 21:44';   // 공개본을 만들 때 날짜·시간이 들어갑니다
+const APP_BUILD = '2026.11.26 21:59';   // 공개본을 만들 때 날짜·시간이 들어갑니다
 // 무료 등급에서는 가벼운 flash-lite가 훨씬 빨리 답해서(측정: 9초 vs 60초 넘게 대기) 모든 작업에 lite를 먼저 씁니다.
 const GEMINI_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest'];   // 2.5는 새 키에서 안 되므로 뺐어요
 const GEMINI_QUICK  = GEMINI_MODELS;
@@ -1734,7 +1734,7 @@ function applyGrades(){
     const m = row.querySelector('.mark'); m.innerHTML='';
     const stamp = document.createElement('button'); stamp.className='stamp'; stamp.textContent = g.correct ? '○' : '✗';
     stamp.title = '아빠가 눌러서 정정하기'; stamp.setAttribute('aria-label', (g.correct?'정답':'오답')+' (눌러서 정정)');
-    stamp.onclick = () => { g.correct = !g.correct; g.sure = true; S.v.grades[q.n] = g; LS.set('grades', S.v.grades); applyGrades() };
+    stamp.onclick = () => { g.correct = !g.correct; g.sure = true; S.v.grades[q.n] = g; LS.set('grades', S.v.grades); applyGrades(); readjustCoins('V', scoreV()) };
     m.appendChild(stamp);
     if(g.sure===false){ const u = document.createElement('span'); u.className='unsure'; u.textContent='글씨 확인 필요'; m.appendChild(u) }
     const rd = document.createElement('span'); rd.className='read'; rd.textContent = g.empty ? '답을 쓰지 않았어요' : (g.read ? `읽은 답: ${g.read}` : ''); if(rd.textContent) m.appendChild(rd);
@@ -2020,7 +2020,7 @@ function renderDictResults(){
     const ans = document.createElement('div'); ans.className='ans tall cells ' + ((S.d.items[idx]||'').length > 13 ? 'r2' : 'r1'); ans.dataset.key='d:'+pos; ans.innerHTML=cellGrid((S.d.items[idx]||'').length > 13 ? 2 : 1) + '<canvas></canvas>';
     const m = document.createElement('div'); m.className='mark';
     const stamp = document.createElement('button'); stamp.className='stamp'; stamp.textContent = g.correct?'○':'✗'; stamp.title='잘못 채점됐으면 눌러서 바꾸기';
-    stamp.onclick = e => { e.stopPropagation(); g.correct = !g.correct; g.sure = true; S.d.grades[pos] = g; saveDict(); renderDictResults() };
+    stamp.onclick = e => { e.stopPropagation(); g.correct = !g.correct; g.sure = true; S.d.grades[pos] = g; saveDict(); renderDictResults(); readjustCoins('D', scoreD()) };
     m.appendChild(stamp);
     if(g.sure===false){ const u=document.createElement('span'); u.className='unsure'; u.textContent='글씨 확인 필요'; m.appendChild(u) }
     const rd = document.createElement('span'); rd.className='read'; rd.textContent = g.empty ? '답을 쓰지 않았어요' : (g.read ? `읽은 답: ${g.read}` : ''); if(rd.textContent) m.appendChild(rd);
@@ -2226,12 +2226,19 @@ function celebrateCopy(sum, what){
 let celTimer = null, confettiStop = null;
 const EN_PRAISE = { perfect:['Excellent!', 'Perfect!', 'Amazing!'], near:['Great job!', 'So close!', 'Great!'], good:['Good job!', 'Well done!', 'Good!'], ok:['Nice try!', 'Keep going!'], low:['You can do it!', 'Never give up!', 'Try again!'] };
 function coinsFor(pct){ return pct>=100 ? 5 : pct>=85 ? 4 : pct>=75 ? 3 : pct>=65 ? 2 : 1 }
+function awardCoins(mode, sum){ const coins = coinsFor(sum.pct); Play.addCoins(coins); LS.set('award'+mode, { coins, ok:sum.ok, total:sum.total, t:Date.now() }); return coins }
+function readjustCoins(mode, sum){   // 아빠가 ○✗를 고치면 점수에 맞게 코인을 더 주거나 되가져가요
+  const a = LS.get('award'+mode, null); if(!a) return;
+  const want = coinsFor(sum.pct), diff = want - a.coins; if(!diff) return;
+  const before = Play.data.coins; Play.addCoins(Math.max(diff, -Play.data.coins)); a.coins = want; a.ok = sum.ok; LS.set('award'+mode, a);
+  toast(`정정 결과 ${sum.ok}/${sum.total}개 → 코인 ${before}개에서 ${Play.data.coins}개로 조정했어요 (${diff>0?'+':''}${diff})`, 3800);
+}
 async function celebrate(sum, what, english){
   const c = celebrateCopy(sum, what);
   const el = $('celebrate'); el.className = 'celebrate ' + c.level;
   $('celEmoji').textContent = c.emoji; $('celScore').innerHTML = `${sum.ok}<small>/${sum.total}개</small>`;
   const en = english ? pick(EN_PRAISE[c.level]) : ''; $('celEn').textContent = en; $('celEn').hidden = !en;
-  const coins = coinsFor(sum.pct); Play.addCoins(coins);
+  const coins = awardCoins(what==='받아쓰기' ? 'D' : what==='스크립트 외우기' ? 'S' : 'V', sum);   // 나중에 ○✗ 정정하면 이 기록을 기준으로 코인을 다시 맞춰요
   $('celTitle').textContent = c.title; $('celSub').textContent = c.sub + `  🪙 코인 +${coins}! (모두 ${Play.data.coins}개) → 놀이터에서 뽑기!`;
   el.hidden = false;
   if(c.level==='perfect'){ fanfare(); confettiStop = confetti(220, 5000) }
